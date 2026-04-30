@@ -13,6 +13,8 @@ import Layout from "../components/Layout"
 import YieldConfigScreen from "./YieldConfigScreen"
 import MachineCapacityScreen from "./MachineCapacityScreen"
 import CapacityConfigScreen from "./Capacityconfigscreen "
+import SpeciesGradesPanel from "./SpeciesGradesPanel"
+import Tabs from "../components/Tabs"
 
 const PageContent = styled.div`
   display: flex;
@@ -88,13 +90,28 @@ const SimpleTable = styled.table`
     font-weight: 600;
   }
 `
+const SpeciesButton = styled.button`
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid
+    ${({ active, theme }) =>
+      active ? theme.colors.primary : theme.colors.border};
+  background: ${({ active, theme }) =>
+    active ? theme.colors.primaryLight : theme.colors.backgroundAlt};
+  cursor: pointer;
+`
+const SpeciesList = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+`
 
 const TABS = [
-  { id: "config", label: "Planning config" },
-  { id: "species", label: "Species & grades" },
-  { id: "yield", label: "Yield chain" },
-  { id: "machines", label: "Machines" },
-  { id: "suppliers", label: "Suppliers" },
+  { id: "config", label: "⚙️ Planning config" },
+  { id: "species", label: "🦐 Species & grades" },
+  { id: "yield", label: "🔗 Yield chain" },
+  { id: "machines", label: "🏭 Machines" },
+  { id: "suppliers", label: "🚚 Suppliers" },
 ]
 
 function formatLabel(key) {
@@ -107,21 +124,23 @@ export default function ConfigDashboard() {
   const globalRows = useMemo(() => Object.entries(INIT_PLANNING_CONFIG), [])
 
   return (
-    <Layout title="Global Settings">
+    <Layout title="Production planning configuration">
       <PageContent>
-        <Card
-          title="Production Planning Configuration"
-          variant="primary"
-          // footer="Using previous model UI and data-source-only rendering"
-        >
-          <TabsBar>
-            {TABS.map((t) => (
-              <TabButton key={t.id} active={tab === t.id} onClick={() => setTab(t.id)}>
-                {t.label}
-              </TabButton>
+        <Card>
+
+         <SpeciesList>
+          {TABS.map((t) => (
+              <SpeciesButton
+                key={t.id}
+                active={tab === t.id}
+                onClick={() => setTab(t.id)}
+              >
+                                {t.label}
+              </SpeciesButton>
             ))}
-          </TabsBar>
+          </SpeciesList>
         </Card>
+       
 
         {tab === "config" && (
           // <Card title="Global Parameters" variant="primary">
@@ -138,33 +157,34 @@ export default function ConfigDashboard() {
         )}
 
         {tab === "species" && (
-          <Card title="Species & Grade Data" variant="secondary">
-            <SimpleTable>
-              <thead>
-                <tr>
-                  <th>Species</th>
-                  <th>Alias</th>
-                  <th>Base Price</th>
-                  <th>Processing Cost</th>
-                  <th>Grades</th>
-                </tr>
-              </thead>
-              <tbody>
-                {INIT_SPECIES.map((sp) => {
-                  const count = INIT_GRADES.filter((g) => g.species === sp.id).length
-                  return (
-                    <tr key={sp.id}>
-                      <td>{sp.name}</td>
-                      <td>{sp.category_alias}</td>
-                      <td>{sp.base_price}</td>
-                      <td>{sp.processing_cost}</td>
-                      <td>{count}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </SimpleTable>
-          </Card>
+          // <Card title="Species & Grade Data" variant="secondary">
+          //   <SimpleTable>
+          //     <thead>
+          //       <tr>
+          //         <th>Species</th>
+          //         <th>Alias</th>
+          //         <th>Base Price</th>
+          //         <th>Processing Cost</th>
+          //         <th>Grades</th>
+          //       </tr>
+          //     </thead>
+          //     <tbody>
+          //       {INIT_SPECIES.map((sp) => {
+          //         const count = INIT_GRADES.filter((g) => g.species === sp.id).length
+          //         return (
+          //           <tr key={sp.id}>
+          //             <td>{sp.name}</td>
+          //             <td>{sp.category_alias}</td>
+          //             <td>{sp.base_price}</td>
+          //             <td>{sp.processing_cost}</td>
+          //             <td>{count}</td>
+          //           </tr>
+          //         )
+          //       })}
+          //     </tbody>
+          //   </SimpleTable>
+          // </Card>
+          <SpeciesGradesPanel />
         )}
 
         {tab === "yield" && (

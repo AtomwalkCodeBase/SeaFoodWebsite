@@ -37,8 +37,12 @@ export const getProcessActivityListUrl = `${hrendpoint}/get_process_activity_lis
 export const getYieldConfigUrl = `${newPPpont}/${db_name}/yield-configs/`;
 export const getMachineCapacityUrl = `${newPPpont}/${db_name}/machines/`;
 export const PlanningConfigUrl = `${newPPpont}/${db_name}/config/`;
+export const SpeciesUrl = `${newPPpont}/${db_name}/species/`;
+export const GradesUrl = `${newPPpont}/${db_name}/grades/`;
+export const ItemCategoryListUrl = `${hrendpoint}/item_category_list/${db_name}/`;
 
 
+// https://www.atomwalk.com/pp_api/config/PMA_002/species/
 // https://crm.atomwalk.com/api/get_process_activity_list/PMA_002/?product_id=1
 
 

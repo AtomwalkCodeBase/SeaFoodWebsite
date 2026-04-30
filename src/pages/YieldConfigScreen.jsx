@@ -5,17 +5,20 @@ import {
 import { AddYieldConfig, getProcessActivityList, getProductList, getYieldConfig, UpdateYieldConfig } from "../services/productServices";
 import { toast } from "react-toastify";
 import ConfirmPopup from "../components/ConfirmPopup";
+import Badge from "../components/Badge";
+import { theme } from "../styles/Theme";
 
 // ── Reusable Components ───────────────────────────────────────────────────────
 
-const Badge = ({ type }) => {
-  const isPre = type === "PRE-GRADE";
-  return (
-    <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wider border ${isPre ? "bg-phasePre text-phasePreText border-phasePreText" : "bg-phasePost text-phasePostText border-phasePostText"}`}>
-      {type}
-    </span>
-  );
-};
+// const Badge = ({ type }) => {
+//   const isPre = type === "PRE-GRADE";
+//   console.log("isPre",isPre)
+//   return (
+//     <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wider border ${isPre ? "bg-phasePre text-phasePreText border-phasePreText" : "bg-phasePost text-phasePostText border-phasePostText"}`}>
+//       {type}
+//     </span>
+//   );
+// };
 
 const StatCard = ({ label, value, colorClass }) => (
   <div className="bg-card border border-border rounded-xl p-3 shadow-sm flex-1 min-w-[130px]">
@@ -338,6 +341,7 @@ export default function YieldConfigScreen() {
     }
   };
 
+  console.log("combinedActivities",combinedActivities)
   return (
     <div className="font-body bg-background min-h-screen p-1 transition-colors duration-300">
       <div className="mx-auto">
@@ -390,7 +394,7 @@ export default function YieldConfigScreen() {
               <thead>
                 <tr className="bg-backgroundAlt">
                   {["#", "Activity (ProcessActivity)", "Phase", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"].map((h) => (
-                    <th key={h} className="p-2.5 px-3.5 text-left text-[10px] font-semibold tracking-wider text-textLight whitespace-nowrap uppercase">
+                    <th key={h} className="p-2.5 px-3.5 text-left text-[10px] font-600 tracking-wider text-textLight whitespace-nowrap uppercase">
                       {h}
                     </th>
                   ))}
@@ -406,14 +410,14 @@ export default function YieldConfigScreen() {
                     <tr key={a.id} className={`border-t border-border ${i % 2 === 0 ? "bg-transparent" : "bg-backgroundAlt"}`}>
                       <td className="p-3 px-3.5 text-textLight font-medium">{a.id}</td>
                       <td className="p-3 px-3.5 font-semibold text-text">{a.name}</td>
-                      <td className="p-3 px-3.5"><Badge type={a.phase} /></td>
-                      <td className={`p-3 px-3.5 font-bold ${yieldColorClass(a.yieldPct)}`}>{a.yieldPct.toFixed(1)}%</td>
-                      <td className="p-3 px-3.5 text-textLight">{a.inputMT.toFixed(3)}</td>
+                      <td className="p-3 px-3.5"><Badge variant={a.phase === "PRE-GRADE" ? "success" : "forward"}>{a.phase}</Badge></td>
+                      <td style={{color: a.yieldPct > 100 ? theme.colors.success : a.yieldPct < 90 ? theme.colors.error : theme.colors.warning}} className={`p-3 px-3.5 font-bold ${yieldColorClass(a.yieldPct)}`}>{a.yieldPct.toFixed(1)}%</td>
+                      <td className="p-3 px-3.5 font-semibold text-textLight">{a.inputMT.toFixed(3)}</td>
                       <td className="p-3 px-3.5 font-semibold text-text">{a.outputMT.toFixed(3)}</td>
-                      <td className={`p-3 px-3.5 font-bold ${lossGainColorClass(a.loss)}`}>
+                      <td style={{color: a.loss >= 0 ? theme.colors.success : theme.colors.error}} className={`p-3 px-3.5 font-bold ${lossGainColorClass(a.loss)}`}>
                         {a.loss >= 0 ? "+" : ""}{a.loss.toFixed(3)}
                       </td>
-                      <td className="p-3 px-3.5 text-textLight whitespace-nowrap">{a.workerEff}</td>
+                      <td className="p-3 px-3.5 text-textLight font-semibold whitespace-nowrap">{a.workerEff}</td>
                       <td className="p-3 px-3.5 text-textLight whitespace-nowrap">{a.equipment}</td>
                       <td className="p-3 px-3.5 text-textLight text-xs">{a.lossReason}</td>
                       <td className="p-3 px-3.5">

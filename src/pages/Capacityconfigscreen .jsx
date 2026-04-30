@@ -314,7 +314,7 @@ if (!config) {
 }
 
   return (
-    <div className="min-h-screen bg-background p-4 font-poppins transition-colors duration-300">
+    <div className="min-h-screen bg-background font-poppins transition-colors duration-300">
       <div className="mx-auto space-y-4">
 
         {/* ── KPI Row ── */}
@@ -326,7 +326,7 @@ if (!config) {
             <KpiCard label="Revenue Est."         value={`₹${revenueCr} Cr`}    valueClass="text-primary" />
           </div>
           <div className="flex gap-2">
-            <IconBtn onClick={openAdd}  icon={<FiPlus />}   label="Add"  variant="primary" />
+            {/* <IconBtn onClick={openAdd}  icon={<FiPlus />}   label="Add"  variant="primary" /> */}
             <IconBtn onClick={openEdit} icon={<FiEdit2 />}  label="Edit" variant="outline" />
           </div>
         </div>
