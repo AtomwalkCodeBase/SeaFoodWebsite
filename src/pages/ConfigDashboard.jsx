@@ -107,11 +107,11 @@ const SpeciesList = styled.div`
 `
 
 const TABS = [
-  { id: "config", label: "⚙️ Planning config" },
-  { id: "species", label: "🦐 Species & grades" },
-  { id: "yield", label: "🔗 Yield chain" },
-  { id: "machines", label: "🏭 Machines" },
-  { id: "suppliers", label: "🚚 Suppliers" },
+  { key: "config", label: "⚙️ Planning config" },
+  { key: "species", label: "🦐 Species & grades" },
+  { key: "yield", label: "🔗 Yield chain" },
+  { key: "machines", label: "🏭 Machines" },
+  { key: "suppliers", label: "🚚 Suppliers" },
 ]
 
 function formatLabel(key) {
@@ -128,7 +128,7 @@ export default function ConfigDashboard() {
       <PageContent>
         <Card>
 
-         <SpeciesList>
+         {/* <SpeciesList>
           {TABS.map((t) => (
               <SpeciesButton
                 key={t.id}
@@ -138,8 +138,9 @@ export default function ConfigDashboard() {
                                 {t.label}
               </SpeciesButton>
             ))}
-          </SpeciesList>
-        </Card>
+          </SpeciesList> */}
+          <Tabs tabs={TABS} activeTab={tab} setActiveTab={setTab} />
+    
        
 
         {tab === "config" && (
@@ -269,6 +270,7 @@ export default function ConfigDashboard() {
             </SimpleTable>
           </Card>
         )}
+            </Card>
       </PageContent>
     </Layout>
   )

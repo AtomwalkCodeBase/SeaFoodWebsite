@@ -221,7 +221,7 @@ const mappedMachines = (machines.length ? machines : MACHINES).map((m) => {
 
     return (
         <>
-        <div className="min-h-screen bg-background p-1 font-body transition-colors duration-300">
+        <div className="p-1 font-body transition-colors duration-300">
             <div className="mx-auto space-y-6">
 
                 {/* ── Capacity Cards Row ── */}

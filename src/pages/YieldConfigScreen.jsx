@@ -343,7 +343,7 @@ export default function YieldConfigScreen() {
 
   console.log("combinedActivities",combinedActivities)
   return (
-    <div className="font-body bg-background min-h-screen p-1 transition-colors duration-300">
+    <div className="font-body min-h-screen p-1 transition-colors duration-300">
       <div className="mx-auto">
 
         {/* ── Top bar ── */}

@@ -314,7 +314,7 @@ if (!config) {
 }
 
   return (
-    <div className="min-h-screen bg-background font-poppins transition-colors duration-300">
+    <div className="min-h-screen font-poppins transition-colors duration-300">
       <div className="mx-auto space-y-4">
 
         {/* ── KPI Row ── */}

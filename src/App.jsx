@@ -26,6 +26,7 @@ import Orders from "./pages/orders";
 import Inventory from "./pages/inventory";
 import ConfigDashboardV3 from "./pages/config-dashboard-v3";
 import ConfigDashboard from "./pages/ConfigDashboard";
+import OrdersScreen from "./pages/OrdersScreen";
 
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
                  <Route path="/dummy" element={<PrawnProductionPlanner />} />
                  <Route path="/config" element={<ConfigDashboardV3 />} />
                  <Route path="/order" element={<Orders />} />
+                 <Route path="/orders" element={<OrdersScreen />} />
                  <Route path="/inventory" element={<Inventory />} />
 
                 <Route
