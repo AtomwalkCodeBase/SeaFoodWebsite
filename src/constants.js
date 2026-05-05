@@ -21,6 +21,19 @@ export const INVENTORY_TYPE = {
   W: { label: "Work In Progress", short: "WIP" },
 };
 
+export const ORDERS_CUSTOMER_TIER = [
+  { id: 1, value: "TIER_1", label: "TIER 1" },
+  { id: 2, value: "TIER_2", label: "TIER 2" },
+  { id: 3, value: "TIER_3", label: "TIER 3" },
+];
+
+export const ORDERS_PRIORITY_OPTIONS = [
+  { id: 1, value: "critical", label: "CRITICAL" },
+  { id: 2, value: "urgent", label: "URGENT" },
+  { id: 3, value: "standard", label: "STANDARD" },
+];
+
+
 const qualityControlData = [
   // MANAGER VIEW DATA
   // {

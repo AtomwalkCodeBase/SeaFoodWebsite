@@ -225,7 +225,7 @@ export default function YieldConfigScreen() {
 
   const combinedActivities = activitiesData
     .map((act) => {
-      const y = yieldsData.find((y) => y.process_activity === act.activity_id) || {};
+      const y = yieldsData.find((y) => y.process_activity === act.id) || {};
       return { act, y };
     })
     .sort((a, b) => {
@@ -343,6 +343,7 @@ export default function YieldConfigScreen() {
 
   console.log("combinedActivities",combinedActivities)
   return (
+    <>
     <div className="font-body min-h-screen p-1 transition-colors duration-300">
       <div className="mx-auto">
 
@@ -495,6 +496,8 @@ export default function YieldConfigScreen() {
       confirmLabel="Yes"
     />
 
+
+    </div>
       {/* ── Edit Modal ── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -588,7 +591,6 @@ export default function YieldConfigScreen() {
           </div>
         </div>
       )}
-
-    </div>
+    </>
   );
 }

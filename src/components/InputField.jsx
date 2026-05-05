@@ -14,18 +14,18 @@ const InputField = ({
 }) => (
   <div className={`flex flex-col gap-1 ${className}`}>
     {labelIcon && labelIcon}
-    <label className="text-1 font-medium text-textLight">{label}</label>
+    <label className="text-sm font-medium text-textLight">{label}</label>
     <div className="flex items-center gap-2">
       {type === "select" ? (
         <select
           name={name}
           value={value}
           onChange={onChange}  // Your handle function works perfectly here
-          className="flex-1 rounded-3 border border-border bg-background px-3 py-2 text-2 font-semibold text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
+          className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm font-semibold text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
         >
-          <option value="">{placeholder || `Select ${label}`}</option>
+          <option className="bg-background text-text text-sm" value="">{placeholder || `Select ${label}`}</option>
           {options.map((option) => (
-            <option key={option.id || option.value} value={option.value}>
+            <option className="bg-background text-text text-sm" key={option.id || option.value} value={option.value}>
               {option.label}
             </option>
           ))}
@@ -46,7 +46,7 @@ const InputField = ({
           onChange={onChange}
           placeholder={placeholder}
           step={type === "number" ? "any" : undefined}
-          className="flex-1 rounded-3 border border-border bg-background px-3 py-2 text-2 font-semibold text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
+          className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-2 font-semibold text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
         />
       )}
       {unit && type !== "checkbox" && <span className="text-1 text-textLight shrink-0">{unit}</span>}

@@ -26,6 +26,7 @@ import {
   FaTasks,
   FaList,
   FaFileInvoiceDollar,
+  FaClipboardList,
 } from "react-icons/fa"
 import { SiGooglecalendar } from "react-icons/si"
 import { PiListPlusFill } from "react-icons/pi"
@@ -34,6 +35,9 @@ import { useAuth } from "../context/AuthContext"
 import { useTheme } from "../context/ThemeContext"
 import { IoTicket } from "react-icons/io5"
 import { RiDashboardFill } from "react-icons/ri"
+import { LuClipboardList } from "react-icons/lu"
+import { BsBoxSeamFill, BsFillCalendar2RangeFill } from "react-icons/bs"
+import { FaGear } from "react-icons/fa6"
 const SidebarContainer = styled.div`
   width: ${(props) => {
     const { isOpen, uiPreferences } = props
@@ -529,7 +533,12 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
     }, 100)
   }
   const menuItems =  [
-      { path: "/dashboard", name: "Retainer Dashboard", icon: <FaHome /> },
+      { path: "/dummy", name: "Production Planner v1", icon: <LuClipboardList /> },
+      { path: "/dummy1", name: "Production Planner v2", icon: <FaClipboardList /> },
+      { path: "/plan-generator", name: "Daily Production Planner", icon: <BsFillCalendar2RangeFill /> },
+      { path: "/config", name: "Global config v1", icon: <FaGear /> },
+      { path: "/orders", name: "Orders Management", icon: <BsBoxSeamFill /> },
+      { path: "/config1", name: "Global Config", icon: <FaGear /> },
     ]
    
 

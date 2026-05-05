@@ -6,6 +6,7 @@ const TableWrap = styled.div`
   background: white;
   border-radius: 8px;
   padding: 0.4rem;
+  min-height: 140px;
 `
 
 const Table = styled.table`
@@ -30,38 +31,49 @@ const Td = styled.td`
   color: ${({ theme }) => theme.colors.text};
 `
 
-function DataTable({ columns, data, renderRow, expandedRow, renderExpandedRow }) {
+function DataTable({ columns, data, renderRow, expandedRow, renderExpandedRow, emptyMessage = "No data available", emptyMessageClassName = "" }) {
+  const safeData = Array.isArray(data) ? data : [];
+  const hasData = safeData.length > 0;
+  const columnsCount = Array.isArray(columns) && columns.length > 0 ? columns.length : 1;
+
   return (
     <TableWrap>
       <Table>
         <thead>
           <tr>
-            {columns.map((col, index) => (
+            {columns?.map((col, index) => (
               <Th key={index}>{col}</Th>
             ))}
           </tr>
         </thead>
 
         <tbody>
-          {data.map((row) => (
-            <React.Fragment key={row.id}>
-              
-              {/* Main Row */}
-              <tr>
-                {renderRow(row)}
-              </tr>
-
-              {/* Expanded Row */}
-              {expandedRow === row.id && renderExpandedRow && (
+          {hasData ? (
+            safeData.map((row, index) => (
+              <React.Fragment key={row?.id ?? index}>
                 <tr>
-                  <td colSpan={columns.length}>
-                    {renderExpandedRow(row)}
-                  </td>
+                  {renderRow(row)}
                 </tr>
-              )}
 
-            </React.Fragment>
-          ))}
+                {expandedRow === row?.id && renderExpandedRow && (
+                  <tr>
+                    <td colSpan={columnsCount}>
+                      {renderExpandedRow(row)}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))
+          ) : (
+            <tr>
+              <td
+                colSpan={columnsCount}
+                className={`text-center py-8 text-text-light font-semibold ${emptyMessageClassName}`}
+              >
+                {emptyMessage}
+              </td>
+            </tr>
+          )}
         </tbody>
       </Table>
     </TableWrap>

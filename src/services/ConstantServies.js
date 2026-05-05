@@ -39,6 +39,7 @@ export const getMachineCapacityUrl = `${newPPpont}/${db_name}/machines/`;
 export const PlanningConfigUrl = `${newPPpont}/${db_name}/config/`;
 export const SpeciesUrl = `${newPPpont}/${db_name}/species/`;
 export const GradesUrl = `${newPPpont}/${db_name}/grades/`;
+export const OrdersUrl = `${newPPpont}/${db_name}/orders/`;
 export const ItemCategoryListUrl = `${hrendpoint}/item_category_list/${db_name}/`;
 
 

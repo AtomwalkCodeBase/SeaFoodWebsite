@@ -18,8 +18,11 @@ const baseThemes = {
       warning: "#FFD600",
       error: "#FF3D00",
       info: "#2196F3",
-      background: "#E4F3F8",
-      backgroundAlt: "#C6E5EF",
+      // background: "#E4F3F8",
+      // background: "#F1F5F9",
+      background: "#F8F9FD",
+      // backgroundAlt: "#C6E5EF",
+      backgroundAlt: "#E2E8F0",
       card: "#FFFFFF",
       text: "#0D2B3E",
       textLight: "#5A7A8A",
@@ -84,16 +87,16 @@ const baseThemes = {
   dark: {
     name: "Dark",
     colors: {
-      primary: "#483A6F",
-      primaryLight: "#2E2845",
-      secondary: "#1A5F51",
-      secondaryLight: "#0E3D35",
-      accent: "#7E3B54",
-      accentLight: "#4A2432",
-      success: "#1F5C2E",
-      warning: "#7D5700",
-      error: "#7D2B2B",
-      info: "#2C5282",
+      // primary: "#483A6F",
+      // primaryLight: "#2E2845",
+      // secondary: "#1A5F51",
+      // secondaryLight: "#0E3D35",
+      // accent: "#7E3B54",
+      // accentLight: "#4A2432",
+      // success: "#1F5C2E",
+      // warning: "#7D5700",
+      // error: "#7D2B2B",
+      // info: "#2C5282",
       // background: "#0A0A0A",
       // backgroundAlt: "#121212",
       // card: "#1A1A1A",
@@ -101,10 +104,61 @@ const baseThemes = {
       // textLight: "#8A8A8A",
       // border: "#2A2A2A",
       // shadow: "rgba(0, 0, 0, 0.6)",
-      background: "#0D1B22", backgroundAlt: "#122330", card: "#162B38", text: "#E4F3F8",
-  textLight: "#7DAFC4", border: "#1E3D54", shadow: "rgba(0,0,0,0.35)",
-  inputBg: "#1A3244", phasePre: "rgba(78,205,196,0.12)", phasePreText: "#4ECDC4",
-  phasePost: "rgba(126,232,224,0.12)", phasePostText: "#7EE8E0",
+  //     background: "#0D1B22", backgroundAlt: "#122330", card: "#162B38", text: "#E4F3F8",
+  // textLight: "#7DAFC4", border: "#1E3D54", shadow: "rgba(0,0,0,0.35)",
+  // inputBg: "#1A3244", phasePre: "rgba(78,205,196,0.12)", phasePreText: "#4ECDC4",
+  // phasePost: "rgba(126,232,224,0.12)", phasePostText: "#7EE8E0",
+      // 🔷 Primary = cyan highlight (used everywhere in your UI)
+    primary: "#22D3EE",
+    primaryLight: "#164E63",
+
+    // 🔷 Secondary (slightly muted cyan)
+    secondary: "#06B6D4",
+    secondaryLight: "#083344",
+
+    // 🟢 Accent (for success / yield / graphs)
+    accent: "#34D399",
+    accentLight: "#064E3B",
+
+    success: "#22C55E",
+    warning: "#FACC15",
+    error: "#F87171",
+    info: "#38BDF8",
+
+    // 🌑 BACKGROUND (this is the BIG fix)
+    background: "#020617",        // deep navy (NOT green)
+    backgroundAlt: "#020617",
+
+    // 🧱 CARDS
+    card: "#0F172A",              // visible separation from bg
+
+    // 📝 TEXT
+    text: "#E2E8F0",
+    textLight: "#94A3B8",
+
+    // 🔲 BORDERS (soft, almost invisible)
+    border: "#1E293B",
+
+    shadow: "rgba(0,0,0,0.6)",
+
+    // 🧾 INPUTS
+    inputBg: "#020617",
+
+    // 🔘 BUTTONS
+    btn: "#06B6D4",
+    btnHover: "#0891B2",
+
+    // 🎯 PANELS (top gradients like your header)
+    panelFrom: "#020617",
+    panelMid: "#0F172A",
+    panelTo: "#020617",
+
+    // 🏷️ PHASE TAGS
+    phasePre: "rgba(34,211,238,0.12)",
+    phasePreText: "#22D3EE",
+
+    phasePost: "rgba(52,211,153,0.12)",
+    phasePostText: "#34D399",
 
     },
   },

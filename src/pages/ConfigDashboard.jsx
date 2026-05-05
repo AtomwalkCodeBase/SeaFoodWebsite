@@ -1,12 +1,6 @@
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import styled from "styled-components"
 
-
-import { INIT_PLANNING_CONFIG } from "./data/planningConfig"
-import { INIT_SPECIES } from "./data/species"
-import { INIT_GRADES } from "./data/grades"
-import { INIT_YIELD_STEPS } from "./data/yieldSteps"
-import { INIT_MACHINES } from "./data/machines"
 import { INIT_SUPPLIERS } from "./data/suppliers"
 import Card from "../components/Card"
 import Layout from "../components/Layout"
@@ -114,133 +108,27 @@ const TABS = [
   { key: "suppliers", label: "🚚 Suppliers" },
 ]
 
-function formatLabel(key) {
-  return key.replaceAll("_", " ")
-}
-
 export default function ConfigDashboard() {
   const [tab, setTab] = useState("config")
-
-  const globalRows = useMemo(() => Object.entries(INIT_PLANNING_CONFIG), [])
 
   return (
     <Layout title="Production planning configuration">
       <PageContent>
         <Card>
-
-         {/* <SpeciesList>
-          {TABS.map((t) => (
-              <SpeciesButton
-                key={t.id}
-                active={tab === t.id}
-                onClick={() => setTab(t.id)}
-              >
-                                {t.label}
-              </SpeciesButton>
-            ))}
-          </SpeciesList> */}
           <Tabs tabs={TABS} activeTab={tab} setActiveTab={setTab} />
-    
-       
-
         {tab === "config" && (
-          // <Card title="Global Parameters" variant="primary">
-          //   <KVGrid>
-          //     {globalRows.map(([key, value]) => (
-          //       <KVItem key={key}>
-          //         <Label>{formatLabel(key)}</Label>
-          //         <Value>{String(value)}</Value>
-          //       </KVItem>
-          //     ))}
-          //   </KVGrid>
-          // </Card>
           <CapacityConfigScreen />
         )}
 
         {tab === "species" && (
-          // <Card title="Species & Grade Data" variant="secondary">
-          //   <SimpleTable>
-          //     <thead>
-          //       <tr>
-          //         <th>Species</th>
-          //         <th>Alias</th>
-          //         <th>Base Price</th>
-          //         <th>Processing Cost</th>
-          //         <th>Grades</th>
-          //       </tr>
-          //     </thead>
-          //     <tbody>
-          //       {INIT_SPECIES.map((sp) => {
-          //         const count = INIT_GRADES.filter((g) => g.species === sp.id).length
-          //         return (
-          //           <tr key={sp.id}>
-          //             <td>{sp.name}</td>
-          //             <td>{sp.category_alias}</td>
-          //             <td>{sp.base_price}</td>
-          //             <td>{sp.processing_cost}</td>
-          //             <td>{count}</td>
-          //           </tr>
-          //         )
-          //       })}
-          //     </tbody>
-          //   </SimpleTable>
-          // </Card>
           <SpeciesGradesPanel />
         )}
 
         {tab === "yield" && (
-          // <Card title="Yield Step Data" variant="accent">
-          //   <SimpleTable>
-          //     <thead>
-          //       <tr>
-          //         <th>Sequence</th>
-          //         <th>Step</th>
-          //         <th>Yield %</th>
-          //         <th>Parent</th>
-          //         <th>Efficiency</th>
-          //       </tr>
-          //     </thead>
-          //     <tbody>
-          //       {INIT_YIELD_STEPS.map((s) => (
-          //         <tr key={s.id}>
-          //           <td>{s.sequence}</td>
-          //           <td>{s.name}</td>
-          //           <td>{(s.yield_pct * 100).toFixed(1)}%</td>
-          //           <td>{s.parent ? "Yes" : "No"}</td>
-          //           <td>{s.efficiency}</td>
-          //         </tr>
-          //       ))}
-          //     </tbody>
-          //   </SimpleTable>
-          // </Card>
           <YieldConfigScreen />
         )}
 
         {tab === "machines" && (
-          // <Card title="Machine Data" variant="primary">
-          //   <SimpleTable>
-          //     <thead>
-          //       <tr>
-          //         <th>Name</th>
-          //         <th>Activity</th>
-          //         <th>Capacity</th>
-          //         <th>Count</th>
-          //         <th>Downtime</th>
-          //       </tr>
-          //     </thead>
-          //     <tbody>
-          //       {INIT_MACHINES.map((m) => (
-          //         <tr key={m.id}>
-          //           <td>{m.name}</td>
-          //           <td>{m.activity}</td>
-          //           <td>{m.capacity}</td>
-          //           <td>{m.count}</td>
-          //           <td>{(m.downtime * 100).toFixed(1)}%</td>
-          //         </tr>
-          //       ))}
-          //     </tbody>
-          //   </SimpleTable>
-          // </Card>
           <MachineCapacityScreen />
         )}
 
