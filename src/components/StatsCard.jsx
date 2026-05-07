@@ -2,7 +2,7 @@ import styled from "styled-components"
 import { FaArrowUp, FaArrowDown } from "react-icons/fa"
 
 const StatsCardContainer = styled.div`
-  background: white;
+  background: ${({ theme, color }) => color ? `${theme.colors[color]}` : theme.colors.card};
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
@@ -254,7 +254,7 @@ const StatsCard = ({
   return (
     <StatsCardContainer clickable={!!onClick}>
       <CardHeader clickable={!!onClick} onClick={handleHeaderClick}>
-        <IconContainer color={color}>{icon}</IconContainer>
+        {icon && <IconContainer color={color}>{icon}</IconContainer>}
         <MainStats>
           <MainLabel>{label}</MainLabel>
           <MainValue>{value}</MainValue>

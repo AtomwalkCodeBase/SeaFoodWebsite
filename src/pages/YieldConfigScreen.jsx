@@ -1,47 +1,40 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-} from "recharts";
-import { AddYieldConfig, getProcessActivityList, getProductList, getYieldConfig, UpdateYieldConfig } from "../services/productServices";
+  AddYieldConfig,
+  getProcessActivityList,
+  getProductList,
+  getYieldConfig,
+  UpdateYieldConfig,
+} from "../services/productServices";
 import { toast } from "react-toastify";
 import ConfirmPopup from "../components/ConfirmPopup";
 import Badge from "../components/Badge";
-import { theme } from "../styles/Theme";
 
 // ── Reusable Components ───────────────────────────────────────────────────────
-
-// const Badge = ({ type }) => {
-//   const isPre = type === "PRE-GRADE";
-//   console.log("isPre",isPre)
-//   return (
-//     <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wider border ${isPre ? "bg-phasePre text-phasePreText border-phasePreText" : "bg-phasePost text-phasePostText border-phasePostText"}`}>
-//       {type}
-//     </span>
-//   );
-// };
-
-const StatCard = ({ label, value, colorClass }) => (
+const StatCard = ({ label, value, colorClass = "text-text" }) => (
   <div className="bg-card border border-border rounded-xl p-3 shadow-sm flex-1 min-w-[130px]">
-    <div className="text-xs font-medium uppercase tracking-wider text-textLight mb-2">
-      {label}
-    </div>
-    <div className={`text-3xl font-bold ${colorClass || 'text-text'}`}>{value}</div>
+    <div className="text-xs font-medium uppercase tracking-wider text-textLight mb-2">{label}</div>
+    <div className={`text-3xl font-bold ${colorClass}`}>{value}</div>
   </div>
 );
 
-const ProductTab = ({ product, active, onClick }) => (
+const ProductTab = ({
+  product,
+  active,
+  onClick,
+}) => (
   <button
     onClick={onClick}
-    className={`py-2 pl-2 pr-5 rounded-xl cursor-pointer text-left transition-all duration-200 min-w-[165px] font-body shadow-sm ${active
-      ? "border-2 border-primary bg-gradient-to-br from-secondary to-primary text-white shadow-md shadow-primary/30"
-      : "border border-border bg-card text-text hover:border-primary"
-      }`}
+    className={`py-2 pl-2 pr-5 rounded-xl cursor-pointer text-left transition-all duration-200 min-w-[165px] font-body shadow-sm ${
+      active
+        ? "border-2 border-primary bg-gradient-to-br from-secondary to-primary text-white shadow-md shadow-primary/30"
+        : "border border-border bg-card text-text hover:border-primary"
+    }`}
   >
     <div className="text-sm font-bold">{product.label}</div>
     <div className={`text-[10px] mt-0.5 ${active ? "opacity-85" : "opacity-60"}`}>{product.desc}</div>
-    <div className={`text-base font-bold mt-1.5 ${active ? "text-white" : "text-primary"}`}>
-      {product.yield}%
-    </div>
+    <div className={`text-base font-bold mt-1.5 ${active ? "text-white" : "text-primary"}`}>{product.yield}%</div>
   </button>
 );
 
@@ -64,16 +57,10 @@ const FlowNode = ({ node, isLast }) => {
   return (
     <div className="flex items-center gap-1.5">
       <div className={`rounded-lg px-3.5 py-2.5 text-center min-w-[72px] sm:min-w-[90px] border ${nodeStyle}`}>
-        <div className="text-[9px] font-semibold tracking-wider text-textLight mb-1">
-          {node.label}
-        </div>
-        <div className={`text-lg font-bold leading-none ${valColor}`}>
-          {node.val}
-        </div>
+        <div className="text-[9px] font-semibold tracking-wider text-textLight mb-1">{node.label}</div>
+        <div className={`text-lg font-bold leading-none ${valColor}`}>{node.val}</div>
         {node.delta && (
-          <div className={`text-[10px] font-semibold mt-1 ${isPos ? "text-success" : "text-error"}`}>
-            {node.delta}
-          </div>
+          <div className={`text-[10px] font-semibold mt-1 ${isPos ? "text-success" : "text-error"}`}>{node.delta}</div>
         )}
       </div>
       {!isLast && <span className="text-textLight text-base">→</span>}
@@ -81,7 +68,11 @@ const FlowNode = ({ node, isLast }) => {
   );
 };
 
-const YieldBar = ({ product, inputMT, active }) => {
+const YieldBar = ({
+  product,
+  inputMT,
+  active,
+}) => {
   const output = (inputMT * product.yield / 100).toFixed(2);
   return (
     <div className="flex items-center gap-3 py-1 border-b border-border last:border-b-0">
@@ -89,7 +80,9 @@ const YieldBar = ({ product, inputMT, active }) => {
       <div className="text-xs text-textLight w-10">{product.yield}%</div>
       <div className="flex-1 bg-backgroundAlt rounded-md h-2.5 overflow-hidden">
         <div
-          className={`h-full rounded-md transition-all duration-500 ease-in-out ${active ? "bg-gradient-to-r from-primary to-secondary" : "bg-border"}`}
+          className={`h-full rounded-md transition-all duration-500 ease-in-out ${
+            active ? "bg-gradient-to-r from-primary to-secondary" : "bg-border"
+          }`}
           style={{ width: `${product.yield}%` }}
         />
       </div>
@@ -100,13 +93,11 @@ const YieldBar = ({ product, inputMT, active }) => {
 };
 
 const SectionCard = ({ children, className = "" }) => (
-  <div className={`bg-card border border-border rounded-2xl shadow-sm ${className}`}>
-    {children}
-  </div>
+  <div className={`bg-card border border-border rounded-2xl shadow-sm ${className}`}>{children}</div>
 );
 
 const SectionHeader = ({ icon, title, sub }) => (
-  <div className="p-2  border-b border-border">
+  <div className="p-3 border-b border-border">
     <div className="text-base font-bold flex items-center gap-2.5 text-text">
       <span>{icon}</span> {title}
     </div>
@@ -114,21 +105,17 @@ const SectionHeader = ({ icon, title, sub }) => (
   </div>
 );
 
-// ── Derived helpers ───────────────────────────────────────────────────────────
-const yieldColorClass = (pct) => (pct >= 100 ? "text-success" : pct >= 95 ? "text-primary" : "text-warning");
+// ── Helpers ───────────────────────────────────────────────────────────
+const yieldColorClass = (pct) =>
+  pct >= 100 ? "text-success" : pct >= 95 ? "text-primary" : "text-warning";
 const lossGainColorClass = (loss) => (loss >= 0 ? "text-success" : "text-error");
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function YieldConfigScreen() {
-  const [products, setProducts] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState(null);
-  const [activitiesData, setActivitiesData] = useState([]);
-  const [yieldsData, setYieldsData] = useState([]);
   const [inputMT, setInputMT] = useState(10);
-  const [loading, setLoading] = useState(true);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     id: "",
     process_activity: "",
@@ -137,71 +124,129 @@ export default function YieldConfigScreen() {
     loss_description: "",
     is_pre_grading: false,
     worker_efficiency_kg_per_hour: "",
-    processing_cost_per_mt: ""
+    processing_cost_per_mt: "",
   });
 
-  const handleEditClick = (rawYield) => {
-    setEditFormData({
-      id: rawYield?.yield_percentage || "",
-      process_activity: rawYield?.process_activity || "",
-      sequence: rawYield?.sequence || "",
-      yield_percentage: rawYield?.yield_percentage || "",
-      loss_description: rawYield?.loss_description || "",
-      is_pre_grading: rawYield?.is_pre_grading || false,
-      worker_efficiency_kg_per_hour: rawYield?.worker_efficiency_kg_per_hour || "",
-      processing_cost_per_mt: rawYield?.processing_cost_per_mt || ""
-    });
-    setIsModalOpen(true);
-  };
-
-  // Chart theme colors corresponding to light theme
-  const chartColors = {
-    textLight: "#5A7A8A",
-    primary: "#0E7A91",
-    border: "#C8DDED",
-    card: "#FFFFFF",
-    text: "#0D2B3E"
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  useEffect(() => {
-    if (selectedProductId) {
-      fetchDetails(selectedProductId);
-    }
-  }, [selectedProductId]);
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
+  // Queries
+  const { data: productsData = [], isLoading: productsLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
       const res = await getProductList();
-      const list = res.data || [];
-      setProducts(list);
-      if (list.length > 0) {
-        setSelectedProductId(list[0].id);
-      }
-    } catch (error) {
-      toast.error("Failed to load product list.");
-    } finally {
-      setLoading(false);
+      return res.data || [];
+    },
+  });
+
+  const { data: activitiesData = [] } = useQuery({
+    queryKey: ["activities", selectedProductId],
+    queryFn: async () => {
+      if (!selectedProductId) return [];
+      const res = await getProcessActivityList({ product_id: selectedProductId });
+      return res.data || [];
+    },
+    enabled: !!selectedProductId,
+  });
+
+  const { data: yieldsData = [] } = useQuery({
+    queryKey: ["yields", selectedProductId],
+    queryFn: async () => {
+      if (!selectedProductId) return [];
+      const res = await getYieldConfig({ product_id: selectedProductId });
+      return res.data || [];
+    },
+    enabled: !!selectedProductId,
+  });
+
+  // Set initial product
+  useEffect(() => {
+    if (productsData.length > 0 && !selectedProductId) {
+      setSelectedProductId(productsData[0].id);
     }
-  };
+  }, [productsData, selectedProductId]);
 
-  const fetchDetails = async (productId) => {
-    try {
-      const actRes = await getProcessActivityList({ product_id: productId });
-      setActivitiesData(actRes.data || []);
+    // Merge activities and yields
+  const combinedActivities = useMemo(() => {
+    const activityMap = new Map(activitiesData.map((act) => [act.id || act.activity_id, act]));
 
-      const yieldRes = await getYieldConfig({ product_id: productId });
-      setYieldsData(yieldRes.data || []);
-    } catch (error) {
-      toast.error("Failed to load process details.");
-    }
-  };
+    return yieldsData
+      .map((y, index) => {
+        const act = activityMap.get(y.process_activity) || {};
+        const yieldPctRaw = parseFloat(y.yield_percentage || "1.0");
+        const yieldPct = yieldPctRaw * 100;
 
-  if (loading) {
+        return {
+          id: index + 1,
+          name: act.activity_name || y.activity_name || "Unknown",
+          phase: y.is_pre_grading ? "PRE-GRADE" : "POST-GRADE",
+          yieldPct,
+          yieldRaw: yieldPctRaw,
+          inputMT: 0, // will be calculated later
+          outputMT: 0,
+          loss: 0,
+          workerEff: y.worker_efficiency_kg_per_hour ? `${y.worker_efficiency_kg_per_hour} kg/hr` : "N/A",
+          equipment: act.a_equipment_name || "N/A",
+          lossReason: y.loss_description || "-",
+          rawYield: { ...y, process_activity: y.process_activity || act.id },
+        };
+      })
+      .sort((a, b) => (a.rawYield.sequence || 999) - (b.rawYield.sequence || 999));
+  }, [activitiesData, yieldsData]);
+
+  // Calculate running totals
+  let currentInputMT = inputMT;
+  const processedActivities = combinedActivities.map((item) => {
+    const outputMT = currentInputMT * item.yieldRaw;
+    const loss = outputMT - currentInputMT;
+
+    const result = {
+      ...item,
+      inputMT: currentInputMT,
+      outputMT: parseFloat(outputMT.toFixed(3)),
+      loss: parseFloat(loss.toFixed(3)),
+    };
+
+    currentInputMT = outputMT;
+    return result;
+  });
+
+  const finalOutput = parseFloat(currentInputMT.toFixed(2));
+  const calculatedTotalYieldPct =
+    processedActivities.length > 0
+      ? parseFloat(((currentInputMT / inputMT) * 100).toFixed(1))
+      : 100;
+
+  const preGradeYield =
+    processedActivities.find((a) => a.phase === "PRE-GRADE")?.yieldPct ?? 100;
+  const postGradeYield = processedActivities
+    .filter((a) => a.phase === "POST-GRADE")
+    .reduce((acc, a) => acc * (a.yieldRaw || 1), 1) * 100;
+
+  const activeProduct = productsData.find((p) => p.id === selectedProductId);
+
+  const uiProducts = productsData.map((p, i) => {
+    const isActive = p.id === selectedProductId;
+    return {
+      id: p.id,
+      label: p.product_code || `P-${p.id}`,
+      desc: p.product_name || "Unknown Product",
+      yield: isActive ? calculatedTotalYieldPct : [78.1, 94.7, 84.8, 87.8][i % 4],
+      steps: isActive ? processedActivities.length : 5,
+    };
+  });
+
+  const activeUiProduct = uiProducts.find((p) => p.id === selectedProductId) || uiProducts[0];
+
+  // Material Flow
+  const flow = [
+    { label: "RAW", val: inputMT.toFixed(1), delta: null },
+    ...processedActivities.map((a) => ({
+      label: a.name.toUpperCase(),
+      val: a.outputMT.toFixed(2),
+      delta: `${a.loss >= 0 ? "+" : ""}${((a.yieldPct) - 100).toFixed(1)}%`,
+    })),
+    { label: "FINISHED", val: finalOutput.toFixed(2), delta: null },
+  ];
+
+  if (productsLoading) {
     return (
       <div className="font-body bg-background min-h-screen p-6 flex items-center justify-center">
         <div className="text-text font-semibold">Loading configuration...</div>
@@ -209,224 +254,149 @@ export default function YieldConfigScreen() {
     );
   }
 
-  if (products.length === 0) {
+  if (productsData.length === 0) {
     return (
       <div className="font-body bg-background min-h-screen p-6 flex items-center justify-center">
         <div className="bg-card border border-border p-8 rounded-xl shadow-sm text-center max-w-md">
           <h2 className="text-lg font-bold text-text mb-2">No Products Configured</h2>
-          <p className="text-textLight text-sm">Please add a product or ensure the API returns valid data to view the yield configuration.</p>
+          <p className="text-textLight text-sm">
+            Please add a product or ensure the API returns valid data.
+          </p>
         </div>
       </div>
     );
   }
 
-  // Combine activities and yields for the selected product
-  let currentInputMT = inputMT;
-
-  const combinedActivities = activitiesData
-    .map((act) => {
-      const y = yieldsData.find((y) => y.process_activity === act.id) || {};
-      return { act, y };
-    })
-    .sort((a, b) => {
-      const seqA = a.y.sequence || 999;
-      const seqB = b.y.sequence || 999;
-      return seqA - seqB;
-    })
-    .map(({ act, y }, index) => {
-      const yieldPct = y.yield_percentage ? parseFloat(y.yield_percentage) : 0;
-      const outputMT = currentInputMT * (yieldPct / 100);
-      const loss = outputMT - currentInputMT;
-
-      const row = {
-        id: index + 1,
-        name: act.activity_name || y.activity_name || "Unknown",
-        phase: y.is_pre_grading ? "PRE-GRADE" : "POST-GRADE",
-        yieldPct: yieldPct,
-        inputMT: currentInputMT,
-        outputMT: outputMT,
-        loss: loss,
-        workerEff: y.worker_efficiency_kg_per_hour ? `${y.worker_efficiency_kg_per_hour} kg/hr` : "N/A",
-        equipment: act.a_equipment_name || "N/A",
-        lossReason: y.loss_description || "-",
-        rawYield: {
-          process_activity: act.activity_id,
-          ...y
-        }
-      };
-      currentInputMT = outputMT;
-      return row;
+  const handleEditClick = (rawYield) => {
+    setEditFormData({
+      id: rawYield.id || "",
+      process_activity: rawYield.process_activity,
+      sequence: rawYield.sequence || "",
+      yield_percentage: rawYield.yield_percentage || "",
+      loss_description: rawYield.loss_description || "",
+      is_pre_grading: rawYield.is_pre_grading || false,
+      worker_efficiency_kg_per_hour: rawYield.worker_efficiency_kg_per_hour || "",
+      processing_cost_per_mt: rawYield.processing_cost_per_mt || "",
     });
-
-  const finalOutput = currentInputMT.toFixed(2);
-  const calculatedTotalYieldPct = combinedActivities.length > 0
-    ? ((currentInputMT / inputMT) * 100).toFixed(1)
-    : 100.0;
-
-  const preGradeYield = combinedActivities.find((a) => a.phase === "PRE-GRADE")?.yieldPct ?? 100;
-  const postGradeYield = combinedActivities
-    .filter((a) => a.phase === "POST-GRADE")
-    .reduce((acc, a) => acc * (a.yieldPct / 100), 100)
-    .toFixed(1);
-
-  const processFlowName = yieldsData.length > 0 ? yieldsData[0].process_flow_name : "Default Process";
-
-  // Hardcode random yield for other tabs as requested
-  const hardcodedYields = [78.1, 94.7, 84.8, 87.8];
-  const uiProducts = products.map((p, i) => {
-    const fallbackYield = hardcodedYields[i % hardcodedYields.length];
-    return {
-      id: p.id,
-      label: p.product_code || `P-${p.id}`,
-      desc: p.product_name || "Unknown Product",
-      yield: p.id === selectedProductId && combinedActivities.length > 0 ? calculatedTotalYieldPct : fallbackYield,
-      steps: p.id === selectedProductId ? combinedActivities.length : 4
-    };
-  });
-
-  const activeUiProduct = uiProducts.find(p => p.id === selectedProductId) || uiProducts[0];
-
-  const chartData = uiProducts.map((p) => ({
-    name: p.label,
-    yield: parseFloat(p.yield),
-    output: +(inputMT * (parseFloat(p.yield) / 100)).toFixed(2),
-  }));
-
-  const flow = [{ label: "RAW", val: inputMT, delta: null }];
-  combinedActivities.forEach(a => {
-    flow.push({
-      label: a.name.toUpperCase(),
-      val: a.outputMT.toFixed(2),
-      delta: `${a.loss >= 0 ? '+' : ''}${((a.yieldPct) - 100).toFixed(1)}%`
-    });
-  });
-  if (flow.length > 1) {
-    flow.push({ label: "FINISHED", val: currentInputMT.toFixed(2), delta: null });
-  }
+    setIsModalOpen(true);
+  };
 
   const handleSubmit = async () => {
-    const payload = {
-      id: editFormData.id,
-      process_activity: editFormData.process_activity,
-      sequence: editFormData.sequence,
-      yield_percentage: editFormData.yield_percentage,
-      loss_description: editFormData.loss_description,
-      is_pre_grading: editFormData.is_pre_grading,
-      worker_efficiency_kg_per_hour: editFormData.worker_efficiency_kg_per_hour,
-      processing_cost_per_mt: editFormData.processing_cost_per_mt || ""
-    };
+    const payload = { ...editFormData };
 
     try {
-    let response;
+      let response;
+      if (payload.id) {
+        response = await UpdateYieldConfig(payload);
+      } else {
+        response = await AddYieldConfig(payload);
+      }
 
-    if (payload.id) {
-      // ✅ UPDATE
-      response = await UpdateYieldConfig(payload);
-    } else {
-      // ✅ CREATE
-      response = await AddYieldConfig(payload);
-    }
-
-      // console.log("AddYieldConfig", payload);
-      // const response = {status : 200}
-
-      if (response.status === 200 || response.status === 201) {
+      if (response?.status === 200 || response?.status === 201) {
         toast.success("Yield Configuration Saved.");
-        setIsConfirmOpen(false);
         setIsModalOpen(false);
-        fetchDetails(selectedProductId);
+        setIsConfirmOpen(false);
+        // Refetch will happen automatically via query invalidation if set up, or manual
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again later.");
+      toast.error("Failed to save configuration.");
     }
   };
 
-  console.log("combinedActivities",combinedActivities)
   return (
-    <>
-    <div className="font-body min-h-screen p-1 transition-colors duration-300">
-      <div className="mx-auto">
-
-        {/* ── Top bar ── */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-xs font-semibold tracking-widest text-textLight uppercase">
-            Select Product (each has its own processflow → yield chain)
-          </div>
-        </div>
-
-        {/* ── Product Tabs ── */}
-        <div className="flex gap-3 mb-3 flex-wrap">
+    <div className="font-body min-h-screen transition-colors duration-300">
+      <div className="mx-auto max-w-[1400px]">
+        {/* Product Tabs */}
+        <div className="flex gap-3 mb-4 flex-wrap">
           {uiProducts.map((p) => (
-            <ProductTab key={p.id} product={p} active={p.id === selectedProductId} onClick={() => setSelectedProductId(p.id)} />
+            <ProductTab
+              key={p.id}
+              product={p}
+              active={p.id === selectedProductId}
+              onClick={() => setSelectedProductId(p.id)}
+            />
           ))}
         </div>
 
-        {/* ── KPI Cards ── */}
-        <div className="flex gap-3 mb-3 flex-wrap">
+        {/* KPI Cards */}
+        <div className="flex gap-3 mb-6 flex-wrap">
           <StatCard label="Total Yield" value={`${activeUiProduct.yield}%`} colorClass="text-warning" />
           <StatCard label="Pre-Grading Yield" value={`${preGradeYield.toFixed(1)}%`} colorClass="text-secondary" />
-          <StatCard label="Post-Grading Yield" value={`${postGradeYield}%`} colorClass="text-[#C97AFF]" />
+          <StatCard label="Post-Grading Yield" value={`${postGradeYield.toFixed(1)}%`} colorClass="text-[#C97AFF]" />
           <StatCard label="Final Output" value={`${finalOutput} MT`} colorClass="text-success" />
-          {/* Simulate Input */}
+
           <div className="bg-card border border-border rounded-xl p-4 shadow-sm min-w-[180px]">
-            <div className="text-xs font-medium uppercase tracking-wider text-textLight mb-2">
-              Simulate Input
-            </div>
+            <div className="text-xs font-medium uppercase tracking-wider text-textLight mb-2">Simulate Input</div>
             <div className="flex items-center gap-2">
               <input
-                type="number" value={inputMT} min={1} max={9999}
-                onChange={(e) => setInputMT(+e.target.value || 1)}
-                className="w-20 p-1.5 px-2.5 text-base font-bold rounded-lg border border-border bg-inputBg text-text outline-none font-body focus:border-primary focus:ring-1 focus:ring-primary"
+                type="number"
+                value={inputMT}
+                min={1}
+                max={9999}
+                onChange={(e) => setInputMT(Math.max(1, parseFloat(e.target.value) || 1))}
+                className="w-20 p-2 text-base font-bold rounded-lg border border-border bg-inputBg text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
               <span className="text-sm text-textLight font-medium">MT</span>
             </div>
           </div>
         </div>
 
-        {/* ── Activity Table ── */}
-        <SectionCard className="p-3 mb-3 overflow-hidden">
+        {/* Activity Table */}
+        <SectionCard className="mb-6">
           <SectionHeader
             icon="🔗"
             title={`${activeUiProduct.label} — ${activeUiProduct.desc}`}
-            sub={`ProcessFlow: "${processFlowName}"`}
+            sub="IQF Cooking Process"
           />
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-backgroundAlt">
-                  {["#", "Activity (ProcessActivity)", "Phase", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"].map((h) => (
-                    <th key={h} className="p-2.5 px-3.5 text-left text-[10px] font-600 tracking-wider text-textLight whitespace-nowrap uppercase">
-                      {h}
-                    </th>
-                  ))}
+                  {["#", "Activity", "Phase", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="p-3 px-4 text-left text-[10px] font-semibold tracking-wider text-textLight uppercase whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    )
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {combinedActivities.length === 0 ? (
+                {processedActivities.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="p-6 text-center text-textLight">No activities found for this product.</td>
+                    <td colSpan={11} className="p-8 text-center text-textLight">
+                      No activities configured for this product.
+                    </td>
                   </tr>
                 ) : (
-                  combinedActivities.map((a, i) => (
-                    <tr key={a.id} className={`border-t border-border ${i % 2 === 0 ? "bg-transparent" : "bg-backgroundAlt"}`}>
-                      <td className="p-3 px-3.5 text-textLight font-medium">{a.id}</td>
-                      <td className="p-3 px-3.5 font-semibold text-text">{a.name}</td>
-                      <td className="p-3 px-3.5"><Badge variant={a.phase === "PRE-GRADE" ? "success" : "forward"}>{a.phase}</Badge></td>
-                      <td style={{color: a.yieldPct > 100 ? theme.colors.success : a.yieldPct < 90 ? theme.colors.error : theme.colors.warning}} className={`p-3 px-3.5 font-bold ${yieldColorClass(a.yieldPct)}`}>{a.yieldPct.toFixed(1)}%</td>
-                      <td className="p-3 px-3.5 font-semibold text-textLight">{a.inputMT.toFixed(3)}</td>
-                      <td className="p-3 px-3.5 font-semibold text-text">{a.outputMT.toFixed(3)}</td>
-                      <td style={{color: a.loss >= 0 ? theme.colors.success : theme.colors.error}} className={`p-3 px-3.5 font-bold ${lossGainColorClass(a.loss)}`}>
-                        {a.loss >= 0 ? "+" : ""}{a.loss.toFixed(3)}
+                  processedActivities.map((a, i) => (
+                    <tr key={a.id} className={`border-t border-border ${i % 2 === 0 ? "" : "bg-backgroundAlt"}`}>
+                      <td className="p-3 px-4 text-textLight font-medium">{a.id}</td>
+                      <td className="p-3 px-4 font-semibold text-text">{a.name}</td>
+                      <td className="p-3 px-4">
+                        <Badge variant={a.phase === "PRE-GRADE" ? "success" : "forward"}>{a.phase}</Badge>
                       </td>
-                      <td className="p-3 px-3.5 text-textLight font-semibold whitespace-nowrap">{a.workerEff}</td>
-                      <td className="p-3 px-3.5 text-textLight whitespace-nowrap">{a.equipment}</td>
-                      <td className="p-3 px-3.5 text-textLight text-xs">{a.lossReason}</td>
-                      <td className="p-3 px-3.5">
+                      <td className={`p-3 px-4 font-bold ${yieldColorClass(a.yieldPct)}`}>
+                        {a.yieldPct.toFixed(1)}%
+                      </td>
+                      <td className="p-3 px-4 font-semibold text-textLight">{a.inputMT.toFixed(3)}</td>
+                      <td className="p-3 px-4 font-semibold text-text">{a.outputMT.toFixed(3)}</td>
+                      <td className={`p-3 px-4 font-bold ${lossGainColorClass(a.loss)}`}>
+                        {a.loss >= 0 ? "+" : ""}
+                        {a.loss}
+                      </td>
+                      <td className="p-3 px-4 text-textLight font-semibold whitespace-nowrap">{a.workerEff}</td>
+                      <td className="p-3 px-4 text-textLight whitespace-nowrap">{a.equipment}</td>
+                      <td className="p-3 px-4 text-textLight text-xs break-words max-w-[180px]">{a.lossReason}</td>
+                      <td className="p-3 px-4">
                         <button
                           onClick={() => handleEditClick(a.rawYield)}
-                          className="bg-primary/10 text-primary hover:bg-primary hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200"
+                          className="bg-primary/10 hover:bg-primary hover:text-white text-primary px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                         >
-                          {a.yieldPct ? "Edit" : "Add"}
+                          Edit
                         </button>
                       </td>
                     </tr>
@@ -437,69 +407,39 @@ export default function YieldConfigScreen() {
           </div>
         </SectionCard>
 
-        {/* ── Material Flow + Chart ── */}
-        <div className="flex gap-4 mb-5 flex-wrap">
-          {/* Material Flow */}
+        {/* Material Flow */}
+        <div className="flex gap-4 mb-6 flex-wrap">
           <SectionCard className="flex-[2] min-w-[300px] border-l-4 border-l-primary">
-            <SectionHeader icon="📦" title="Material Flow" sub={`${inputMT} MT input → ${finalOutput} MT output`} />
-            <div className="p-5 px-6 flex flex-wrap gap-2 items-center">
-              {flow.length > 1 ? flow.map((node, i) => (
+            <SectionHeader
+              icon="📦"
+              title="Material Flow"
+              sub={`${inputMT} MT input → ${finalOutput} MT output`}
+            />
+            <div className="p-6 flex flex-wrap gap-3 items-center">
+              {flow.map((node, i) => (
                 <FlowNode key={i} node={node} isLast={i === flow.length - 1} />
-              )) : (
-                <div className="text-textLight text-sm">No flow data available.</div>
-              )}
+              ))}
             </div>
           </SectionCard>
-
-          {/* Bar Chart */}
-          {/* <SectionCard className="flex-1 min-w-[260px]">
-            <SectionHeader icon="📊" title="Yield by Product" sub="Yield % comparison across products" />
-            <div className="p-4 px-6 pb-5">
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={chartData} barCategoryGap="30%">
-                  <XAxis dataKey="name" tick={{ fill: chartColors.textLight, fontSize: 11, fontFamily: "Poppins" }} axisLine={false} tickLine={false} />
-                  <YAxis domain={[70, 100]} tick={{ fill: chartColors.textLight, fontSize: 11, fontFamily: "Poppins" }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ background: chartColors.card, border: `1px solid ${chartColors.border}`, borderRadius: 10, fontFamily: "Poppins", fontSize: 12, color: chartColors.text }}
-                    labelStyle={{ color: chartColors.text, fontWeight: 600 }}
-                    formatter={(v, n) => [`${v}${n === "yield" ? "%" : " MT"}`, n === "yield" ? "Yield" : "Output"]}
-                  />
-                  <Bar dataKey="yield" radius={[6, 6, 0, 0]}>
-                    {chartData.map((entry, i) => (
-                      <Cell key={i} fill={entry.name === activeUiProduct.label ? chartColors.primary : chartColors.border} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </SectionCard> */}
         </div>
 
-        {/* ── Product Yield Comparison ── */}
+        {/* Yield Comparison */}
         <SectionCard>
-          <SectionHeader icon="🟧" title="Product Yield Comparison" sub="Same raw input, different routes, different outputs" />
-          <div className="p-4 px-3 pb-4">
+          <SectionHeader
+            icon="📊"
+            title="Product Yield Comparison"
+            sub="Same raw input, different routes, different outputs"
+          />
+          <div className="p-5">
             {uiProducts.map((p) => (
               <YieldBar key={p.id} product={p} inputMT={inputMT} active={p.id === selectedProductId} />
             ))}
           </div>
         </SectionCard>
-
       </div>
 
-    <ConfirmPopup
-      isOpen={isConfirmOpen}
-      onClose={() => setIsConfirmOpen(false)}
-      onConfirm={handleSubmit}
-      title="Confirmation"
-      message="Are you sure you want to save this?"
-      confirmLabel="Yes"
-    />
-
-
-    </div>
-      {/* ── Edit Modal ── */}
-      {isModalOpen && (
+      {/* Edit Modal */}
+     {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border p-4 font-body">
             <div className="flex justify-between items-center mb-3  ">
@@ -591,6 +531,15 @@ export default function YieldConfigScreen() {
           </div>
         </div>
       )}
-    </>
+
+      <ConfirmPopup
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleSubmit}
+        title="Save Changes"
+        message="Are you sure you want to update this yield configuration?"
+        confirmLabel="Save"
+      />
+    </div>
   );
 }

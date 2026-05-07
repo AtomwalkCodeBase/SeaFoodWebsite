@@ -1,33 +1,33 @@
-import React, { useState } from "react"
-import styled from "styled-components"
-import Layout from "../components/Layout"
-import StatsCard from "../components/StatsCard"
-import Badge from "../components/Badge"
-import DataTable, { Td } from "../components/Datatable"
-import { FaSnowflake, FaBoxOpen, FaLock, FaCheckCircle } from "react-icons/fa"
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import styled from "styled-components";
+import { toast } from "react-toastify";
+
+import Layout from "../components/Layout";
+import StatsCard from "../components/StatsCard";
+import Card from "../components/Card";
+import DataTable, { Td } from "../components/Datatable";
+
 import {
-  BarChart,
-  Bar,
+  FaBoxes,
+  FaSnowflake,
+  FaExclamationTriangle,
+  FaMoneyBillWave,
+} from "react-icons/fa";
+
+
+import {
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-} from "recharts"
-import { Cell } from "recharts"
-
-const sectionCardStyles = `
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-`
-
-const PageContent = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-`
+  ReferenceLine,
+} from "recharts";
+import { getInventoryProjection, getInventoryStatus } from "../services/productServices";
+import { SectionHeader } from "../components/EmptyState";
 
 const StatsGrid = styled.div`
   display: grid;
@@ -41,262 +41,242 @@ const StatsGrid = styled.div`
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
-`
-const ProgressBar = styled.div`
-  height: 16px;
-  background: ${({ theme }) => theme.colors.border};
-  border-radius: 8px;
-  overflow: hidden;
-  margin-top: 0.5rem;
-`
+`;
 
-const ProgressFill = styled.div`
-  height: 100%;
-  width: ${({ percent }) => percent}%;
-  background: ${({ color }) => color};
-  transition: width 0.3s ease;
-`
-const PageSection = styled.div`
-  ${sectionCardStyles}
-  padding: 1.25rem;
-`
-const SectionHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-
-  h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: ${({ theme }) => theme.colors.text};
-  }
-`
-const ExpandedBox = styled.div`
-  background: #0b1e33;
-  padding: 1rem;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`
-const SupplierCard = styled.div`
-  background: #102a44;
-  padding: 0.75rem;
-  border-radius: 6px;
-  color: white;
-
-  h4 {
-    margin: 0 0 0.3rem;
-  }
-
-  p {
-    margin: 0 0 0.5rem;
-    font-size: 0.85rem;
-  }
-`
 const inventoryColumns = [
-  "SPECIES",
   "GRADE",
+  "SPECIES",
   "IN STOCK",
+  "COMMITTED",
   "AVAILABLE",
+  "REQUIRED",
   "SHORTFALL",
   "PURCHASE",
-  "STATUS",
-  "ACTION",
-]
-function Inventory() {
+  "EST. COST",
+  "ORDERS",
+];
 
-  const [expandedRow, setExpandedRow] = useState(null)
+// ✅ Utility to handle 0 properly
+const formatValue = (val) =>
+  val !== null && val !== undefined ? val : "-";
 
-  const toggleRow = (id) => {
-    setExpandedRow(expandedRow === id ? null : id)
-  }
-  // Example values
-  const coldStorage = {
-    raw: { used: 21, capacity: 50 },
-    finished: { used: 0, capacity: 30 },
-  }
+const Inventory = () => {
+  // 🔷 INVENTORY API
+  const {
+    data: inventoryData = {},
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["inventory"],
+    queryFn: getInventoryStatus,
+    select: (res) => {
+      const payload = res?.data || res;
 
-  const stockSummary = [
-    { label: "IN STOCK", value: "21 MT RM", color: "primary", icon: <FaBoxOpen /> },
-    { label: "RESERVED", value: "8.8 MT locked", color: "warning", icon: <FaLock /> },
-    { label: "AVAILABLE", value: "12.2 MT free", color: "success", icon: <FaCheckCircle /> },
-    { label: "BYPRODUCT", value: "0.85 MT shells", color: "error", icon: <FaSnowflake /> },
-  ]
-  const gradeData = [
-    { grade: "23/25ML", stock: 5.2 },
-    { grade: "20/25ML", stock: 8.5 },
-    { grade: "16/20L", stock: 4.1 },
-    { grade: "31/40S", stock: 2.3 },
-  ]
-  const inventoryData = [
+      // Map grades with proper field names
+      const grades = (payload?.grades || []).map((item) => ({
+        grade: item.grade_code || "-",
+        species: item.species || "-",
+
+        in_stock: item.in_stock_mt ?? 0,
+        committed: item.committed_mt ?? 0,
+        available: item.available_mt ?? 0,
+        required: item.required_mt ?? 0,
+
+        shortfall: item.shortfall_mt ?? 0,
+        purchase_qty: item.purchase_needed_mt ?? 0,
+
+        // Auto calculate cost if backend gives 0
+        estimated_cost:
+          item.estimated_cost ||
+          (item.price_per_mt * item.purchase_needed_mt) ||
+          0,
+
+        orders: item.active_orders ?? 0,
+      }));
+
+      return {
+        grades,
+        summary: payload?.summary || {},
+      };
+    },
+    onError: () => toast.error("Failed to load inventory"),
+  });
+
+  const safeData = Array.isArray(inventoryData?.grades) ? inventoryData?.grades : [];
+
+  // 🔷 METRICS
+  const totalStock = safeData.reduce(
+    (sum, item) => sum + Number(item.in_stock),
+    0
+  );
+
+  // const totalShortfall = safeData.reduce(
+  //   (sum, item) => sum + Number(item.shortfall),
+  //   0
+  // );
+
+  // const totalCost = safeData.reduce(
+  //   (sum, item) => sum + Number(item.estimated_cost),
+  //   0
+  // );
+
+  // 🔷 PROJECTION API (FIXED)
+  const { data: projectionData = [] } = useQuery({
+    queryKey: ["inventoryProjection"],
+    queryFn: () => getInventoryProjection(14),
+    select: (res) => {
+      const payload = res?.data;
+
+      // console.log("PROJECTION API 👉", payload);
+
+      // adjust based on backend response
+      const data =
+        payload?.projection ||
+        payload?.data ||
+        payload?.results ||
+        [];
+
+      return data.map((item, index) => ({
+        day: `D${item.day ?? index}`,
+        stock: item.stock ?? item.stock_mt ?? 0,
+      }));
+    },
+  });
+
+  const metrics = [
     {
-      id: 1,
-      species: "Black Tiger",
-      grade: "20/25",
-      label: "Medium Large",
-      inStock: 8,
-      reserved: 2.5,
-      available: 5.5,
-      reqOrders: 12.54,
-      shortfall: 7.04,
-      purchase: 8.1,
-      cost: "₹4.20L",
-      supplier: "KeralaFish Exports",
-      lead: "3d",
-      status: "SHORTAGE",
+      label: "TOTAL IN STOCK",
+      value: `${totalStock.toFixed(1)} MT`,
+      color: "success",
+      icon: <FaBoxes />,
     },
     {
-      id: 2,
-      species: "Vannamei",
-      grade: "31/40",
-      label: "Small",
-      inStock: 6,
-      reserved: 1.8,
-      available: 4.2,
-      reqOrders: 5.14,
-      shortfall: 0.94,
-      purchase: 1.08,
-      cost: "₹2.80L",
-      supplier: "AndhraSea Co",
-      lead: "2d",
-      status: "SHORTAGE",
+      label: "COLD STORAGE",
+      value: `${inventoryData?.summary?.cold_storage_capacity_mt} MT`,
+      color: "info",
+      icon: <FaSnowflake />,
     },
-    
-  ]
-  
+    {
+      label: "GRADES SHORT",
+      value: `${inventoryData?.summary?.total_shortfall_grades}`,
+      color: "error",
+      icon: <FaExclamationTriangle />,
+    },
+    {
+      label: "PROCUREMENT COST",
+      value: `${inventoryData?.summary?.total_procurement_cost}`,
+      color: "primary",
+      icon: <FaMoneyBillWave />,
+    },
+  ];
+
+  if (error) {
+    return (
+      <Layout title="Inventory">
+        <div className="text-red-500 p-4">
+          Failed to load inventory
+        </div>
+      </Layout>
+    );
+  }
+
   return (
-    <Layout title="Inventory & Procurement">
-      <PageContent>
-        
-        {/* Cold Storage Utilization */}
-        <PageSection>
-        <SectionHeader>
-          <h3>Cold Storage Utilization</h3>
-        </SectionHeader>
-          <div>
-            <span>
-              RAW MATERIAL STORAGE: {coldStorage.raw.used}/{coldStorage.raw.capacity} MT
-            </span>
-            <ProgressBar>
-              <ProgressFill
-                percent={(coldStorage.raw.used / coldStorage.raw.capacity) * 100}
-                color="#1890ff"
-              />
-            </ProgressBar>
-            <span>
-              FINISHED GOODS STORAGE: {coldStorage.finished.used}/{coldStorage.finished.capacity} MT
-            </span>
-            <ProgressBar>
-              <ProgressFill
-                percent={(coldStorage.finished.used / coldStorage.finished.capacity) * 100}
-                color="#52c41a"
-              />
-            </ProgressBar>
-          </div>
-        </PageSection>
-  
-        {/* Stock State Summary */}
-        <PageSection>
-        <SectionHeader>
-        <h3>Stock Summary</h3>
-        </SectionHeader>
-          <StatsGrid>
-            {stockSummary.map((m, idx) => (
-              <StatsCard
-                key={idx}
-                icon={m.icon}
-                label={m.label}
-                value={m.value}
-                color={m.color}
-              />
-            ))}
-          </StatsGrid>
-        </PageSection>
-  
-        {/* Stock by Grade */}
-        <PageSection>
-        <SectionHeader>
-          <h3>Stock by Grade</h3>
-        </SectionHeader>
-          <div style={{ width: "100%", height: 300 }}>
-            <ResponsiveContainer>
-              <BarChart data={gradeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="grade" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="stock">
-                  {gradeData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        entry.grade === "16/20L"
-                          ? "#ff4d4f"
-                          : entry.grade === "20/25ML"
-                          ? "#faad14"
-                          : entry.grade === "31/40S"
-                          ? "#52c41a"
-                          : "#1890ff"
-                      }
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </PageSection>
-        <PageSection>
-            <SectionHeader>
-              <h3>Raw Material Inventory</h3>
-              </SectionHeader>
-              <DataTable
-                columns={inventoryColumns}
-                data={inventoryData}
-                expandedRow={expandedRow}
-                renderRow={(row) => (
-                  <>
-                    <Td>{row.species}</Td>
-                    <Td>{row.grade}</Td>
-                    <Td>{row.inStock} MT</Td>
-                    <Td style={{ color: "green" }}>{row.available} MT</Td>
-                    <Td style={{ color: "red" }}>{row.shortfall} MT</Td>
-                    <Td>{row.purchase} MT</Td>
-                    <Td>
-                      <Badge variant="error">{row.status}</Badge>
-                    </Td>
-                    <Td>
-                      <button onClick={() => toggleRow(row.id)}>
-                        {expandedRow === row.id ? "Hide" : "2 Sup."}
-                      </button>
-                    </Td>
-                  </>
-                )}
-                renderExpandedRow={() => (
-                  <ExpandedBox>
-                    <SupplierCard>
-                      <h4>Tamil Nadu Marine</h4>
-                      <p>Stock: 8 MT | Price: ₹3.90L | Lead: 4d</p>
-                      <ProgressBar>
-                        <ProgressFill percent={95} color="#faad14" />
-                      </ProgressBar>
-                    </SupplierCard>
+    <Layout title="Inventory">
+      {/* 🔷 Stats */}
+      <StatsGrid>
+        {metrics.map((m, idx) => (
+          <StatsCard key={idx} {...m} />
+        ))}
+      </StatsGrid>
 
-                    <SupplierCard>
-                      <h4>KeralaFish Exports</h4>
-                      <p>Stock: 15 MT | Price: ₹4.20L | Lead: 3d</p>
-                      <ProgressBar>
-                        <ProgressFill percent={100} color="#52c41a" />
-                      </ProgressBar>
-                    </SupplierCard>
-                  </ExpandedBox>
-                )}
+      {/* 🔷 TABLE */}
+      <Card style={{ marginTop: "2rem" }}>
+        <SectionHeader title="Grade-wise Inventory" />
+
+        <DataTable
+          columns={inventoryColumns}
+          data={safeData}
+          isLoading={isLoading}
+          emptyMessage="No inventory data"
+          renderRow={(item) => (
+            <>
+              <Td className="text-blue-400 font-medium">
+                {item.grade}
+              </Td>
+              <Td>{item.species}</Td>
+
+              <Td className="text-green-400">
+                {formatValue(item.in_stock)}
+              </Td>
+
+              <Td className="text-yellow-400">
+                {formatValue(item.committed)}
+              </Td>
+
+              <Td className="text-cyan-400">
+                {formatValue(item.available)}
+              </Td>
+
+              <Td>{formatValue(item.required)}</Td>
+
+              <Td
+                className={
+                  item.shortfall > 0
+                    ? "text-red-400 font-medium"
+                    : ""
+                }
+              >
+                {formatValue(item.shortfall)}
+              </Td>
+
+              <Td>{formatValue(item.purchase_qty)}</Td>
+
+              <Td>
+                {item.estimated_cost !== null &&
+                item.estimated_cost !== undefined
+                  ? `₹${Number(item.estimated_cost).toLocaleString()}`
+                  : "-"}
+              </Td>
+
+              <Td>{formatValue(item.orders)}</Td>
+            </>
+          )}
+        />
+      </Card>
+
+      {/* 🔷 CHART */}
+      <Card style={{ marginTop: "2rem" }}>
+        <SectionHeader title="14-day stock projection" />
+
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={projectionData}>
+              <CartesianGrid strokeDasharray="3 3" />
+
+              <XAxis dataKey="day" />
+              <YAxis />
+
+              <Tooltip />
+
+              <Line
+                type="monotone"
+                dataKey="stock"
+                stroke="#3b82f6"
+                strokeWidth={2}
               />
-         </PageSection>
-      </PageContent>
+
+              <ReferenceLine
+                y={50}
+                stroke="red"
+                strokeDasharray="4 4"
+                label="50 MT cap"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
     </Layout>
-  ) 
-}
-export default Inventory
+  );
+};
+
+export default Inventory;

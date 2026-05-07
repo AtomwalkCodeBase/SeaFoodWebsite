@@ -3,7 +3,7 @@ import styled from "styled-components"
 
 const TableWrap = styled.div`
   overflow-x: auto;
-  background: white;
+  background: ${({ theme, color }) => color ? `${theme.colors[color]}` : theme.colors.background};
   border-radius: 8px;
   padding: 0.4rem;
   min-height: 140px;

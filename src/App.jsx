@@ -29,6 +29,11 @@ import ConfigDashboard from "./pages/ConfigDashboard";
 import OrdersScreen from "./pages/OrdersScreen";
 import ProductionPlannerV3 from "./pages/production-planner-v3";
 import PlanGenerator from "./pages/plan-generator-v3";
+import InventoryScreen from "./pages/InventoryScreen";
+import CapacityPlanning from "./pages/CapacityPlanning";
+import DaliyProductionPlan from "./pages/DaliyProductionPlan";
+import BatchScreen from "./pages/BatchScreen";
+import UnifiedPlanGenerator from "./pages/unified-plan-generator-v3";
 
 
 function App() {
@@ -46,7 +51,12 @@ function App() {
                  <Route path="/order" element={<Orders />} />
                  <Route path="/orders" element={<OrdersScreen />} />
                  <Route path="/inventory" element={<Inventory />} />
+                 <Route path="/inventorys" element={<InventoryScreen />} />
                  <Route path="/plan-generator" element={<PlanGenerator />} />
+                 <Route path="/capacity" element={<CapacityPlanning />} />
+                 <Route path="/production-plan" element={<DaliyProductionPlan />} />
+                 <Route path="/batch" element={<BatchScreen />} />
+                 {/* <Route path="/new" element={<UnifiedPlanGenerator />} /> */}
 
                 <Route
                   element={

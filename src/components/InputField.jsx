@@ -14,7 +14,7 @@ const InputField = ({
 }) => (
   <div className={`flex flex-col gap-1 ${className}`}>
     {labelIcon && labelIcon}
-    <label className="text-sm font-medium text-textLight">{label}</label>
+    <label className="text-sm font-medium text-text-light">{label}</label>
     <div className="flex items-center gap-2">
       {type === "select" ? (
         <select

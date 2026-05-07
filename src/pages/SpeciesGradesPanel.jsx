@@ -129,7 +129,7 @@ const ITEM_CATEGORIES = [
 const chartPalette = ["#1890ff", "#13c2c2", "#722ed1", "#faad14"]
 
 const gradeColumns = [
-  "GRADE","LABEL","COUNT/LB","PRICE MULT.","RM COST/MT","YIELD MULT.","EFF. YIELD %","MARGIN/MT",
+  "GRADE","LABEL","COUNT/LB","PRICE MULT.","RM COST/MT","YIELD MULT.","MARGIN/MT",
 ]
 /* -------------------- COMPONENT -------------------- */
 export default function SpeciesGradesPanel() {
@@ -208,7 +208,7 @@ export default function SpeciesGradesPanel() {
   const tableRows = selectedSpecies
     ? grades.map((g) => {
         const rmCost = (selectedSpecies.base_price || 0) * (g.price_multiplier || 0)
-        const effectiveYield = baseYield * g.yield_multiplier
+        const effectiveYield = g.yield_multiplier
         const processingCost = selectedSpecies.default_processing_cost_per_mt || 0
         const margin = 750000 - rmCost - processingCost
 
@@ -382,7 +382,8 @@ const GetItemCategoryList = async () => {
                   <Td>{row.count_per_pound_min}/{row.count_per_pound_max}</Td>
                   <Td>{row.price_multiplier}</Td>
                  <Td>{row.rmCost?.toFixed(0)}</Td>
-                <Td>{(row.effectiveYield * 100)?.toFixed(1)}%</Td>
+                {/* <Td>{(row.effectiveYield * 100)?.toFixed(1)}%</Td> */}
+                <Td>{row.effectiveYield}</Td>
                 <Td>{row.margin?.toFixed(0)}</Td>
                   {/* <Td>--</Td>
                   <Td>--</Td> */}

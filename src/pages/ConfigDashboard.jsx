@@ -113,7 +113,6 @@ export default function ConfigDashboard() {
 
   return (
     <Layout title="Production planning configuration">
-      <PageContent>
         <Card>
           <Tabs tabs={TABS} activeTab={tab} setActiveTab={setTab} />
         {tab === "config" && (
@@ -159,7 +158,6 @@ export default function ConfigDashboard() {
           </Card>
         )}
             </Card>
-      </PageContent>
     </Layout>
   )
 }

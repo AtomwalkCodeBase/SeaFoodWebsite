@@ -5,7 +5,8 @@ const db_name = localStorage.getItem("dbName");
 export const endpoint = `${localhost}${apiURL}`;
 export const hrendpoint = `${newlocalhost}/api`;
 export const newhrendpoint = `${newlocalhost}/hr_api`;
-export const newPPpont = `${localhost}/pp_api/config`;
+export const newPPpont = `${newlocalhost}/pp_api/config`;
+export const PPendPoint = `${newlocalhost}/pp_api`;
 
 export const userSignUpURL = `${endpoint}/customer_sign_up/${db_name}/`;
 export const userLoginURL = `${endpoint}/customer_login/${db_name}/`;
@@ -41,6 +42,10 @@ export const SpeciesUrl = `${newPPpont}/${db_name}/species/`;
 export const GradesUrl = `${newPPpont}/${db_name}/grades/`;
 export const OrdersUrl = `${newPPpont}/${db_name}/orders/`;
 export const ItemCategoryListUrl = `${hrendpoint}/item_category_list/${db_name}/`;
+export const CapacityPlanningUrl = `${PPendPoint}/capacity/plan/${db_name}/`;
+export const PlanningReportUrl = `${PPendPoint}/engine/report/${db_name}/`;
+export const InventoryStatusUrl = `${PPendPoint}/inventory/status/${db_name}/`;
+export const InventoryProjectionUrl = `${PPendPoint}/inventory/projection/${db_name}/`;
 
 
 // https://www.atomwalk.com/pp_api/config/PMA_002/species/

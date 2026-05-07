@@ -39,3 +39,5 @@ export const formatToDDMMYYYY = (dateValue) => {
 
     return ""
 }
+
+export const fmt = (n, d = 2) => Number(n).toFixed(d);
