@@ -34,6 +34,7 @@ import CapacityPlanning from "./pages/CapacityPlanning";
 import DaliyProductionPlan from "./pages/DaliyProductionPlan";
 import BatchScreen from "./pages/BatchScreen";
 import UnifiedPlanGenerator from "./pages/unified-plan-generator-v3";
+import DailyProductionPlanInner from "./pages/Dailyproductionplan ";
 
 
 function App() {
@@ -56,7 +57,8 @@ function App() {
                  <Route path="/capacity" element={<CapacityPlanning />} />
                  <Route path="/production-plan" element={<DaliyProductionPlan />} />
                  <Route path="/batch" element={<BatchScreen />} />
-                 {/* <Route path="/new" element={<UnifiedPlanGenerator />} /> */}
+                 <Route path="/new" element={<UnifiedPlanGenerator />} />
+                 <Route path="/production-plan2" element={<DailyProductionPlanInner />} />
 
                 <Route
                   element={

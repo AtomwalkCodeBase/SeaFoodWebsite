@@ -178,3 +178,59 @@ export function getInventoryProjection(days) {
   let data = { "days": days };
   return authAxios(InventoryProjectionUrl, data);
 }
+
+// productServices.js
+
+export async function CreateParentBatch(data) {
+  try {
+    const response = await authAxiosPost(BatchesUrl, data);
+    return response;
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function AdvanceBatchActivity(id, data = {}) {
+  try {
+    const response = await authAxiosPost(`${BatchesUrl}${id}/advance-activity/`, data);
+    return response;
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function RecordGrades(sessionId, data) {
+  try {
+    const response = await authAxiosPost(`${GradingSessionsUrl}${sessionId}/record-grades/`, data);
+    return response;
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function CreateSubBatches(batchId, data) {
+  try {
+    const response = await authAxiosPost(`${BatchesUrl}${batchId}/create-sub-batches/`, data);
+    return response;
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function GenerateBatchPlan(data) {
+  try {
+    const response = await authAxiosPost(EngineGenerateUrl, data);
+    return response;
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function AutoAllocateBatch(batchId, data = {}) {
+  try {
+    const response = await authAxiosPost(`${BatchesUrl}${batchId}/auto-allocate/`, data);
+    return response;
+  } catch (error) {
+    return error;
+  }
+}

@@ -6,6 +6,12 @@ import { POCardItem } from '../components/ScreenComponents/POCardItem';
 import PurchaseOrderModal from '../components/Modal/PurchaseOrderModal';
 import styled from 'styled-components';
 import { theme } from '../styles/Theme';
+import { FiFilter, FiPackage, FiSearch } from 'react-icons/fi';
+import { MdOutlineWaterDrop } from 'react-icons/md';
+import { TbFish } from 'react-icons/tb';
+import Button from '../components/Button';
+import { FaPlus } from 'react-icons/fa';
+import StatsCard from '../components/StatsCard';
 
 const Page = styled.div`
   min-height: 100vh;

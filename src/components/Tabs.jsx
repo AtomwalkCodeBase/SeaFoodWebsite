@@ -29,6 +29,7 @@ const Tabs = ({tabs, activeTab, setActiveTab}) => {
         <TabContainer>
           {tabs.map(t => (
             <Tab key={t.key} active={activeTab === t.key} onClick={() => setActiveTab(t.key)}>
+              {/* {t.icon && t.icon}  */}
               {t.label}
             </Tab>
           ))}

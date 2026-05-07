@@ -47,6 +47,7 @@ export const PlanningReportUrl = `${PPendPoint}/engine/report/${db_name}/`;
 export const InventoryStatusUrl = `${PPendPoint}/inventory/status/${db_name}/`;
 export const InventoryProjectionUrl = `${PPendPoint}/inventory/projection/${db_name}/`;
 
+export const BatchesUrl = `${newPPpont}/${db_name}/batches/`;
 
 // https://www.atomwalk.com/pp_api/config/PMA_002/species/
 // https://crm.atomwalk.com/api/get_process_activity_list/PMA_002/?product_id=1
