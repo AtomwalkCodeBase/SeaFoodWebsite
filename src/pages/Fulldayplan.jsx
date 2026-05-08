@@ -1,20 +1,27 @@
 import React from 'react';
 import { FiArrowRight } from 'react-icons/fi';
-import { SectionHeader2 } from '../components/EmptyState';
+import { SectionHeader, SectionHeader2 } from '../components/EmptyState';
 import { PreGradingPhase } from './Pregradingphase ';
 import { PostGradingPhase } from './Postgradingphase';
+import Button from '../components/Button';
 
-export function FullDayPlan() {
+export function FullDayPlan({setIsOpenGrnModal, speciesList}) {
+   
   return (
+    <>
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       {/* Phase 1 column */}
       <div>
-        <SectionHeader2
+        <div className='flex justify-between items-center'>
+        <SectionHeader
           step="1"
           title="Pre-grading: raw material → grading → graded inventory"
-          phaseColor="pre"
+          // phaseColor="pre"
         />
-        <PreGradingPhase />
+        <Button size='sm' onClick = {() => setIsOpenGrnModal(true)}>Add GRN</Button>
+
+        </div>
+        <PreGradingPhase speciesList={speciesList} />
       </div>
 
       {/* Divider (visible on XL) */}
@@ -45,5 +52,6 @@ export function FullDayPlan() {
         <PostGradingPhase />
       </div>
     </div>
+    </>
   );
 }

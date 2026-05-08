@@ -8,7 +8,13 @@ import {
 //   SectionHeader, StepFlow, MetricCard,
 // } from './ui';
 import { ActionButton, Badge, EmptyState, InfoRow, MetricCard, Panel, StepFlow } from '../components/EmptyState';
-import { AdvanceBatchActivity, CreateParentBatch, RecordGrades } from '../services/productServices';
+import { AdvanceBatchActivity, CreateParentBatch, getBatchList, getGradingSessionsList, getProductList, getSpecies, RecordGrades } from '../services/productServices';
+import { toast } from 'react-toastify';
+import { extractDateTime } from '../utils';
+import Button from '../components/Button';
+import Modal from '../components/Modal';
+import ConfirmPopup from '../components/ConfirmPopup';
+import InputField from '../components/InputField';
 
 // ── Mock data (replace with real API) ─────────────────────────────────────────
 const MOCK_GRNS = [
@@ -46,46 +52,137 @@ const MOCK_GRADING_SESSIONS = [
 
 // ── GRN Card ──────────────────────────────────────────────────────────────────
 function GrnCard({ grn, onCreateBatch }) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [form, setForm] = useState({
+    batch_number: "",
+    input_weight_mt: "",
+    total_received_mt: 0,
+    species_config: "",
+    erp_batch: "",
+  });
+
   const mutation = useMutation({
    mutationFn: () => CreateParentBatch({ grn_reference: grn.id, batch_type: 'PARENT' }),
     onSuccess: onCreateBatch,
   });
 
-  const speciesVariant = grn.species.toLowerCase().includes('tiger') ? 'species' : 'info';
+  const { date } = extractDateTime(grn.created_at);
+
+  const {data: speciesList = [], isLoading: speciesLoading, error: speciesError } = useQuery  ({
+    queryKey: ['species'],
+    queryFn: () => getSpecies(),
+    select: (res) => res.data,
+    onError: () => toast.error('Failed to load species'),
+  });
+
+  const {data: productList = [], isLoading: productLoading, error: productError } = useQuery  ({
+    queryKey: ['product'],
+    queryFn: () => getProductList(),
+    select: (res) => res.data,
+    onError: () => toast.error('Failed to load species'),
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value, type } = e.target;
+    setForm((prev) => ({...prev,[name]: type === 'number' ? Number(value) || 0 : value,}));
+  };
 
   return (
+    <>
     <div className="rounded-lg border border-border bg-background p-3 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge label={grn.id} variant="grn" />
-        <Badge label={grn.species} variant={speciesVariant} />
-        <span className="text-xs text-textLight">{grn.supplier}</span>
+        <Badge label={grn.grn_reference} variant="grn" />
+        <Badge label={grn.species_name} variant="species" />
+        <span className="text-xs text-textLight">{grn.supplier_name || "Supplier Name not found"}</span>
+          {/* <span className="text-lg font-bold text-text">{grn.total_received_mt} MT</span> */}
+          <InfoRow label="Total Received(MT)" value={grn.total_received_mt || "--"} className='font-semibold' />
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-lg font-bold text-text">{grn.quantityMt} MT</span>
-          <ActionButton
+          {/* <ActionButton
             variant="primary"
             size="sm"
             onClick={() => mutation.mutate()}
             loading={mutation.isPending}
           >
             Create parent batch
-          </ActionButton>
+          </ActionButton> */}
+           <Button variant='outline' size="sm" onClick={() => setIsModalOpen(true)} loading={mutation.isPending}>
+          Proceed for Grading
+        </Button>
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 pl-1">
-        <InfoRow label="Received" value={grn.received} />
-        <InfoRow label="ERP Batch" value={grn.erpBatch} />
-        <InfoRow label="Location" value={grn.location} />
+        <InfoRow label="Received Date" value={date} />
+        <InfoRow label="ERP Batch" value={grn.erpBatch || "--"} />
+        <InfoRow label="Location" value={grn.location || "--"} />
       </div>
-      <div className="flex flex-wrap gap-1.5 pl-1">
+      {/* <div className="flex flex-wrap gap-1.5 pl-1">
         <span className="text-xs text-textLight">Expected grades:</span>
-        {grn.expectedGrades.map((g) => (
+        {grn.grade_lines.map((g) => (
           <span key={g} className="text-xs bg-accentLight text-primary px-1.5 py-0.5 rounded">{g}</span>
         ))}
+      </div> */}
+       <div className="ml-auto flex items-center justify-end gap-2">
+        {/* <Button size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}> */}
+        {/* <Button variant='outline' size="sm" onClick={() => setIsModalOpen(true)} loading={mutation.isPending}>
+          Proceed for Grading
+        </Button> */}
       </div>
-      <p className="text-[10px] text-textLight/60 font-mono pl-1">
+      {/* <p className="text-[10px] text-textLight/60 font-mono pl-1">
         POST /api/planning/batches/ — creates PARENT batch with pre-grading activities
-      </p>
+      </p> */}
     </div>
+    <Modal title= "Create Grading Batch" saveButtonText='Create Batch' width='max-w-xl' isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={() => setIsConfirmOpen(true)} showSaveButton={true} isConfirmOpen={isConfirmOpen} setIsConfirmOpen={setIsConfirmOpen}>
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <InputField
+                  label="Enter Batch Number"
+                  name="batch_number"
+                  type="text"
+                  value={form.batch_number}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <InputField
+                label="Enter Quantity(MT)"
+                name="input_weight_mt"
+                type="number"
+                value={form.input_weight_mt}
+                onChange={handleInputChange}
+              />
+
+              <InputField
+                label="Supplier Name"
+                name="scheduled_date"
+                type="date"
+                value={form.scheduled_date}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Product"
+                name="product"
+                type="select"
+                value={form.product}
+                onChange={handleInputChange}
+                options={productList.map(item => ({ id: item.id, value: item.id, label: `${item.product_name}`}))}
+              />
+
+              <InputField
+                label="Species"
+                name="species_config"
+                type="select"
+                value={form.species_config}
+                onChange={handleInputChange}
+                options={speciesList.map(item => ({ id: item.id, value: item.id, label: `${item.scientific_name}`}))}
+              />
+            </div>
+        </div>
+    </Modal>
+    <ConfirmPopup isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} />
+    </>
   );
 }
 
@@ -97,45 +194,91 @@ function ParentBatchCard({ batch, onAdvance }) {
   });
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-3">
-      <Badge label={batch.id} variant="grn" />
-      <Badge label={batch.species} variant="species" />
-      <span className="font-bold text-text">{batch.quantityMt} MT</span>
-      <Badge label={batch.activity} variant="cleaning" />
-      <span className="text-xs text-textLight">Expected cleaned: {batch.expectedCleaned} MT</span>
+      <Badge label={batch.batch_number} variant="grn" />
+      <Badge label={batch.species_name} variant="species" />
+      <span className="font-bold text-text">{batch.input_weight_mt} MT</span>
+      <Badge label={batch.current_activity_name || "--"} variant="cleaning" />
+      <span className="text-xs text-textLight">Expected : {batch.expected_output_mt} MT</span>
+      <span className="text-xs text-textLight">Actual : {batch.actual_output_mt} MT</span>
       <div className="ml-auto flex items-center gap-2">
-        <ActionButton variant="secondary" size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}>
+        {/* <ActionButton variant="secondary" size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}>
           Advance activity
-        </ActionButton>
-        <span className="text-[10px] text-textLight/50 font-mono hidden sm:block">
+        </ActionButton> */}
+        <Button variant="primary" size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}>
+          Advance activity
+        </Button>
+        {/* <span className="text-[10px] text-textLight/50 font-mono hidden sm:block">
           POST /batches/&#123;id&#125;/advance-activity/
-        </span>
+        </span> */}
       </div>
     </div>
   );
 }
 
 // ── Grade Input Row ────────────────────────────────────────────────────────────
-function GradeInputRow({ grades, values, onChange }) {
+// function GradeInputRow({ grades }) {
+//   return (
+//     <div className="overflow-x-auto">
+//       <div className="flex gap-2 min-w-max pb-1">
+//         {grades.grade_lines.map((g, i) => (
+//           <div key={i} className="flex flex-col items-center gap-1">
+//             <span className={`text-xs font-medium ${g.label === 'Waste' ? 'text-error' : 'text-textLight'}`}>
+//               {g.grade_code ?? g.label}
+//             </span>
+//             <span className="w-16 text-center text-xs border border-border rounded-md py-1 bg-inputBg text-text focus:outline-none focus:ring-1 focus:ring-primary">
+//               {g.quantity_mt}
+//             </span>
+//             <span className="text-[10px] text-textLight">MT</span>
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
+
+function GradeInputRow({ 
+  gradeLines = [], 
+  waste_mt = 0 
+}) {
+  // const totalGraded = gradeLines.reduce((sum, line) => {
+  //   return sum + parseFloat(line.quantity_mt || 0);
+  // }, 0);
+
+  const wasteValue = parseFloat(waste_mt || 0);
+
   return (
     <div className="overflow-x-auto">
-      <div className="flex gap-2 min-w-max pb-1">
-        {grades.map((g, i) => (
-          <div key={i} className="flex flex-col items-center gap-1">
-            <span className={`text-xs font-medium ${g.label === 'Waste' ? 'text-error' : 'text-textLight'}`}>
-              {g.code ?? g.label}
+      <div className="flex gap-4 min-w-max pb-2">
+        {/* Regular Grades */}
+        {gradeLines.map((line, index) => (
+          <div 
+            key={line.id || index} 
+            className="flex flex-col items-center gap-1 min-w-[110px]"
+          >
+            <span className="text-xs font-medium text-textLight">
+              {line.grade_code}
             </span>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              value={values[i] ?? ''}
-              onChange={(e) => onChange(i, e.target.value)}
-              className="w-16 text-center text-xs border border-border rounded-md py-1 bg-inputBg text-text focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="0.0"
-            />
+
+            <div className="w-20 text-center font-semibold text-sm border border-border rounded-lg py-2 bg-inputBg text-text">
+              {parseFloat(line.quantity_mt || 0).toFixed(3)}
+            </div>
+
             <span className="text-[10px] text-textLight">MT</span>
           </div>
         ))}
+
+        {/* Waste - Always shown */}
+        <div className="flex flex-col items-center gap-1 min-w-[110px]">
+          <span className="text-xs font-medium text-error">
+            WASTE
+          </span>
+
+          <div className="w-20 text-center font-semibold text-sm border border-error/30 rounded-lg py-2 bg-inputBg text-error">
+            {wasteValue.toFixed(3)}
+          </div>
+
+          <span className="text-[10px] text-textLight">MT</span>
+        </div>
       </div>
     </div>
   );
@@ -143,71 +286,222 @@ function GradeInputRow({ grades, values, onChange }) {
 
 // ── Grading Session Card ───────────────────────────────────────────────────────
 function GradingSessionCard({ session, onConfirm }) {
-  const [gradeValues, setGradeValues] = useState(session.gradeSlots.map(() => ''));
-  const qc = useQueryClient();
-
-  const recordMutation = useMutation({
-    mutationFn: () => RecordGrades(session.id, {
-  grades: session.gradeSlots.map((g, i) => ({
-    grade_code: g.code ?? 'WASTE',
-    quantity_mt: parseFloat(gradeValues[i] || 0),
-  })),
-}),
-  });
-
-  const subBatchMutation = useMutation({
-    mutationFn: () =>
-      apiFetch(API.batchCreateSubBatches(session.batchId), {
-        method: 'POST',
-        body: JSON.stringify({ grade_quantities: Object.fromEntries(session.gradeSlots.map((g, i) => [g.code ?? 'WASTE', parseFloat(gradeValues[i] || 0)])) }),
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries(['inventory']);
-      onConfirm?.();
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [gradeRows, setGradeRows] = useState([
+    {
+      grade_code: "",
+      quantity_mt: 0,
+      bin_location_id: "",
     },
-  });
+  ]);
 
-  const handleChange = (i, val) => {
-    setGradeValues((prev) => { const n = [...prev]; n[i] = val; return n; });
+      const {data: speciesList = [], isLoading: speciesLoading, error: speciesError } = useQuery  ({
+        queryKey: ['species', session.species_config],
+        queryFn: () => getSpecies(null, session.species_config),
+        select: (res) => res.data,
+        onError: () => toast.error('Failed to load species'),
+      });
+
+      const speciesArray = Array.isArray(speciesList) ? speciesList : [speciesList];
+      const gradeOptions = speciesArray.flatMap((species) =>
+        (species.grades || []).map((grade) => ({
+          id: grade.id,
+          value: grade.grade_code,
+          label: `${species.scientific_name} (${grade.grade_code})`,
+        }))
+      );
+  const handleInputChange = (index, e) => {
+    const { name, value, type } = e.target;
+
+    const updatedRows = [...gradeRows];
+
+    updatedRows[index][name] =
+      type === "number" ? Number(value) || 0 : value;
+
+    setGradeRows(updatedRows);
   };
 
+   const handleAddRow = () => {
+    setGradeRows((prev) => [
+      ...prev,
+      {
+        grade_code: "",
+        quantity_mt: 0,
+        bin_location_id: "",
+      },
+    ]);
+  };
+
+  // Remove row
+  const handleRemoveRow = (index) => {
+    const updatedRows = gradeRows.filter((_, i) => i !== index);
+    setGradeRows(updatedRows);
+  };
+
+  // Submit grades
+  const handleSubmitGrades = async () => {
+    const payload = {
+      grades: gradeRows.map((row) => ({
+        grade_code: row.grade_code,
+        quantity_mt: row.quantity_mt,
+        bin_location_id: row.bin_location_id,
+      })),
+    };
+
+    console.log("Payload", payload);
+
+    try {
+      // await RecordGrades(session.id, payload);
+
+      toast.success("Grades recorded successfully");
+
+      setIsRecordModalOpen(false);
+
+      // Reset form
+      setGradeRows([
+        {
+          grade_code: "",
+          quantity_mt: 0,
+          bin_location_id: "",
+        },
+      ]);
+    } catch (error) {
+      toast.error("Failed to record grades");
+    }
+  };
+
+
+  const hasGrading = session.grade_lines && session.grade_lines.length > 0;
+
   return (
+    <>
     <div className="rounded-xl border-2 border-secondary/30 bg-phasePost/30 p-4 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge label={session.batchId} variant="grn" />
-        <Badge label={session.species} variant="species" />
-        <span className="text-sm font-bold text-text">{session.cleanedMt} MT cleaned</span>
-        <ActionButton
-          variant="secondary"
+        <Badge label={session.erp_batch || "--"} variant="grn" />
+        <Badge label={session.species_name} variant="species" />
+        <span className="text-sm font-bold text-text">{session.total_graded_mt} MT cleaned</span>
+       {/* {!hasGrading &&  */}
+       <Button
+          variant="outline"
           size="sm"
+          onClick={() => setIsRecordModalOpen(true)}
           className="ml-auto"
-          onClick={() => recordMutation.mutate()}
-          loading={recordMutation.isPending}
+          // loading={recordMutation.isPending}
         >
           Record grades
-        </ActionButton>
+        </Button>
+        {/* // } */}
       </div>
-      <p className="text-xs text-textLight">Enter grade-wise weight from QC sorting:</p>
-      <GradeInputRow grades={session.gradeSlots} values={gradeValues} onChange={handleChange} />
-      <p className="text-[10px] text-textLight/50 font-mono">
+      <p className="text-xs text-textLight">Grade-wise weight from QC sorting:</p>
+        {/* <GradeInputRow grades={session} values={gradeValues} /> */}
+     {hasGrading ? (
+        <GradeInputRow 
+          gradeLines={session.grade_lines} 
+          waste_mt={session.waste_mt} 
+        />
+      ) : (
+        <div className="py-10 text-center border border-dashed border-border rounded-xl">
+          <EmptyState 
+            icon={FiSliders} 
+            message="No grading found" 
+          />
+        </div>
+      )}
+
+      {/* <p className="text-[10px] text-textLight/50 font-mono">
         POST /grading-sessions/&#123;id&#125;/record-grades/ — creates sub-batches + updates inventory
-      </p>
+      </p> */}
       <div className="flex justify-end">
-        <ActionButton
+        <Button
           variant="primary"
           size="sm"
-          onClick={() => subBatchMutation.mutate()}
-          loading={subBatchMutation.isPending}
+          // onClick={() => subBatchMutation.mutate()}
+          // loading={subBatchMutation.isPending}
         >
           Confirm grades &amp; create sub-batches
-        </ActionButton>
+        </Button>
       </div>
     </div>
+    <Modal title='Record Grade' width='max-w-6xl' isOpen={isRecordModalOpen} onClose={() => setIsRecordModalOpen(false)} onSave={handleSubmitGrades} saveButtonText='Add Grades'>
+        <div className="space-y-6">
+          <div className="space-y-4">
+            {gradeRows.map((row, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-12 gap-4 items-end border border-border rounded-xl p-4"
+              >
+                <div className="col-span-4">
+                  <InputField
+                    label="Grade Code"
+                    name="grade_code"
+                    type="select"
+                    value={row.grade_code}
+                    onChange={(e) =>
+                      handleInputChange(index, e)
+                    }
+                    options={gradeOptions}
+                  />
+                </div>
+
+                <div className="col-span-3">
+                  <InputField
+                    label="Quantity (MT)"
+                    name="quantity_mt"
+                    type="number"
+                    value={row.quantity_mt}
+                    onChange={(e) =>
+                      handleInputChange(index, e)
+                    }
+                  />
+                </div>
+
+                <div className="col-span-3">
+                  <InputField
+                    label="Bin Location ID"
+                    name="bin_location_id"
+                    type="text"
+                    value={row.bin_location_id}
+                    onChange={(e) =>
+                      handleInputChange(index, e)
+                    }
+                  />
+                </div>
+
+                <div className="col-span-2 flex gap-2">
+                  {/* Add Button */}
+                  {index === gradeRows.length - 1 && (
+                    <Button
+                      variant="primary"
+                      onClick={handleAddRow}
+                      size='sm'
+                    >
+                     Add
+                    </Button>
+                  )}
+
+                  {/* Remove Button */}
+                  {gradeRows.length > 1 && (
+                    <Button
+                    size="sm"
+                      variant="outlines"
+                      onClick={() => handleRemoveRow(index)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+    </Modal>
+    </>
   );
 }
 
 // ── Phase 1 Root ───────────────────────────────────────────────────────────────
-export function PreGradingPhase() {
+export function PreGradingPhase({speciesList}) {
   const qc = useQueryClient();
 
   // Use mock data – swap for real useQuery calls in production
@@ -222,12 +516,40 @@ export function PreGradingPhase() {
     { label: 'Graded stock', icon: FiCheckCircle },
   ];
 
+  
+  const {data: sessionList = [], isLoading: speciesLoading, error: speciesError } = useQuery  ({
+    queryKey: ['session'],
+    queryFn: () => getGradingSessionsList(),
+    select: (res) => res.data,
+    onError: () => toast.error('Failed to load GRN list.'),
+  });
+
+  const {data: parentBatchList = [], isLoading: parentBatchLoading, error: parentBatchError } = useQuery  ({
+    queryKey: ['parentBatch'],
+    queryFn: () => getBatchList(),
+    select: (res) => res.data,
+    onError: () => toast.error('Failed to load GRN list.'),
+  });
+
+  const parentBatchData = parentBatchList.filter((p) => p.batch_type === "PARENT" )
+  // const sessionData = sessionList.filter((p) => p.status === 'COMPLETED' )
+
+  console.log("sessionList", sessionList)
+
+  //  const pendingGrns = sessionList.filter(grn => grn.status !== 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+   const pendingGrns = sessionList.filter(grn => grn.status === 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+   const getSpeciesName = (pendingGrns, speciesList) => {
+    const matchedSpecies = speciesList.find(species => species.id === pendingGrns.species_config);
+    return matchedSpecies?.scientific_name || 'Unknown Species';
+  };
+
   return (
     <div className="space-y-5">
       {/* Flow indicator */}
-      <Panel>
+      {/* <Panel>
         <StepFlow steps={STEPS} current={1} />
-      </Panel>
+      </Panel> */}
 
       {/* Section 1 – Ungraded raw material */}
       <Panel accent="pre">
@@ -241,17 +563,30 @@ export function PreGradingPhase() {
               Received via GRN; needs pre-grading activities (cleaning) then grade sorting
             </p>
           </div>
-          <Badge label={`${grns.length} pending GRNs`} variant="info" />
+          <Badge label={`${sessionList.filter(grn => grn.status !== 'COMPLETED').length} pending GRNs`} variant="info" />
         </div>
         <div className="space-y-3">
-          {grns.length === 0 ? (
-            <EmptyState icon={FiPackage} message="No pending GRNs" />
-          ) : (
-            grns.map((grn) => (
-              <GrnCard key={grn.id} grn={grn} onCreateBatch={() => qc.invalidateQueries(['parentBatches'])} />
-            ))
-          )}
-        </div>
+            {speciesLoading ? (
+              <EmptyState message="Loading GRNs..." />
+            ) : speciesError ? (
+              <EmptyState message="Failed to load GRNs" />
+            ) : pendingGrns.length === 0 ? (
+              <EmptyState message="No pending GRNs" />
+            ) : (
+              pendingGrns.map((grn) => {
+              const scientificName = getSpeciesName(grn, speciesList);
+              return (
+                <GrnCard key={grn.id} grn={{...grn, species_name: scientificName}} onCreateBatch={() => qc.invalidateQueries(['session'])} />
+              );
+            })
+            )}
+            {/* {pendingGrns.map((grn) => {
+              const scientificName = getSpeciesName(grn, speciesList);
+              return (
+                <GrnCard key={grn.id} grn={{...grn, species_name: scientificName}} onCreateBatch={() => qc.invalidateQueries(['session'])} />
+              );
+            })} */}
+          </div>
       </Panel>
 
       {/* Section 2 – Parent batches in progress */}
@@ -262,13 +597,23 @@ export function PreGradingPhase() {
           <span className="text-xs text-textLight">Pre-grading activities running</span>
         </div>
         <div className="space-y-2">
-          {parentBatches.length === 0 ? (
-            <EmptyState icon={FiActivity} message="No batches in progress" />
-          ) : (
-            parentBatches.map((b) => (
-              <ParentBatchCard key={b.id} batch={b} onAdvance={() => qc.invalidateQueries(['parentBatches'])} />
-            ))
-          )}
+          {parentBatchLoading ? (
+              <EmptyState message="Loading Batches..." />
+            ) : parentBatchError ? (
+              <EmptyState message="Failed to load batches" />
+            ) : (() => {
+            const pendingBatches = parentBatchData.filter(batch => batch.status === 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            return pendingBatches.length === 0 ? (
+              <EmptyState icon={FiActivity} message="No batches in progress" />
+            ) : (
+              pendingBatches.map((b) => {
+                const specifiedName = getSpeciesName(b, speciesList);
+                return (
+                  <ParentBatchCard key={b.id} batch={{...b, species_name: specifiedName}} onAdvance={() => qc.invalidateQueries(['parentBatches'])} />
+                );
+              })
+            );
+          })()}
         </div>
       </Panel>
 
@@ -280,13 +625,35 @@ export function PreGradingPhase() {
           <span className="text-xs text-textLight">Pre-grading done; QC sorts into grades</span>
         </div>
         <div className="space-y-3">
-          {gradingSessions.length === 0 ? (
+          {parentBatchLoading ? (
+              <EmptyState message="Loading Batches..." />
+            ) : parentBatchError ? (
+              <EmptyState icon={FiSliders} message="Failed to load batches" />
+            ) : (() => {
+                // const completedBatches = sessionList.filter(batch => batch.status === 'COMPLETED').sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+                const completedBatches = sessionList.filter(batch => batch.status === 'COMPLETED');
+                console.log("completedBatches", completedBatches)
+                return completedBatches.length === 0 ? (
+                  <EmptyState icon={FiSliders} message="No batches ready for grading" />
+                ) : (
+                  completedBatches.map((batch) => {
+                    const specifiedName = getSpeciesName(batch, speciesList);
+                    return (
+                      <GradingSessionCard 
+                        key={batch.id} 
+                        session={{...batch, species_name: specifiedName}} 
+                      />
+                    );
+                  })
+                );
+              })()}
+          {/* {gradingSessions.length === 0 ? (
             <EmptyState icon={FiSliders} message="No sessions ready for grading" />
           ) : (
             gradingSessions.map((s) => (
               <GradingSessionCard key={s.id} session={s} onConfirm={() => qc.invalidateQueries(['inventory'])} />
             ))
-          )}
+          )} */}
         </div>
       </Panel>
     </div>

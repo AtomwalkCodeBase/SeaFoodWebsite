@@ -1,141 +1,64 @@
-import React from 'react';
-import styled from 'styled-components';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
-// Styled components
-const Overlay = styled.div`
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-`;
+const ConfirmPopup = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = "Confirm Action",
+  message = "Are you sure you want to proceed?",
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  isLoading = false,
+  variant = "default"   // "danger" or "default"
+}) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
-const PopupContainer = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  padding: 24px;
-  width: 400px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-`;
-
-const Title = styled.h2`
-  margin: 0;
-  color: #333;
-  font-size: 20px;
-`;
-
-const Message = styled.p`
-  margin: 16px 0;
-  color: #555;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 24px;
-  gap: 12px;
-`;
-
-const Button = styled.button`
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-`;
-
-const CancelButton = styled(Button)`
-  background-color: #f1f1f1;
-  color: #333;
-  &:hover {
-    background-color: #e1e1e1;
-  }
-`;
-
-const SubmitButton = styled(Button)`
-  background-color: ${props => props.approve ? '#28a745' : '#007bff'};
-  color: white;
-  &:hover {
-    background-color: ${props => props.approve ? '#218838' : '#0069d9'};
-  }
-`;
-
-const LoadingSpinner = styled.div`
-  display: inline-block;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 0.5rem;
-  
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-`
-
-// Component
-const ConfirmPopup = ({ isOpen, onClose, onConfirm, approve, timesheet, isLoading, title, message, confirmLabel  }) => {
   if (!isOpen) return null;
 
-  const isApproveAction = approve === "APPROVE";
-  const fallbackActionLabel = isApproveAction ? 'Approve' : 'Submit';
-  const fallbackActionVerb = isApproveAction ? 'approving' : 'submitting';
-
-  const resolvedTitle = title || `${fallbackActionLabel} Weekly Timesheet`;
-  const resolvedMessage = message || (isApproveAction 
-    ? 'Are you sure you want to approve this weekly timesheet? This action cannot be undone.'
-    : 'Are you sure you want to submit your weekly timesheet for approval? You won\'t be able to make changes after submission.');
-  const resolvedConfirmLabel = confirmLabel || `${fallbackActionLabel} Weekly Timesheet`;
-
-  return (
-    <Overlay>
-      <PopupContainer>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title>{resolvedTitle}</Title>
-          <button
+  return createPortal(
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/10 backdrop-blur-xs p-4">
+      <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-text">{title}</h3>
+          <button 
             onClick={onClose}
-            style={{
-              fontSize: '24px',
-              cursor: 'pointer',
-              color: '#666',
-              background: 'transparent',
-              border: 'none',
-              lineHeight: 1,
-            }}
-            aria-label="Close"
+            className="text-3xl leading-none text-textLight hover:text-error"
           >
-            &times;
+            ×
           </button>
         </div>
 
-        <Message>
-          {resolvedMessage}
-        </Message>
+        <p className="text-textLight text-[15px] leading-relaxed mb-6 text-text">
+          {message}
+        </p>
 
-        <ButtonGroup>
-          <CancelButton onClick={onClose}>Cancel</CancelButton>
-           <SubmitButton
-            approve={isApproveAction}
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl border border-border hover:bg-backgroundAlt transition-colors font-medium text-text"
+          >
+            {cancelLabel}
+          </button>
+          <button
             onClick={onConfirm}
             disabled={isLoading}
+            className={`px-5 py-2.5 rounded-xl font-semibold text-white transition-colors ${
+              variant === 'danger' 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-primary hover:bg-primary/90'
+            }`}
           >
-            {isLoading ? (
-              <>
-                <LoadingSpinner /> {fallbackActionVerb}...
-              </>
-            ) : (
-              resolvedConfirmLabel
-            )}
-          </SubmitButton>
-        </ButtonGroup>
-      </PopupContainer>
-    </Overlay>
+            {isLoading ? 'Processing...' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.getElementById('modal-root') || document.body
   );
 };
 

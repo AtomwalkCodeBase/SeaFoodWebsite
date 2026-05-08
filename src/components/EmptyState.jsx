@@ -8,8 +8,13 @@ export const EmptyState = ({ message, className = "" }) => {
   );
 };
 
-export const SectionHeader = ({ icon, title, sub }) => (
-    <div className="p-2  border-b border-border">
+export const SectionHeader = ({ step, icon, title, sub }) => (
+    <div className="flex items-start p-2  border-b border-border">
+      {step && (
+        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold`}>
+          {step}
+        </span>
+      )}
         <div className="text-base font-bold flex items-center gap-2.5 text-text">
             <span>{icon}</span> {title}
         </div>
@@ -124,10 +129,10 @@ export function ActionButton({
 }
  
 // ── InfoRow ───────────────────────────────────────────────────────────────────
-export function InfoRow({ label, value, valueClass = '' }) {
+export function InfoRow({ label, value, valueClass = '', className='' }) {
   return (
-    <div className="flex items-center justify-between text-xs gap-2">
-      <span className="text-textLight">{label}</span>
+    <div className={`flex items-center text-xs gap-2 ${className}`}>
+      <span className="text-textLight">{label}: </span>
       <span className={`font-medium text-text ${valueClass}`}>{value}</span>
     </div>
   );

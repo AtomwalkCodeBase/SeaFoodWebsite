@@ -538,11 +538,12 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
       { path: "/dummy1", name: "Production Planner v2", icon: <FaClipboardList /> },
       { path: "/plan-generator", name: "Daily Production Planner", icon: <BsFillCalendar2RangeFill /> },
       { path: "/config", name: "Global config v1", icon: <FaGear /> },
+      { path: "/new", name: "Daily production plan v1", icon: <FaGear /> },
       { path: "/orders", name: "Orders Management", icon: <BsBoxSeamFill /> },
       { path: "/config1", name: "Global Config", icon: <FaGear /> },
       { path: "/capacity", name: "Production Planner", icon: "📊"},
       { path: "/inventory", name: "Inventory", icon: <FaBoxes />},
-      { path: "/production-plan", name: "Daily production plan", icon: <BsFillCalendar2RangeFill />},
+      { path: "/production-plan2", name: "Daily production plan", icon: <BsFillCalendar2RangeFill />},
     ]
    
 

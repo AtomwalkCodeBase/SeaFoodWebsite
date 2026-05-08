@@ -41,3 +41,22 @@ export const formatToDDMMYYYY = (dateValue) => {
 }
 
 export const fmt = (n, d = 2) => Number(n).toFixed(d);
+
+// passing formate:- 2026-05-07T10:23:59.983143+05:30
+export const extractDateTime = (isoString) => {
+  const date = new Date(isoString);
+  return {
+    date: date.toLocaleDateString('en-CA'),     // 2026-05-07
+    time: date.toLocaleTimeString('en-US', {    // 10:23
+      hour: '2-digit',
+      minute: '2-digit',
+    //   second: '2-digit',
+      hour12: false
+    }),
+    dateTime: `${date.toLocaleDateString('en-CA')} ${date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })}`
+  };
+};

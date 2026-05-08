@@ -1,6 +1,5 @@
-import React, { ReactNode } from 'react';
-//   width?: string; // e.g., "max-w-md", "max-w-lg", "max-w-xl", "max-w-2xl"
-//   maxHeight?: string; // e.g., "max-h-[80vh]", "max-h-[600px]"
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const Modal = ({
   isOpen,
@@ -13,9 +12,14 @@ const Modal = ({
   showSaveButton = true,
   saveButtonText = "Save Changes",
   cancelButtonText = "Cancel",
-  isConfirmOpen,
-  setIsConfirmOpen,
+  setIsConfirmOpen,   // For opening confirm popup
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleSave = () => {
@@ -26,9 +30,12 @@ const Modal = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className={`bg-card w-full ${width} rounded-2xl shadow-xl border border-border p-4 font-body flex flex-col`}>
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div 
+        className={`bg-card w-full ${width} rounded-2xl shadow-2xl border border-border p-6 flex flex-col max-h-[95vh]`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex justify-between items-center mb-3 flex-shrink-0">
           <h3 className="text-lg font-bold text-text">{title}</h3>
@@ -36,7 +43,7 @@ const Modal = ({
             onClick={onClose} 
             className="text-textLight hover:text-error text-2xl font-bold leading-none transition-colors"
           >
-            &times;
+            ×
           </button>
         </div>
 
@@ -67,7 +74,8 @@ const Modal = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.getElementById('modal-root') || document.body
   );
 };
 

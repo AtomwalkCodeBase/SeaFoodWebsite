@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FiBox, FiList, FiZap, FiTruck, FiCheckCircle, FiAlertTriangle,
+  FiActivity,
 } from 'react-icons/fi';
-import { AutoAllocateBatch, CreateParentBatch, GetPlanningReport } from '../services/productServices';
+import { AutoAllocateBatch, CreateParentBatch, getInventoryStatus, GetItemCategory, GetOrdersList, GetPlanningReport } from '../services/productServices';
 import { ActionButton, Badge, EmptyState, MetricCard, Panel, StepFlow } from '../components/EmptyState';
+import Button from '../components/Button';
+import { toast } from 'react-toastify';
+import DataTable, { Td } from '../components/Datatable';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 const MOCK_GRADED_STOCK = [
@@ -55,16 +59,17 @@ function ScoreBar({ score }) {
 function OrderRow({ order }) {
   return (
     <div className="flex flex-wrap items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-backgroundAlt transition-colors">
-      <Badge label={order.id} variant="grn" />
-      <span className="text-sm font-medium text-text min-w-[100px]">{order.buyer}</span>
-      <Badge label={order.process} variant={PROCESS_BADGE[order.process] ?? 'default'} />
-      <span className="text-xs text-textLight">{order.grade}</span>
-      <span className="text-xs text-text font-medium">{order.requiredMt} MT</span>
-      <span className="text-xs text-textLight">{order.ageDays}d</span>
-      <StockAvailability availableMt={order.availableMt} />
-      <Badge label={order.priority} variant={PRIORITY_BADGE[order.priority]} />
+      <Badge label={order.erp_order_reference} variant="grn" />
+      <span className="text-sm font-medium text-text min-w-[100px]">{order.customer_name}</span>
+      {/* <Badge label={order.process} variant={PROCESS_BADGE[order.process] ?? 'default'} /> */}
+      <span className="text-xs text-textLight">{order.product_name}</span>
+      <span className="text-xs text-textLight">{order.grade_code}</span>
+      <span className="text-xs text-text font-medium">{order.remaining_qty_mt} MT</span>
+      <span className="text-xs text-textLight">{order.days_until_delivery}d</span>
+      <StockAvailability availableMt={order.remaining_qty_mt} />
+      <Badge label={order.priority} variant={PRIORITY_BADGE[order.priority_override]} />
       <div className="ml-auto">
-        <ScoreBar score={order.score} />
+        <ScoreBar score={order.score || 0} />
       </div>
     </div>
   );
@@ -148,6 +153,36 @@ function GradedStockPanel({ onGenerate }) {
     onSuccess: onGenerate,
   });
 
+    const {data: InventoryCategoryList = [], isLoading: InventoryCategoryLoading, error: InventoryCategoryError } = useQuery  ({
+      queryKey: ['inventory'],
+      queryFn: () => GetItemCategory(),
+      select: (res) => res.data,
+      onError: () => toast.error('Failed to load inventory list'),
+    });
+
+    const {data: InventoryStatusList = [], isLoading: InventoryStatusLoading, error: InventoryStatusError } = useQuery  ({
+      queryKey: ['inventoryStatus'],
+      queryFn: () => getInventoryStatus(),
+      select: (res) => res.data,
+      onError: () => toast.error('Failed to load inventory list'),
+    });
+
+    const gradedStockData = (InventoryStatusList?.grades || []).map(
+    (item) => {
+      const matchedSpecies = InventoryCategoryList.find(
+        (cat) => String(cat.id) === String(item.species)
+      );
+
+      return {
+        grade: item.grade_code,
+        species: matchedSpecies?.name || "Unknown",
+        quantityMt: item.available_mt,
+      };
+    }
+  );
+
+
+
   return (
     <Panel accent="post">
       <div className="flex items-center justify-between mb-3">
@@ -156,20 +191,39 @@ function GradedStockPanel({ onGenerate }) {
           <h3 className="font-semibold text-text">Graded stock available</h3>
           <span className="text-xs text-textLight">From ERP ItemBatch – ready for post-grading</span>
         </div>
-        <ActionButton variant="primary" size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}>
+        <Button variant="primary" size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}>
           Generate batch plan
-        </ActionButton>
+        </Button>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {MOCK_GRADED_STOCK.map((s) => (
-          <MetricCard
-            key={`${s.grade}-${s.species}`}
-            label={`${s.grade} ${s.species}`}
-            value={s.quantityMt}
-            unit="MT"
-            color="text-secondary"
-          />
-        ))}
+      <div>
+        {(InventoryCategoryLoading || InventoryStatusLoading) ? (
+          <EmptyState message="Loading Batches..." />
+        ) : (InventoryCategoryError || InventoryStatusError) ? (
+          <EmptyState message="Failed to load batches" />
+        ) : (() => {
+          return gradedStockData.length === 0 ? (
+            <EmptyState icon={FiActivity} message="No batches in progress"/>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border">
+              {gradedStockData.map((s, index) => {
+                return (
+                  <div
+                    key={`${s.grade}-${s.species}-${index}`}
+                    className="min-w-[220px] flex-shrink-0"
+                  >
+                    <MetricCard
+                        label={`${s.grade} ${s.species}`}
+                        value={s.quantityMt}
+                        unit="MT"
+                        color="text-secondary"
+                        sub="Available stock"
+                      />
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
     </Panel>
   );
@@ -186,12 +240,20 @@ export function PostGradingPhase() {
     { label: 'Orders fulfilled', icon: FiTruck },
   ];
 
+  const orderColumns = [ 'ORDER ID', 'CUSTOMER', 'PRODUCT', 'Grade', 'Required', 'DAYS LEFT', 'Stock', 'PRIORITY', 'Score'];
+  const { data: orderList = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => GetOrdersList(),
+    select: (res) => res.data,
+    onError: () => toast.error('Failed to load orders'),
+  });
+
   return (
     <div className="space-y-5">
       {/* Flow indicator */}
-      <Panel>
+      {/* <Panel>
         <StepFlow steps={STEPS} current={1} />
-      </Panel>
+      </Panel> */}
 
       {/* Stock & batch generation */}
       <GradedStockPanel onGenerate={() => qc.invalidateQueries(['postBatches'])} />
@@ -205,7 +267,7 @@ export function PostGradingPhase() {
         </div>
 
         {/* Column headers */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-textLight border-b border-border mb-1">
+        {/* <div className="hidden sm:flex items-center gap-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-textLight border-b border-border mb-1">
           <span className="w-24">Order</span>
           <span className="min-w-[100px]">Buyer</span>
           <span className="w-20">Process</span>
@@ -219,7 +281,28 @@ export function PostGradingPhase() {
 
         <div className="divide-y divide-border/50">
           {MOCK_ORDERS.map((o) => <OrderRow key={o.id} order={o} />)}
-        </div>
+        </div> */}
+        <DataTable
+          columns={orderColumns}
+          data={orderList}
+          isLoading={ordersLoading}
+          emptyMessage="No orders found"
+          renderRow={(order) => (
+            <>
+              <Td><Badge label={order.erp_order_reference} variant="grn" /></Td>
+              <Td>{order.customer_name}</Td>
+              <Td>{order.product_name}</Td>
+              <Td>{order.grade_code}</Td>
+              <Td>{order.remaining_qty_mt} MT</Td>
+              <Td>{order.days_until_delivery}d</Td>
+              <Td><StockAvailability availableMt={order.remaining_qty_mt} /></Td>
+              <Td><Badge label={order.priority} variant={PRIORITY_BADGE[order.priority_override]} /></Td>
+              <Td>
+                 <ScoreBar score={order.score || 0} />
+              </Td>
+            </>
+          )}
+        />
       </Panel>
 
       {/* Active batches */}

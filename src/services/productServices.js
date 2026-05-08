@@ -1,4 +1,4 @@
-import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl } from "../services/ConstantServies";
+import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl } from "../services/ConstantServies";
 import { authAxios, authAxiosFilePost, authAxiosget, authAxiosPatch, authAxiosPost, authAxiosPut } from "./HttpMethod";
 
 export function getemployeeList() {
@@ -118,8 +118,13 @@ export async function AddPlanningConfig(data) {
   }
 }
 
-export function getSpecies(data) {
-  return authAxios(SpeciesUrl, data);
+// export function getSpecies(data) {
+//   return authAxios(SpeciesUrl, data);
+// }
+
+export function getSpecies(data, id) {
+  const url = id ? `${SpeciesUrl}${id}/` : SpeciesUrl;
+  return authAxios(url, data);
 }
 
 export async function AddSpecies(data) {
@@ -179,7 +184,9 @@ export function getInventoryProjection(days) {
   return authAxios(InventoryProjectionUrl, data);
 }
 
-// productServices.js
+export function getBatchList(data) {
+  return authAxios(BatchesUrl, data);
+}
 
 export async function CreateParentBatch(data) {
   try {
@@ -188,6 +195,10 @@ export async function CreateParentBatch(data) {
   } catch (error) {
     return error;
   }
+}
+
+export function getGradingSessionsList(data) {
+  return authAxios(GradingSessionsUrl, data);
 }
 
 export async function AdvanceBatchActivity(id, data = {}) {
