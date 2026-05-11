@@ -188,7 +188,7 @@ const DaliyProductionPlan = () => {
   );
 };
 
-const PlanningResult = ({ data, loading, batchState, setBatchState, selectedDate }) => {
+export const PlanningResult = ({ data, loading, batchState, setBatchState, selectedDate }) => {
   if (loading) return <Card>Loading plan...</Card>;
   if (!data) return null;
 
@@ -265,16 +265,16 @@ const RecommendedBatches = ({ batchState, setBatchState, selectedDate }) => {
   const handleApprove = async () => {
     const payload = {
       date: selectedDate,
-      batches: batchState.filter(b => b.included).map(b => ({
-        product_code: b.product,
-        grade_code: b.grade,
-        input_weight_mt: b.qty,
-        notes: b.notes,
-      }))
+      // batches: batchState.filter(b => b.included).map(b => ({
+      //   product_code: b.product,
+      //   grade_code: b.grade,
+      //   input_weight_mt: b.qty,
+      //   notes: b.notes,
+      // }))
     };
 
     try {
-    //   await GeneratePlan(payload);
+      // await GeneratePlan(payload);
     console.log(payload)
       toast.success("Batches created successfully!");
     } catch (err) {
@@ -303,7 +303,17 @@ const RecommendedBatches = ({ batchState, setBatchState, selectedDate }) => {
                 className="w-5 h-5 accent-green-500"
               />
               <div>
-                <Badge variant="error">CRITICAL</Badge>
+                <Badge
+  variant={
+    b.priority === "URGENT"
+      ? "error"
+      : b.priority === "HIGH"
+      ? "warning"
+      : "success"
+  }
+>
+  {b.priority}
+</Badge>
                 <p className="font-mono font-bold mt-1">{b.orderId}</p>
               </div>
             </div>
@@ -351,7 +361,8 @@ const RecommendedBatches = ({ batchState, setBatchState, selectedDate }) => {
               </div>
               <div>
                 <p className="text-text-light">Margin</p>
-                <p className="font-semibold">₹{(b.margin / 1000).toFixed(0)}K</p>
+                {/* <p className="font-semibold">₹{(b.margin / 1000).toFixed(0)}K</p> */}
+                <p className="font-semibold">₹{Number(b.margin).toLocaleString()}</p>
               </div>
             </div>
 

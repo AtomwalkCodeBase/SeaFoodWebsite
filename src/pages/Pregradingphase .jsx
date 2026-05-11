@@ -8,7 +8,7 @@ import {
 //   SectionHeader, StepFlow, MetricCard,
 // } from './ui';
 import { ActionButton, Badge, EmptyState, InfoRow, MetricCard, Panel, StepFlow } from '../components/EmptyState';
-import { AdvanceBatchActivity, CreateParentBatch, getBatchList, getGradingSessionsList, getProductList, getSpecies, RecordGrades } from '../services/productServices';
+import { AdvanceBatchActivity, CreateParentBatch, CreateSubBatches, getBatchList, getGradingSessionsList, getProductList, getSpecies, RecordGrades } from '../services/productServices';
 import { toast } from 'react-toastify';
 import { extractDateTime } from '../utils';
 import Button from '../components/Button';
@@ -52,20 +52,17 @@ const MOCK_GRADING_SESSIONS = [
 
 // ── GRN Card ──────────────────────────────────────────────────────────────────
 function GrnCard({ grn, onCreateBatch }) {
+  const qc = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-  const [form, setForm] = useState({
+  const EMPTY_FORM = {
     batch_number: "",
     input_weight_mt: "",
     total_received_mt: 0,
     species_config: "",
     erp_batch: "",
-  });
-
-  const mutation = useMutation({
-   mutationFn: () => CreateParentBatch({ grn_reference: grn.id, batch_type: 'PARENT' }),
-    onSuccess: onCreateBatch,
-  });
+  }
+  const [form, setForm] = useState(EMPTY_FORM);
 
   const { date } = extractDateTime(grn.created_at);
 
@@ -85,7 +82,74 @@ function GrnCard({ grn, onCreateBatch }) {
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
-    setForm((prev) => ({...prev,[name]: type === 'number' ? Number(value) || 0 : value,}));
+    // setForm((prev) => ({...prev,[name]: type === 'number' ? Number(value) || 0 : value,}));
+    setForm((prev) => ({...prev,[name]: value,}));
+  };
+
+    const mutation = useMutation({
+    mutationFn: (payload) => CreateParentBatch(payload),
+
+    onSuccess: () => {
+      toast.success('Batch created successfully');
+
+      qc.invalidateQueries(['session']);
+
+      onCreateBatch?.();
+
+      setForm(EMPTY_FORM);
+
+      setIsModalOpen(false);
+      setIsConfirmOpen(false);
+    },
+
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message ||
+        'Failed to create batch'
+      );
+    },
+  });
+
+  const handleCreateBatch = () => {
+
+    // VALIDATION
+
+    if (!form.batch_number?.trim()) {
+      return toast.error('Please enter batch number');
+    }
+
+    if (!form.input_weight_mt || Number(form.input_weight_mt) <= 0) {
+      return toast.error('Please enter valid quantity');
+    }
+
+    if (!form.scheduled_date) {
+      return toast.error('Please select scheduled date');
+    }
+
+    if (!form.product) {
+      return toast.error('Please select product');
+    }
+
+    if (!form.species_config) {
+      return toast.error('Please select species');
+    }
+
+    // PAYLOAD
+
+    const payload = {
+      batch_number: form.batch_number,
+      input_weight_mt: Number(form.input_weight_mt),
+      scheduled_date: form.scheduled_date,
+      product: Number(form.product),
+      species_config: form.species_config,
+
+      // Optional if backend requires linkage with GRN
+      // grn_reference: grn.id,
+      // batch_type: 'PARENT',
+    };
+
+    mutation.mutate(payload);
+    // console.log("payload",payload)
   };
 
   return (
@@ -132,7 +196,8 @@ function GrnCard({ grn, onCreateBatch }) {
         POST /api/planning/batches/ — creates PARENT batch with pre-grading activities
       </p> */}
     </div>
-    <Modal title= "Create Grading Batch" saveButtonText='Create Batch' width='max-w-xl' isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={() => setIsConfirmOpen(true)} showSaveButton={true} isConfirmOpen={isConfirmOpen} setIsConfirmOpen={setIsConfirmOpen}>
+    {/* <Modal title= "Create Grading Batch" saveButtonText='Create Batch' width='max-w-xl' isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleCreateBatch} showSaveButton={true} isConfirmOpen={isConfirmOpen} setIsConfirmOpen={setIsConfirmOpen}> */}
+    <Modal title= "Create Grading Batch" saveButtonText='Create Batch' width='max-w-xl' isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleCreateBatch} showSaveButton={true}>
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
@@ -181,16 +246,31 @@ function GrnCard({ grn, onCreateBatch }) {
             </div>
         </div>
     </Modal>
-    <ConfirmPopup isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} />
+    {/* <ConfirmPopup isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} /> */}
     </>
   );
 }
 
 // ── Parent Batch In-Progress Card ─────────────────────────────────────────────
 function ParentBatchCard({ batch, onAdvance }) {
+    const qc = useQueryClient();
   const mutation = useMutation({
     mutationFn: () => AdvanceBatchActivity(batch.id),
-    onSuccess: onAdvance,
+
+    onSuccess: () => {
+      toast.success('Activity advanced successfully');
+
+      qc.invalidateQueries(['parentBatches']);
+
+      onAdvance?.();
+    },
+
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message ||
+        'Failed to advance activity'
+      );
+    },
   });
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-3">
@@ -285,8 +365,9 @@ function GradeInputRow({
 }
 
 // ── Grading Session Card ───────────────────────────────────────────────────────
-function GradingSessionCard({ session, onConfirm }) {
+function GradingSessionCard({ session, onConfirm, parentBatchData }) {
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [isCreateSubModalOpen, setIsCreateSubModalOpen] = useState(false);
   const [gradeRows, setGradeRows] = useState([
     {
       grade_code: "",
@@ -294,6 +375,15 @@ function GradingSessionCard({ session, onConfirm }) {
       bin_location_id: "",
     },
   ]);
+  const [subBatchGrades, setSubBatchGrades] = useState([
+    {
+      grade_code: "",
+      quantity_mt: 0,
+      item_batch_id: "",
+    },
+  ]);
+
+  // console.log("session", parentBatchData)
 
       const {data: speciesList = [], isLoading: speciesLoading, error: speciesError } = useQuery  ({
         queryKey: ['species', session.species_config],
@@ -321,6 +411,27 @@ function GradingSessionCard({ session, onConfirm }) {
     setGradeRows(updatedRows);
   };
 
+  const handleChange = (index, e) => {
+  const { name, value, type } = e.target;
+
+  const updatedRows = [...subBatchGrades];
+
+  if (name === "grade_code") {
+    const selectedGrade = gradeOptions.find(
+      (grade) => grade.value === value
+    );
+
+    updatedRows[index].grade_code = selectedGrade?.value || "";
+    updatedRows[index].item_batch_id =
+      selectedGrade?.item_batch_id || "";
+  } else {
+    updatedRows[index][name] =
+      type === "number" ? Number(value) || 0 : value;
+  }
+
+  setSubBatchGrades(updatedRows);
+};
+
    const handleAddRow = () => {
     setGradeRows((prev) => [
       ...prev,
@@ -338,6 +449,23 @@ function GradingSessionCard({ session, onConfirm }) {
     setGradeRows(updatedRows);
   };
 
+   const handleAddBatchesRow = () => {
+    setSubBatchGrades((prev) => [
+      ...prev,
+      {
+        grade_code: "",
+        quantity_mt: 0,
+        item_batch_id: "",
+      },
+    ]);
+  };
+
+  // Remove row
+  const handleRemoveBatchesRow = (index) => {
+    const updatedRows = subBatchGrades.filter((_, i) => i !== index);
+    setSubBatchGrades(updatedRows);
+  };
+
   // Submit grades
   const handleSubmitGrades = async () => {
     const payload = {
@@ -348,10 +476,10 @@ function GradingSessionCard({ session, onConfirm }) {
       })),
     };
 
-    console.log("Payload", payload);
+    // console.log("Payload", payload);
 
     try {
-      // await RecordGrades(session.id, payload);
+      await RecordGrades(session.id, payload);
 
       toast.success("Grades recorded successfully");
 
@@ -369,6 +497,54 @@ function GradingSessionCard({ session, onConfirm }) {
       toast.error("Failed to record grades");
     }
   };
+
+  const handleCreateSubBatches = async () => {
+  const payload = {
+    grade_quantities: {},
+  };
+
+  subBatchGrades.forEach((row) => {
+    if (row.grade_code) {
+      payload.grade_quantities[row.grade_code] = {
+        quantity_mt: row.quantity_mt,
+        item_batch_id: row.item_batch_id,
+      };
+    }
+  });
+
+  console.log(payload);
+    // Find the latest batch from parentBatchData
+  let latestBatchId = null;
+  
+  if (parentBatchData && parentBatchData.length > 0) {
+    // Find the batch with the latest updated_at timestamp
+    const latestBatch = parentBatchData.reduce((latest, current) => {
+      const latestDate = new Date(latest.updated_at || latest.created_at);
+      const currentDate = new Date(current.updated_at || current.created_at);
+      return currentDate > latestDate ? current : latest;
+    }, parentBatchData[0]);
+    
+    latestBatchId = latestBatch.id;
+  }
+
+  try {
+    await CreateSubBatches(latestBatchId, payload);
+
+    toast.success("Sub batches created successfully");
+
+    setIsCreateSubModalOpen(false);
+
+    setSubBatchGrades([
+      {
+        grade_code: "",
+        quantity_mt: 0,
+        item_batch_id: "",
+      },
+    ]);
+  } catch (error) {
+    toast.error("Failed to create sub batches");
+  }
+};
 
 
   const hasGrading = session.grade_lines && session.grade_lines.length > 0;
@@ -415,14 +591,14 @@ function GradingSessionCard({ session, onConfirm }) {
         <Button
           variant="primary"
           size="sm"
-          // onClick={() => subBatchMutation.mutate()}
+          onClick={() => setIsCreateSubModalOpen(true)}
           // loading={subBatchMutation.isPending}
         >
           Confirm grades &amp; create sub-batches
         </Button>
       </div>
     </div>
-    <Modal title='Record Grade' width='max-w-6xl' isOpen={isRecordModalOpen} onClose={() => setIsRecordModalOpen(false)} onSave={handleSubmitGrades} saveButtonText='Add Grades'>
+    <Modal title='Record Grade' width='max-w-6xl' isOpen={isRecordModalOpen} onClose={() => {setIsRecordModalOpen(false); setGradeRows([])}} onSave={handleSubmitGrades} saveButtonText='Add Grades'>
         <div className="space-y-6">
           <div className="space-y-4">
             {gradeRows.map((row, index) => (
@@ -496,6 +672,81 @@ function GradingSessionCard({ session, onConfirm }) {
         </div>
 
     </Modal>
+
+    <Modal title='Create sub-batches' width='max-w-6xl' isOpen={isCreateSubModalOpen} onClose={() => {setIsCreateSubModalOpen(false); setSubBatchGrades([])}} onSave={handleCreateSubBatches} saveButtonText='Create Sub Batches'>
+        <div className="space-y-6">
+          <div className="space-y-4">
+            {subBatchGrades.map((row, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-12 gap-4 items-end border border-border rounded-xl p-4"
+              >
+                <div className="col-span-4">
+                  <InputField
+                    label="Grade Code"
+                    name="grade_code"
+                    type="select"
+                    value={row.grade_code}
+                    onChange={(e) =>
+                      handleChange(index, e)
+                    }
+                    options={gradeOptions}
+                  />
+                </div>
+
+                <div className="col-span-3">
+                  <InputField
+                    label="Quantity (MT)"
+                    name="quantity_mt"
+                    type="number"
+                    value={row.quantity_mt}
+                    onChange={(e) =>
+                      handleChange(index, e)
+                    }
+                  />
+                </div>
+
+                <div className="col-span-3">
+                  <InputField
+                    label="Batch ID"
+                    name="item_batch_id"
+                    type="text"
+                    value={row.item_batch_id}
+                    onChange={(e) =>
+                      handleChange(index, e)
+                    }
+                  />
+                </div>
+
+                <div className="col-span-2 flex gap-2">
+                  {/* Add Button */}
+                  {index === subBatchGrades.length - 1 && (
+                    <Button
+                      variant="primary"
+                      onClick={handleAddBatchesRow}
+                      size='sm'
+                    >
+                     Add
+                    </Button>
+                  )}
+
+                  {/* Remove Button */}
+                  {subBatchGrades.length > 1 && (
+                    <Button
+                    size="sm"
+                      variant="outlines"
+                      onClick={() => handleRemoveBatchesRow(index)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+    </Modal>
     </>
   );
 }
@@ -534,10 +785,10 @@ export function PreGradingPhase({speciesList}) {
   const parentBatchData = parentBatchList.filter((p) => p.batch_type === "PARENT" )
   // const sessionData = sessionList.filter((p) => p.status === 'COMPLETED' )
 
-  console.log("sessionList", sessionList)
+  // console.log("sessionList", sessionList)
 
-  //  const pendingGrns = sessionList.filter(grn => grn.status !== 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-   const pendingGrns = sessionList.filter(grn => grn.status === 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+   const pendingGrns = sessionList.filter(grn => grn.status !== 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  //  const pendingGrns = sessionList.filter(grn => grn.status === 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
    const getSpeciesName = (pendingGrns, speciesList) => {
     const matchedSpecies = speciesList.find(species => species.id === pendingGrns.species_config);
@@ -576,7 +827,8 @@ export function PreGradingPhase({speciesList}) {
               pendingGrns.map((grn) => {
               const scientificName = getSpeciesName(grn, speciesList);
               return (
-                <GrnCard key={grn.id} grn={{...grn, species_name: scientificName}} onCreateBatch={() => qc.invalidateQueries(['session'])} />
+                // <GrnCard key={grn.id} grn={{...grn, species_name: scientificName}} onCreateBatch={() => qc.invalidateQueries(['session'])} />
+                <GrnCard key={grn.id} grn={{...grn, species_name: scientificName}} />
               );
             })
             )}
@@ -602,7 +854,7 @@ export function PreGradingPhase({speciesList}) {
             ) : parentBatchError ? (
               <EmptyState message="Failed to load batches" />
             ) : (() => {
-            const pendingBatches = parentBatchData.filter(batch => batch.status === 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const pendingBatches = parentBatchData.filter(batch => batch.status !== 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             return pendingBatches.length === 0 ? (
               <EmptyState icon={FiActivity} message="No batches in progress" />
             ) : (
@@ -610,6 +862,7 @@ export function PreGradingPhase({speciesList}) {
                 const specifiedName = getSpeciesName(b, speciesList);
                 return (
                   <ParentBatchCard key={b.id} batch={{...b, species_name: specifiedName}} onAdvance={() => qc.invalidateQueries(['parentBatches'])} />
+                  // <ParentBatchCard key={b.id} batch={{...b, species_name: specifiedName}} />
                 );
               })
             );
@@ -631,8 +884,8 @@ export function PreGradingPhase({speciesList}) {
               <EmptyState icon={FiSliders} message="Failed to load batches" />
             ) : (() => {
                 // const completedBatches = sessionList.filter(batch => batch.status === 'COMPLETED').sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
-                const completedBatches = sessionList.filter(batch => batch.status === 'COMPLETED');
-                console.log("completedBatches", completedBatches)
+                const completedBatches = sessionList.filter(batch => batch.status !== 'COMPLETED');
+                // console.log("completedBatches", completedBatches)
                 return completedBatches.length === 0 ? (
                   <EmptyState icon={FiSliders} message="No batches ready for grading" />
                 ) : (
@@ -642,6 +895,7 @@ export function PreGradingPhase({speciesList}) {
                       <GradingSessionCard 
                         key={batch.id} 
                         session={{...batch, species_name: specifiedName}} 
+                        parentBatchData={parentBatchData}
                       />
                     );
                   })

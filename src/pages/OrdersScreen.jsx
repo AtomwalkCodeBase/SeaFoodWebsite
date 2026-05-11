@@ -65,7 +65,7 @@ const statusToBadgeVariant = {
 }
 
 const orderColumns = [
-  'ORDER ID', 'CUSTOMER', 'PRODUCT', 'QTY (MT)', 'MARGIN (USD/MT)',
+  'ORDER ID', 'CUSTOMER', 'PRODUCT', 'QTY (MT)', 'MARGIN (MT)',
   'SHIPMENT DATE', 'DAYS LEFT', 'SCORE', 'PRIORITY', 'STATUS'
 ];
 
@@ -125,9 +125,11 @@ const OrdersScreen = () => {
 
   const createOrderMutation = useMutation({
     mutationFn: AddNewOrder,
-    onSuccess: () => {
+    onSuccess: async() => {
       toast.success('Order added successfully!');
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+       await queryClient.invalidateQueries({
+        queryKey: ['orders']
+      });
       handleCloseModal();
     },
     onError: (error) => {
@@ -145,8 +147,20 @@ const OrdersScreen = () => {
   };
 
   const handleAddOrder = () => {
-    console.log(form)
-    // createOrderMutation.mutate(form);
+    // console.log(form)
+      const payload = {
+    ...form,
+
+    quantity_mt: Number(form.quantity_mt || 0),
+    selling_price_per_mt: Number(form.selling_price_per_mt || 0),
+    cold_chain_buffer_days: Number(form.cold_chain_buffer_days || 0),
+
+    product: Number(form.product),
+  };
+
+  console.log("Creating Order Payload:", payload);
+
+  createOrderMutation.mutate(payload);
   };
 
   const handleCloseModal = () => {
@@ -286,6 +300,14 @@ const OrdersScreen = () => {
                 onChange={handleInputChange}
                 options={gradeList.map(item => ({ id: item.id, value: item.id, label: `${item.label} (${item.grade_code})`}))}
               />
+
+               <InputField
+                label="Quantity (per MT)"
+                name="quantity_mt"
+                type="number"
+                value={form.quantity_mt}
+                onChange={handleInputChange}
+              />
             </div>
           </Section>
 
@@ -343,7 +365,7 @@ const OrdersScreen = () => {
                 onChange={handleInputChange}
                 options={ORDERS_PRIORITY_OPTIONS.map(item => ({
                   id: item.id,
-                  value: item.id,
+                  value: item.label,
                   label: item.label
                 }))}
               />

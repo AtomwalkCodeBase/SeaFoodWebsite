@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FiBox, FiList, FiZap, FiTruck, FiCheckCircle, FiAlertTriangle,
   FiActivity,
 } from 'react-icons/fi';
-import { AutoAllocateBatch, CreateParentBatch, getInventoryStatus, GetItemCategory, GetOrdersList, GetPlanningReport } from '../services/productServices';
+import { AutoAllocateBatch, CreateParentBatch, getBatchList, getInventoryStatus, GetItemCategory, GetOrdersList, GetPlanningReport, getProcessActivityList } from '../services/productServices';
 import { ActionButton, Badge, EmptyState, MetricCard, Panel, StepFlow } from '../components/EmptyState';
 import Button from '../components/Button';
 import { toast } from 'react-toastify';
 import DataTable, { Td } from '../components/Datatable';
+import { PlanningResult } from './DaliyProductionPlan';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 const MOCK_GRADED_STOCK = [
@@ -80,7 +81,34 @@ const PROCESS_STEPS = ['Cleaning', 'Cooking', 'Glazing', 'Packing'];
 
 function BatchCard({ batch }) {
   const qc = useQueryClient();
-  const currentIdx = PROCESS_STEPS.indexOf(batch.currentStep);
+
+  const completedActivities = useMemo(() => {
+    return batch.activity_logs?.filter((log) => log.status === "COMPLETED").map((log) => log.activity_name) || [];
+  }, [batch.activity_logs]);
+
+  const currentActivityName = batch.current_activity_name;
+  const [selectedActivityName, setSelectedActivityName] = useState(currentActivityName);
+
+  const { data: processActivities = [] } = useQuery({
+    queryKey: ['processActivities', batch.product],
+    queryFn: () => getProcessActivityList(batch.product),
+    enabled: !!batch.product,
+  });
+
+  const dynamicSteps = useMemo(() => {
+    if (processActivities.length > 0) {
+      return processActivities.sort((a, b) => a.id - b.id).map((act) => act.activity_name);
+    }
+    return PROCESS_STEPS; // fallback
+  }, [processActivities]);
+
+  const currentIdx = dynamicSteps.indexOf(currentActivityName);
+  const selectedLog = batch.activity_logs?.find((log) => log.activity_name === selectedActivityName);
+
+  const displayInput = selectedLog?.input_weight_mt || batch.input_weight_mt || '0';
+  const displayExpected = selectedLog?.expected_output_mt || '0';
+  const displayActual = selectedLog?.actual_output_mt || '-';
+
 
   const advanceMutation = useMutation({
     mutationFn: () =>  CreateParentBatch({ grn_reference: batch.id, batch_type: 'PARENT' }),
@@ -93,32 +121,44 @@ function BatchCard({ batch }) {
     onSuccess: () => qc.invalidateQueries(['orders']),
   });
 
-  const nextStep = PROCESS_STEPS[currentIdx + 1];
+  const nextStep = currentIdx >= 0 && currentIdx < dynamicSteps.length - 1 ? dynamicSteps[currentIdx + 1]  : null;
+
+  const isLastStep = currentIdx === dynamicSteps.length - 1;
+
 
   return (
     <div className="rounded-lg border border-border bg-background p-3 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge label={batch.id} variant="grn" />
-        <span className="text-xs text-textLight">→ {batch.orderId}</span>
+        <Badge label={batch.batch_number} variant="grn" />
+        <span className="text-xs text-textLight">→ {batch.orderId || "--"}</span>
         <Badge label={batch.species} variant="species" />
         <span className="text-xs text-textLight">
-          Input: <strong className="text-text">{batch.inputMt} MT</strong>
-          {' '}Output: <strong className="text-secondary">{batch.outputMt} MT</strong>
+          Input: <strong className="text-text">{batch.input_weight_mt || "--"} MT</strong>,
+          {' '}{' '}{' '}{' '}Expected Output: <strong className="text-secondary">{batch.expected_output_mt || "--"} MT</strong>,
+          {' '}{' '}{' '}{' '}Actual Output: <strong className="text-secondary">{batch.actual_output_mt || "Not finished yet"} MT</strong>
         </span>
       </div>
 
       {/* Step indicators */}
       <div className="flex gap-2">
-        {PROCESS_STEPS.map((step, i) => {
-          const done = i < currentIdx;
-          const active = i === currentIdx;
+        {dynamicSteps.map((step, i) => {
+          const isDone = batch.activity_logs?.some((log) => log.activity_name === step && log.status === "COMPLETED");
+          const isActive = step === currentActivityName;
+          const isSelected = step === selectedActivityName;
+
           return (
-            <div key={step} className="flex-1 text-center">
-              <div className={`text-[10px] font-semibold rounded px-1 py-0.5 ${
-                done ? 'bg-success/15 text-success' :
-                active ? 'bg-secondary/20 text-secondary' :
-                'bg-backgroundAlt text-textLight'
-              }`}>
+            <div 
+              key={step} 
+              className="flex-1 text-center cursor-pointer"
+              onClick={() => setSelectedActivityName(step)}
+            >
+              <div className={`text-[10px] font-semibold rounded px-1 py-0.5 transition-all ${
+                isDone 
+                  ? 'bg-success/15 text-success'                     // ← Green preserved for completed
+                  : isActive 
+                  ? 'bg-secondary/20 text-secondary font-medium' 
+                  : 'bg-backgroundAlt text-textLight'
+              } ${isSelected ? 'ring-2 ring-offset-2 ring-secondary' : ''}`}>
                 {step}
               </div>
             </div>
@@ -126,16 +166,46 @@ function BatchCard({ batch }) {
         })}
       </div>
 
+      {/* Selected Activity Details */}
+      <div className="bg-backgroundAlt rounded-lg p-3 text-sm">
+        <p className="font-medium text-text mb-2">
+          {selectedActivityName} 
+          {selectedActivityName === currentActivityName && (
+            <span className="ml-2 text-secondary text-xs font-normal">(In Progress)</span>
+          )}
+        </p>
+        
+        <div className="grid grid-cols-3 gap-3 text-xs">
+          <div>
+            <span className="text-textLight">Input</span><br />
+            <strong className="text-text">{displayInput} MT</strong>
+          </div>
+          <div>
+            <span className="text-textLight">Expected Output</span><br />
+            <strong className="text-text">{displayExpected} MT</strong>
+          </div>
+          <div>
+            <span className="text-textLight">Actual Output</span><br />
+            <strong className={`${
+              displayActual === '-' ? 'text-textLight' : 'text-secondary'
+            }`}>
+              {displayActual} MT
+            </strong>
+          </div>
+        </div>
+      </div>
+
       <div className="flex gap-2 flex-wrap">
         {nextStep && (
-          <ActionButton variant="primary" size="sm" onClick={() => advanceMutation.mutate()} loading={advanceMutation.isPending}>
+          <Button variant="primary" size="sm" onClick={() => advanceMutation.mutate()} loading={advanceMutation.isPending}>
             Advance → {nextStep}
-          </ActionButton>
+          </Button>
         )}
-        {currentIdx === PROCESS_STEPS.length - 1 && (
-          <ActionButton variant="success" size="sm" onClick={() => allocateMutation.mutate()} loading={allocateMutation.isPending}>
+
+        {isLastStep && (
+          <Button variant="success" size="sm" onClick={() => allocateMutation.mutate()} loading={allocateMutation.isPending}>
             Auto-allocate to order
-          </ActionButton>
+          </Button>
         )}
       </div>
     </div>
@@ -143,15 +213,9 @@ function BatchCard({ batch }) {
 }
 
 // ── Graded Stock Summary ───────────────────────────────────────────────────────
-function GradedStockPanel({ onGenerate }) {
-  const mutation = useMutation({
-    mutationFn: () =>  GetPlanningReport({  date: new Date().toISOString().slice(0, 10) }),
-    //   apiFetch(API.engineGenerate, {
-    //     method: 'POST',
-    //     body: JSON.stringify({ date: new Date().toISOString().slice(0, 10) }),
-    //   }),
-    onSuccess: onGenerate,
-  });
+function GradedStockPanel({ onGenerate, planLoading  }) {
+
+
 
     const {data: InventoryCategoryList = [], isLoading: InventoryCategoryLoading, error: InventoryCategoryError } = useQuery  ({
       queryKey: ['inventory'],
@@ -184,6 +248,7 @@ function GradedStockPanel({ onGenerate }) {
 
 
   return (
+    <>
     <Panel accent="post">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -191,7 +256,7 @@ function GradedStockPanel({ onGenerate }) {
           <h3 className="font-semibold text-text">Graded stock available</h3>
           <span className="text-xs text-textLight">From ERP ItemBatch – ready for post-grading</span>
         </div>
-        <Button variant="primary" size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}>
+        <Button variant="primary" size="sm"   onClick={onGenerate} loading={planLoading}>
           Generate batch plan
         </Button>
       </div>
@@ -226,12 +291,19 @@ function GradedStockPanel({ onGenerate }) {
         })()}
       </div>
     </Panel>
+
+
+    </>
   );
 }
 
 // ── Phase 2 Root ───────────────────────────────────────────────────────────────
 export function PostGradingPhase() {
   const qc = useQueryClient();
+      const [selectedDate, setSelectedDate] = useState("");
+    const [showPlan, setShowPlan] = useState(false);
+    const [deferredOrders, setDeferredOrders] = useState(new Set());
+    const [batchState, setBatchState] = useState([]);
 
   const STEPS = [
     { label: 'Graded stock', icon: FiBox },
@@ -239,6 +311,82 @@ export function PostGradingPhase() {
     { label: 'Processing', icon: FiList },
     { label: 'Orders fulfilled', icon: FiTruck },
   ];
+
+   const today = new Date().toISOString().slice(0, 10);
+
+const { data: planData, isLoading: planLoading, refetch: fetchPlan } = useQuery({
+    queryKey: ['planning-engine', today],
+    queryFn: () => GetPlanningReport(today),
+    enabled: false,
+    select: (res) => res.data,
+    onError: () => toast.error("Failed to generate plan"),
+  });
+
+useEffect(() => {
+  if (planData?.recommended_batches) {
+
+    const mapped = planData.recommended_batches.map((batch, i) => {
+
+      // find matching priority queue item
+      const matchedPriority = planData.priority_queue?.find(
+        (pq) =>
+          pq.product_code === batch.product_code &&
+          pq.grade_code === batch.grade_code
+      );
+
+      return {
+        id: i,
+
+        // order details
+        orderId:
+          matchedPriority?.order?.erp_order_reference ||
+          `BATCH-${i}`,
+
+        customer:
+          matchedPriority?.order?.customer_name ||
+          "Unknown Customer",
+
+        daysLeft:
+          matchedPriority?.order?.days_until_delivery || 0,
+
+        // batch details
+        product: batch.product_code,
+        grade: batch.grade_code,
+        qty: batch.input_weight_mt,
+
+        included: true,
+        notes: "",
+
+        // metrics
+        yieldPct: matchedPriority?.yield_chain_pct || 0,
+
+        margin:
+          matchedPriority?.order?.margin_per_mt || 0,
+
+        priority:
+          matchedPriority?.label || "NORMAL",
+
+        score:
+          matchedPriority?.total || 0,
+
+        stockAvailable:
+          matchedPriority?.stock_available_mt || 0,
+
+        estimatedDays:
+          matchedPriority?.estimated_completion_days || 0,
+
+        orders: batch.fulfills_orders || [],
+      };
+    });
+
+    setBatchState(mapped);
+  }
+}, [planData]);
+
+  const handleGeneratePlan = async () => {
+    await fetchPlan();
+    setShowPlan(true);
+  };
 
   const orderColumns = [ 'ORDER ID', 'CUSTOMER', 'PRODUCT', 'Grade', 'Required', 'DAYS LEFT', 'Stock', 'PRIORITY', 'Score'];
   const { data: orderList = [], isLoading: ordersLoading } = useQuery({
@@ -248,6 +396,19 @@ export function PostGradingPhase() {
     onError: () => toast.error('Failed to load orders'),
   });
 
+  const { data: batchList = [], isLoading: batchLoading } = useQuery({
+    queryKey: ['batches'],
+    queryFn: () => getBatchList(),
+    select: (res) => res.data,
+    onError: () => toast.error('Failed to load batches'),
+  });
+
+const activeSubBatches = useMemo(() => {
+  return batchList.filter(batch => batch.batch_type === "SUB_BATCH" && batch.status === "IN_PROGRESS");
+}, [batchList]);
+
+
+
   return (
     <div className="space-y-5">
       {/* Flow indicator */}
@@ -256,7 +417,7 @@ export function PostGradingPhase() {
       </Panel> */}
 
       {/* Stock & batch generation */}
-      <GradedStockPanel onGenerate={() => qc.invalidateQueries(['postBatches'])} />
+      <GradedStockPanel   onGenerate={handleGeneratePlan} planLoading={planLoading} />
 
       {/* Orders queue */}
       <Panel accent="post">
@@ -305,6 +466,16 @@ export function PostGradingPhase() {
         />
       </Panel>
 
+      {showPlan && (
+        <PlanningResult 
+          data={planData} 
+          loading={planLoading} 
+          batchState={batchState}
+          setBatchState={setBatchState}
+          selectedDate={today}
+        />
+      )}
+
       {/* Active batches */}
       <Panel accent="post">
         <div className="flex items-center gap-2 mb-3">
@@ -313,10 +484,10 @@ export function PostGradingPhase() {
           <span className="text-xs text-textLight">Processing in progress</span>
         </div>
         <div className="space-y-3">
-          {MOCK_BATCHES.length === 0 ? (
+          {activeSubBatches.length === 0 ? (
             <EmptyState icon={FiZap} message="No active batches — generate a batch plan above" />
           ) : (
-            MOCK_BATCHES.map((b) => <BatchCard key={b.id} batch={b} />)
+            activeSubBatches.map((b) => <BatchCard key={b.id} batch={b} />)
           )}
         </div>
       </Panel>

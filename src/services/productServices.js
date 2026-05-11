@@ -201,6 +201,15 @@ export function getGradingSessionsList(data) {
   return authAxios(GradingSessionsUrl, data);
 }
 
+export async function createGRN(data) {
+  try {
+    const response = await authAxiosPost(GradingSessionsUrl, data);
+    return response;
+  } catch (error) {
+    return error;
+  }
+}
+
 export async function AdvanceBatchActivity(id, data = {}) {
   try {
     const response = await authAxiosPost(`${BatchesUrl}${id}/advance-activity/`, data);

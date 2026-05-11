@@ -44,6 +44,7 @@ import { toast } from "react-toastify"
 import { getEmployeeInfo } from "../services/authServices"
 import { setuserpinview } from "../services/productServices"
 import Layout from "../components/Layout"
+import { useAuth } from "../context/AuthContext"
 
 const PageHeader = styled.div`
   background: linear-gradient(120deg, ${({ theme }) => theme.colors.primary} 0%, ${({ theme }) => theme.colors.secondary} 100%);
@@ -1120,6 +1121,7 @@ const OptionCardLabel = styled.div`
 `
 
 const Profile = () => {
+  const { profile } = useAuth();
   const [isEditingPin, setIsEditingPin] = useState(false)
   const [currentPin, setCurrentPin] = useState("")
   const [newPin, setNewPin] = useState("")
@@ -1127,10 +1129,12 @@ const Profile = () => {
   const [pinError, setPinError] = useState("")
   const [pinSuccess, setPinSuccess] = useState("")
   const [activeTab, setActiveTab] = useState("personal")
-  const [profileData, setProfileData] = useState({})
+  const [profileData, setProfileData] = useState(profile)
   const [activeThemeTab, setActiveThemeTab] = useState("presets")
   const isFmsLogin = localStorage.getItem("fmsUser")
   const isEmpId = localStorage.getItem('empId')
+
+    console.log("profile", profile)
   const {
     theme,
     currentTheme,
@@ -1143,19 +1147,19 @@ const Profile = () => {
     isCustomTheme,
     resetCustomizations,
   } = useTheme()
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await getEmployeeInfo()
-        setProfileData(res?.data[0])
-      } catch (error) {
-        console.error("Failed to fetch profile:", error)
-      }
-    }
-    if(isEmpId){
-      fetchProfile()
-    }
-  }, [])
+  // useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     try {
+  //       const res = await getEmployeeInfo()
+  //       setProfileData(res?.data[0])
+  //     } catch (error) {
+  //       console.error("Failed to fetch profile:", error)
+  //     }
+  //   }
+  //   if(isEmpId){
+  //     fetchProfile()
+  //   }
+  // }, [])
 
   const getExperience = (joiningDate) => {
     if (!joiningDate) return "0 years"

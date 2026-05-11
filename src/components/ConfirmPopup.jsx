@@ -22,8 +22,8 @@ const ConfirmPopup = ({
 
   return createPortal(
     <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/10 backdrop-blur-xs p-4">
-      <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border p-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border p-4">
+        <div className="flex justify-between items-center">
           <h3 className="text-xl font-bold text-text">{title}</h3>
           <button 
             onClick={onClose}
@@ -40,14 +40,14 @@ const ConfirmPopup = ({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-border hover:bg-backgroundAlt transition-colors font-medium text-text"
+            className="px-3 py-2 rounded-xl border border-border hover:bg-backgroundAlt transition-colors font-medium text-text"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`px-5 py-2.5 rounded-xl font-semibold text-white transition-colors ${
+            className={`px-3 py-2 rounded-xl font-semibold text-white transition-colors ${
               variant === 'danger' 
                 ? 'bg-red-600 hover:bg-red-700' 
                 : 'bg-primary hover:bg-primary/90'

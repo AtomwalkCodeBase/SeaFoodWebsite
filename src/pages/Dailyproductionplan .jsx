@@ -8,9 +8,10 @@ import { FullDayPlan } from './Fulldayplan';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
 import InputField from '../components/InputField';
-import { getCustomerListView, getSpecies } from '../services/productServices';
+import { createGRN, getCustomerListView, getSpecies } from '../services/productServices';
 import { toast } from 'react-toastify';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import Button from '../components/Button';
 
  const tabs = [
     {
@@ -44,7 +45,7 @@ import { useQuery } from '@tanstack/react-query';
 export default function DailyProductionPlanInner() {
   const [activeTab, setActiveTab] = useState('full');
     const [isOpenGrnModal, setIsOpenGrnModal] = useState(false);
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    // const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
      const [form, setForm] = useState(EMPTY_FORM);
 
@@ -68,6 +69,56 @@ export default function DailyProductionPlanInner() {
     setForm((prev) => ({...prev,[name]: type === 'number' ? Number(value) || 0 : value,}));
   };
 
+    const { mutate: addGRN, isPending: isAddingGRN } = useMutation({
+    mutationFn: (payload) => createGRN(payload),
+
+    onSuccess: () => {
+      toast.success('GRN added successfully');
+      setForm(EMPTY_FORM);
+      setIsOpenGrnModal(false);
+      // setIsConfirmModalOpen(false);
+    },
+
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message || 'Failed to add GRN'
+      );
+    },
+  });
+
+  const handleAddGRN = () => {
+    if (!form.grn_reference?.trim()) {
+      return toast.error('Please enter GRN reference number');
+    }
+
+    if (!form.supplier_id) {
+      return toast.error('Please select supplier');
+    }
+
+    if (!form.total_received_mt || Number(form.total_received_mt) <= 0) {
+      return toast.error('Please enter total received quantity');
+    }
+
+    if (!form.species_config) {
+      return toast.error('Please select species');
+    }
+
+    if (!form.erp_batch?.trim()) {
+      return toast.error('Please enter ERP batch');
+    }
+
+    const payload = {
+      grn_reference: form.grn_reference,
+      supplier_id: Number(form.supplier_id),
+      total_received_mt: String(form.total_received_mt),
+      species_config: form.species_config,
+      erp_batch: form.erp_batch,
+    };
+
+    addGRN(payload);
+    // console.log("payload",payload)
+  };
+
   return (
     <Layout>
         {/* <TopBar activeTab={activeTab} /> */}
@@ -80,11 +131,15 @@ export default function DailyProductionPlanInner() {
         {activeTab === 'pre' && (
           // <div className="max-w-3xl mx-auto">
           <div className="mx-auto">
+            <div className='flex justify-between items-center'>
             <SectionHeader
               step="1"
               title="Pre-grading: raw material → grading → graded inventory"
               // phaseColor="pre"
             />
+            <Button size='sm' onClick = {() => setIsOpenGrnModal(true)}>Add GRN</Button>
+
+            </div>
             <PreGradingPhase speciesList={speciesList} />
           </div>
         )}
@@ -106,15 +161,15 @@ export default function DailyProductionPlanInner() {
             <Modal 
     isOpen={isOpenGrnModal}
   onClose={() => setIsOpenGrnModal(false)}
-  onSave
+  onSave = {handleAddGRN}
   title = "Add New GRN"
   width = "max-w-xl"
   maxHeight = "max-h-[80vh]"
   showSaveButton = {true}
   saveButtonText = "Add GRN"
   cancelButtonText = "Cancel"
-  isConfirmOpen={isConfirmModalOpen}
-  setIsConfirmOpen ={setIsConfirmModalOpen}
+  // isConfirmOpen={isConfirmModalOpen}
+  // setIsConfirmOpen ={setIsConfirmModalOpen}
   >
     <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
