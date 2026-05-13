@@ -4,12 +4,13 @@ import {
   FiBox, FiList, FiZap, FiTruck, FiCheckCircle, FiAlertTriangle,
   FiActivity,
 } from 'react-icons/fi';
-import { AdvanceBatchActivity, AutoAllocateBatch, CreateParentBatch, getBatchList, getInventoryStatus, GetItemCategory, GetOrdersList, GetPlanningReport, getProcessActivityList } from '../services/productServices';
+import { AdvanceBatchActivity, AutoAllocateBatch, CreateParentBatch, getBatchList, getInventoryStatus, GetItemCategory, GetOrdersList, GetPlanningReport, getProcessActivityList, ManualAllocateBatch } from '../services/productServices';
 import { ActionButton, Badge, EmptyState, MetricCard, Panel, StepFlow } from '../components/EmptyState';
 import Button from '../components/Button';
 import { toast } from 'react-toastify';
 import DataTable, { Td } from '../components/Datatable';
 import { PlanningResult } from './DaliyProductionPlan';
+import AllocateBatchModal from '../components/Modal/AllocateBatchModal';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 const MOCK_GRADED_STOCK = [
@@ -81,6 +82,8 @@ const PROCESS_STEPS = ['Cleaning', 'Cooking', 'Glazing', 'Packing'];
 
 function BatchCard({ batch }) {
   const qc = useQueryClient();
+  const [isAllocateModalOpen, setIsAllocateModalOpen] = useState(false);
+  const manualAllocations = useState({});
 
   console.log("batch", batch)
 
@@ -98,7 +101,19 @@ function BatchCard({ batch }) {
     enabled: !!batch.product,
   });
 
+    const { data: orderList = [], isLoading: ordersLoading, error: ordersError } = useQuery({
+      queryKey: ['orders'],
+      queryFn: () => GetOrdersList(),
+      select: (res) => res.data,
+      onError: () => toast.error('Failed to load orders'),
+    });
+
+  const matchingOrders = useMemo(() => {
+    return orderList.filter((o) =>o.grade_code === batch.grade_code && o.product_code === batch.product_code);
+  }, [batch]);
+
   console.log("completedActivities", completedActivities)
+  
 
 
 
@@ -109,6 +124,14 @@ function BatchCard({ batch }) {
     return PROCESS_STEPS; // fallback
   }, [processActivities]);
 
+  useEffect(() => {
+  if (batch.status === "SCHEDULED") {
+    setSelectedActivityName(dynamicSteps[0]);
+  } else if (currentActivityName) {
+    setSelectedActivityName(currentActivityName);
+  }
+}, [currentActivityName, batch.status, dynamicSteps]);
+
   const currentIdx = dynamicSteps.indexOf(currentActivityName);
   const selectedLog = batch.activity_logs?.find((log) => log.activity_name === selectedActivityName);
 
@@ -116,14 +139,28 @@ function BatchCard({ batch }) {
   const displayExpected = selectedLog?.expected_output_mt || '0';
   const displayActual = selectedLog?.actual_output_mt || '-';
 
-  const nextStep = currentIdx >= 0 && currentIdx < dynamicSteps.length - 1 ? dynamicSteps[currentIdx + 1]  : null;
+const isLastStep = currentIdx === dynamicSteps.length - 1;
 
-  const isLastStep = currentIdx === dynamicSteps.length - 1;
+const canAdvance =
+  batch.status === "SCHEDULED" ||
+  (currentIdx >= 0 &&
+    batch.status !== "ALLOCATING");
+
+const nextStepLabel =
+  batch.status === "SCHEDULED"
+    ? dynamicSteps[0]
+    : isLastStep
+    ? "Complete Batch"
+    : dynamicSteps[currentIdx + 1];
 
   const advanceMutation = useMutation({
     mutationFn: () =>  AdvanceBatchActivity(batch.id),
     onSuccess: () => {
-      toast.success(`Advance to ${nextStep}`);
+      toast.success(
+  batch.status === "SCHEDULED"
+    ? `Started ${dynamicSteps[0]}`
+    : `Advance to ${nextStepLabel}`
+);
       qc.invalidateQueries(['batches'])
     },
     onError: (error) => {
@@ -131,18 +168,34 @@ function BatchCard({ batch }) {
       },
   });
   
-  const allocateMutation = useMutation({
-    mutationFn: () =>  AutoAllocateBatch({ grn_reference: batch.id}),
-    onSuccess: () => qc.invalidateQueries(['orders']),
+  const autoAllocateMutation = useMutation({
+    mutationFn: () => AutoAllocateBatch(batch.id),
+    onSuccess: () => {
+      toast.success("Auto allocation completed");
+      qc.invalidateQueries(['orders']);
+      qc.invalidateQueries(['batches']);
+    },
+  });
+
+  const manualAllocateMutation = useMutation({
+    mutationFn: (payload) => ManualAllocateBatch(batch.id ,payload),
+    onSuccess: () => {
+      toast.success("Allocation completed");
+      setIsAllocateModalOpen(false);
+
+      qc.invalidateQueries(['orders']);
+      qc.invalidateQueries(['batches']);
+    },
   });
 
 
 
   return (
+    <>
     <div className="rounded-lg border border-border bg-background p-3 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Badge label={batch.batch_number} variant="grn" />
-        <span className="text-xs text-text-light">→ {batch.orderId || "--"}</span>
+        {/* <span className="text-xs text-text-light">→ {batch.orderId || "--"}</span> */}
         <Badge label={batch.species} variant="species" />
         <span className="text-xs text-text-light">
           Input: <strong className="text-text">{batch.input_weight_mt || "--"} MT</strong>,
@@ -180,10 +233,10 @@ function BatchCard({ batch }) {
 
       {/* Selected Activity Details */}
       <div className="bg-backgroundAlt rounded-lg p-3 text-sm">
-        <p className="font-medium text-text mb-2">
+        <p className="font-semibold text-text mb-2">
           {selectedActivityName} 
           {selectedActivityName === currentActivityName && (
-            <span className="ml-2 text-secondary text-xs font-normal">(In Progress)</span>
+            <span className="ml-2 text-secondary text-xs ">(In Progress)</span>
           )}
         </p>
         
@@ -208,19 +261,62 @@ function BatchCard({ batch }) {
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        {nextStep && (
-          <Button variant="primary" size="sm" onClick={() => advanceMutation.mutate()} loading={advanceMutation.isPending}>
-            Advance → {nextStep}
-          </Button>
-        )}
+        {canAdvance && (
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => advanceMutation.mutate()}
+          loading={advanceMutation.isPending}
+        >
+          Advance → {nextStepLabel}
+        </Button>
+      )}
 
-        {isLastStep && (
-          <Button variant="success" size="sm" onClick={() => allocateMutation.mutate()} loading={allocateMutation.isPending}>
-            Auto-allocate to order
-          </Button>
-        )}
+        {batch.status === "ALLOCATING" && (
+          <>
+            <Button
+              variant="success"
+              size="sm"
+              onClick={() => autoAllocateMutation.mutate()}
+              loading={autoAllocateMutation.isPending}
+            >
+              Auto-allocate to order
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsAllocateModalOpen(true)}
+            >
+              Manual allocate
+            </Button>
+          </>
+)}
       </div>
     </div>
+
+    {isAllocateModalOpen && (
+  <AllocateBatchModal
+    batch={batch}
+    isOpen={isAllocateModalOpen}
+    orders={matchingOrders}
+    onClose={() => setIsAllocateModalOpen(false)}
+    onConfirm={(allocations) => {
+      const payload = {
+        batch_id: batch.id,
+        allocations: Object.entries(allocations).map(
+          ([order_plan_id, quantity_mt]) => ({
+            order_plan_id,
+            quantity_mt: Number(quantity_mt || 0),
+          })
+        ),
+      };
+
+      manualAllocateMutation.mutate(payload);
+    }}
+  />
+)}
+</>
   );
 }
 
@@ -416,7 +512,7 @@ useEffect(() => {
   });
 
 const activeSubBatches = useMemo(() => {
-  return batchList.filter(batch => batch.batch_type === "SUB_BATCH" && batch.status === "IN_PROGRESS");
+  return batchList.filter(batch => batch.batch_type === "SUB_BATCH" && batch.status !== "COMPLETED");
 }, [batchList]);
 
 

@@ -250,3 +250,7 @@ export async function AutoAllocateBatch(batchId, data = {}) {
     return error;
   }
 }
+export async function ManualAllocateBatch(batchId, data = {}) {
+    const response = await authAxiosPost(`${BatchesUrl}${batchId}/allocate/`, data);
+    return response;
+}
