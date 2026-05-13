@@ -33,7 +33,7 @@ const Modal = ({
   return createPortal(
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div 
-        className={`bg-card w-full ${width} rounded-2xl shadow-2xl border border-border p-6 flex flex-col max-h-[95vh]`}
+        className={`bg-card w-full ${width} rounded-2xl shadow-2xl border border-border p-4 flex flex-col max-h-[95vh]`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

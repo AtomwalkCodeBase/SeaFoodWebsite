@@ -14,12 +14,12 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import Button from '../components/Button';
 
  const tabs = [
-    {
-      key: 'full',
-      label: 'Full day plan',
-      icon: '📋',
-      description: 'Both phases',
-    },
+    // {
+    //   key: 'full',
+    //   label: 'Full day plan',
+    //   icon: '📋',
+    //   description: 'Both phases',
+    // },
     {
       key: 'pre',
       label: 'Phase 1: Pre-grading',
@@ -43,7 +43,7 @@ import Button from '../components/Button';
 };
 
 export default function DailyProductionPlanInner() {
-  const [activeTab, setActiveTab] = useState('full');
+  const [activeTab, setActiveTab] = useState('pre');
     const [isOpenGrnModal, setIsOpenGrnModal] = useState(false);
     // const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
@@ -126,7 +126,7 @@ export default function DailyProductionPlanInner() {
         <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
         {/* <PhaseTabBar activeTab={activeTab} onChange={setActiveTab} /> */}
 
-        {activeTab === 'full' && <FullDayPlan setIsOpenGrnModal={setIsOpenGrnModal} speciesList={speciesList}/>}
+        {/* {activeTab === 'full' && <FullDayPlan setIsOpenGrnModal={setIsOpenGrnModal} speciesList={speciesList}/>} */}
 
         {activeTab === 'pre' && (
           // <div className="max-w-3xl mx-auto">
@@ -137,7 +137,7 @@ export default function DailyProductionPlanInner() {
               title="Pre-grading: raw material → grading → graded inventory"
               // phaseColor="pre"
             />
-            <Button size='sm' onClick = {() => setIsOpenGrnModal(true)}>Add GRN</Button>
+            {/* <Button size='sm' onClick = {() => setIsOpenGrnModal(true)}>Add GRN</Button> */}
 
             </div>
             <PreGradingPhase speciesList={speciesList} />

@@ -211,12 +211,8 @@ export async function createGRN(data) {
 }
 
 export async function AdvanceBatchActivity(id, data = {}) {
-  try {
     const response = await authAxiosPost(`${BatchesUrl}${id}/advance-activity/`, data);
     return response;
-  } catch (error) {
-    return error;
-  }
 }
 
 export async function RecordGrades(sessionId, data) {

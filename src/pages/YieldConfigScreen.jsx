@@ -220,7 +220,7 @@ export default function YieldConfigScreen() {
     .filter((a) => a.phase === "POST-GRADE")
     .reduce((acc, a) => acc * (a.yieldRaw || 1), 1) * 100;
 
-  const activeProduct = productsData.find((p) => p.id === selectedProductId);
+  const activeProduct = productsData?.find((p) => p.id === selectedProductId);
 
   const uiProducts = productsData.map((p, i) => {
     const isActive = p.id === selectedProductId;

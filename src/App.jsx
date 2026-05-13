@@ -21,20 +21,21 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Public Pages
 import EmpLogin from "./pages/EmpLogin";
 import UserLogin from "./pages/UserLogin";
-import PrawnProductionPlanner from "./pages/prawn-production-planning";
-import Orders from "./pages/orders";
-import Inventory from "./pages/inventory";
-import ConfigDashboardV3 from "./pages/config-dashboard-v3";
+import PrawnProductionPlanner from "./pages/Referance Screen/prawn-production-planning";
+import Orders from "./pages/Referance Screen/orders";
+import ConfigDashboardV3 from "./pages/Referance Screen/config-dashboard-v3";
 import ConfigDashboard from "./pages/ConfigDashboard";
 import OrdersScreen from "./pages/OrdersScreen";
-import ProductionPlannerV3 from "./pages/production-planner-v3";
-import PlanGenerator from "./pages/plan-generator-v3";
+import PlanGenerator from "./pages/Referance Screen/plan-generator-v3";
 import InventoryScreen from "./pages/InventoryScreen";
 import CapacityPlanning from "./pages/CapacityPlanning";
 import DaliyProductionPlan from "./pages/DaliyProductionPlan";
 import BatchScreen from "./pages/BatchScreen";
-import UnifiedPlanGenerator from "./pages/unified-plan-generator-v3";
+// import UnifiedPlanGenerator from "../unified-plan-generator-v3";
 import DailyProductionPlanInner from "./pages/Dailyproductionplan ";
+import ProductionPlannerV4 from "./pages/Referance Screen/production-planner-v4";
+import Inventory from "./pages/inventory";
+import UnifiedPlanGenerator from "./pages/Referance Screen/unified-plan-generator-v3";
 
 
 function App() {
@@ -47,12 +48,12 @@ function App() {
                 <Route path="/emp/login" element={<EmpLogin />} />
                  <Route path="/user/login" element={<UserLogin />} />
                  <Route path="/dummy" element={<PrawnProductionPlanner />} />
-                 <Route path="/dummy1" element={<ProductionPlannerV3 />} />
+                 <Route path="/dummy1" element={<ProductionPlannerV4 />} />
                  <Route path="/config" element={<ConfigDashboardV3 />} />
                  <Route path="/order" element={<Orders />} />
                  <Route path="/orders" element={<OrdersScreen />} />
                  <Route path="/inventory" element={<Inventory />} />
-                 <Route path="/inventorys" element={<InventoryScreen />} />
+                 {/* <Route path="/inventorys" element={<InventoryScreen />} /> */}
                  <Route path="/plan-generator" element={<PlanGenerator />} />
                  <Route path="/capacity" element={<CapacityPlanning />} />
                  <Route path="/production-plan" element={<DaliyProductionPlan />} />

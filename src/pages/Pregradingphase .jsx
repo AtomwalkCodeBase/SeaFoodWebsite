@@ -158,7 +158,7 @@ function GrnCard({ grn, onCreateBatch }) {
       <div className="flex flex-wrap items-center gap-2">
         <Badge label={grn.grn_reference} variant="grn" />
         <Badge label={grn.species_name} variant="species" />
-        <span className="text-xs text-textLight">{grn.supplier_name || "Supplier Name not found"}</span>
+        <span className="text-xs text-text-light">{grn.supplier_name || "Supplier Name not found"}</span>
           {/* <span className="text-lg font-bold text-text">{grn.total_received_mt} MT</span> */}
           <InfoRow label="Total Received(MT)" value={grn.total_received_mt || "--"} className='font-semibold' />
         <div className="ml-auto flex items-center gap-3">
@@ -181,7 +181,7 @@ function GrnCard({ grn, onCreateBatch }) {
         <InfoRow label="Location" value={grn.location || "--"} />
       </div>
       {/* <div className="flex flex-wrap gap-1.5 pl-1">
-        <span className="text-xs text-textLight">Expected grades:</span>
+        <span className="text-xs text-text-light">Expected grades:</span>
         {grn.grade_lines.map((g) => (
           <span key={g} className="text-xs bg-accentLight text-primary px-1.5 py-0.5 rounded">{g}</span>
         ))}
@@ -192,7 +192,7 @@ function GrnCard({ grn, onCreateBatch }) {
           Proceed for Grading
         </Button> */}
       </div>
-      {/* <p className="text-[10px] text-textLight/60 font-mono pl-1">
+      {/* <p className="text-[10px] text-text-light/60 font-mono pl-1">
         POST /api/planning/batches/ — creates PARENT batch with pre-grading activities
       </p> */}
     </div>
@@ -278,8 +278,8 @@ function ParentBatchCard({ batch, onAdvance }) {
       <Badge label={batch.species_name} variant="species" />
       <span className="font-bold text-text">{batch.input_weight_mt} MT</span>
       <Badge label={batch.current_activity_name || "--"} variant="cleaning" />
-      <span className="text-xs text-textLight">Expected : {batch.expected_output_mt} MT</span>
-      <span className="text-xs text-textLight">Actual : {batch.actual_output_mt} MT</span>
+      <span className="text-xs text-text-light">Expected : {batch.expected_output_mt} MT</span>
+      <span className="text-xs text-text-light">Actual : {batch.actual_output_mt} MT</span>
       <div className="ml-auto flex items-center gap-2">
         {/* <ActionButton variant="secondary" size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}>
           Advance activity
@@ -287,7 +287,7 @@ function ParentBatchCard({ batch, onAdvance }) {
         <Button variant="primary" size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}>
           Advance activity
         </Button>
-        {/* <span className="text-[10px] text-textLight/50 font-mono hidden sm:block">
+        {/* <span className="text-[10px] text-text-light/50 font-mono hidden sm:block">
           POST /batches/&#123;id&#125;/advance-activity/
         </span> */}
       </div>
@@ -302,13 +302,13 @@ function ParentBatchCard({ batch, onAdvance }) {
 //       <div className="flex gap-2 min-w-max pb-1">
 //         {grades.grade_lines.map((g, i) => (
 //           <div key={i} className="flex flex-col items-center gap-1">
-//             <span className={`text-xs font-medium ${g.label === 'Waste' ? 'text-error' : 'text-textLight'}`}>
+//             <span className={`text-xs font-medium ${g.label === 'Waste' ? 'text-error' : 'text-text-light'}`}>
 //               {g.grade_code ?? g.label}
 //             </span>
 //             <span className="w-16 text-center text-xs border border-border rounded-md py-1 bg-inputBg text-text focus:outline-none focus:ring-1 focus:ring-primary">
 //               {g.quantity_mt}
 //             </span>
-//             <span className="text-[10px] text-textLight">MT</span>
+//             <span className="text-[10px] text-text-light">MT</span>
 //           </div>
 //         ))}
 //       </div>
@@ -335,7 +335,7 @@ function GradeInputRow({
             key={line.id || index} 
             className="flex flex-col items-center gap-1 min-w-[110px]"
           >
-            <span className="text-xs font-medium text-textLight">
+            <span className="text-xs font-medium text-text-light">
               {line.grade_code}
             </span>
 
@@ -343,7 +343,7 @@ function GradeInputRow({
               {parseFloat(line.quantity_mt || 0).toFixed(3)}
             </div>
 
-            <span className="text-[10px] text-textLight">MT</span>
+            <span className="text-[10px] text-text-light">MT</span>
           </div>
         ))}
 
@@ -357,7 +357,7 @@ function GradeInputRow({
             {wasteValue.toFixed(3)}
           </div>
 
-          <span className="text-[10px] text-textLight">MT</span>
+          <span className="text-[10px] text-text-light">MT</span>
         </div>
       </div>
     </div>
@@ -556,7 +556,7 @@ function GradingSessionCard({ session, onConfirm, parentBatchData }) {
         <Badge label={session.erp_batch || "--"} variant="grn" />
         <Badge label={session.species_name} variant="species" />
         <span className="text-sm font-bold text-text">{session.total_graded_mt} MT cleaned</span>
-       {/* {!hasGrading &&  */}
+       {!hasGrading && 
        <Button
           variant="outline"
           size="sm"
@@ -566,9 +566,9 @@ function GradingSessionCard({ session, onConfirm, parentBatchData }) {
         >
           Record grades
         </Button>
-        {/* // } */}
+        } 
       </div>
-      <p className="text-xs text-textLight">Grade-wise weight from QC sorting:</p>
+      <p className="text-xs text-text-light">Grade-wise weight from QC sorting:</p>
         {/* <GradeInputRow grades={session} values={gradeValues} /> */}
      {hasGrading ? (
         <GradeInputRow 
@@ -584,10 +584,10 @@ function GradingSessionCard({ session, onConfirm, parentBatchData }) {
         </div>
       )}
 
-      {/* <p className="text-[10px] text-textLight/50 font-mono">
+      {/* <p className="text-[10px] text-text-light/50 font-mono">
         POST /grading-sessions/&#123;id&#125;/record-grades/ — creates sub-batches + updates inventory
       </p> */}
-      <div className="flex justify-end">
+     {hasGrading && <div className="flex justify-end">
         <Button
           variant="primary"
           size="sm"
@@ -596,7 +596,7 @@ function GradingSessionCard({ session, onConfirm, parentBatchData }) {
         >
           Confirm grades &amp; create sub-batches
         </Button>
-      </div>
+      </div>}
     </div>
     <Modal title='Record Grade' width='max-w-6xl' isOpen={isRecordModalOpen} onClose={() => {setIsRecordModalOpen(false); setGradeRows([])}} onSave={handleSubmitGrades} saveButtonText='Add Grades'>
         <div className="space-y-6">
@@ -810,7 +810,7 @@ export function PreGradingPhase({speciesList}) {
               <FiPackage className="text-primary" size={16} />
               Ungraded raw material
             </h3>
-            <p className="text-xs text-textLight mt-0.5">
+            <p className="text-xs text-text-light mt-0.5">
               Received via GRN; needs pre-grading activities (cleaning) then grade sorting
             </p>
           </div>
@@ -846,7 +846,7 @@ export function PreGradingPhase({speciesList}) {
         <div className="flex items-center gap-2 mb-3">
           <FiActivity className="text-primary" size={16} />
           <h3 className="font-semibold text-text">Parent batches in progress</h3>
-          <span className="text-xs text-textLight">Pre-grading activities running</span>
+          <span className="text-xs text-text-light">Pre-grading activities running</span>
         </div>
         <div className="space-y-2">
           {parentBatchLoading ? (
@@ -875,7 +875,7 @@ export function PreGradingPhase({speciesList}) {
         <div className="flex items-center gap-2 mb-3">
           <FiSliders className="text-primary" size={16} />
           <h3 className="font-semibold text-text">Ready for grading</h3>
-          <span className="text-xs text-textLight">Pre-grading done; QC sorts into grades</span>
+          <span className="text-xs text-text-light">Pre-grading done; QC sorts into grades</span>
         </div>
         <div className="space-y-3">
           {parentBatchLoading ? (

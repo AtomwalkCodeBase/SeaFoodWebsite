@@ -7,6 +7,7 @@ import Card from '../components/Card';
 import { POCardItem } from '../components/ScreenComponents/POCardItem';
 import { EmptyState } from '../components/EmptyState';
 import Button from '../components/Button';
+import Layout from '../components/Layout';
 
 const Paragraphdata = styled.p`
   color: ${({ theme }) => theme.colors.textLight};

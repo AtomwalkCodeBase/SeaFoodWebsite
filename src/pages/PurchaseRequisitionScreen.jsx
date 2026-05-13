@@ -12,6 +12,8 @@ import { TbFish } from 'react-icons/tb';
 import Button from '../components/Button';
 import { FaPlus } from 'react-icons/fa';
 import StatsCard from '../components/StatsCard';
+import { EmptyState } from '../components/EmptyState';
+import PaginationComponent from '../components/Pagination';
 
 const Page = styled.div`
   min-height: 100vh;
@@ -249,7 +251,7 @@ const PurchaseRequisitionScreen = () => {
               <option value="Approved">Approved</option>
               <option value="Rejected">Rejected</option>
             </Select>
-            <ChevronIcon><FiChevronDown /></ChevronIcon>
+            {/* <ChevronIcon><FiChevronDown /></ChevronIcon> */}
           </FilterSelect>
 
           <CountBadge>{filtered.length} record{filtered.length !== 1 ? "s" : ""}</CountBadge>

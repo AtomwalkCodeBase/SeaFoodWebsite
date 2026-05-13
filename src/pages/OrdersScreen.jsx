@@ -158,7 +158,7 @@ const OrdersScreen = () => {
     product: Number(form.product),
   };
 
-  console.log("Creating Order Payload:", payload);
+  // console.log("Creating Order Payload:", payload);
 
   createOrderMutation.mutate(payload);
   };
@@ -191,8 +191,8 @@ const OrdersScreen = () => {
           </StatsGrid>
 
           <Card style={{marginTop: "2rem"}}>
-            <div className='flex justify-between items-center'>
-              <h1>Order Priority Queue</h1>
+            <div className='flex justify-between items-center mb-4'>
+              <span className='text-text text-xl font-bold'>Order Priority Queue</span>
               <Button onClick={() => setIsModalOpen(true)}><FaPlus />Add New Orders</Button>
             </div>
             <DataTable

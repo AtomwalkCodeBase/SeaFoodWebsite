@@ -2,7 +2,7 @@ import React from "react";
 
 export const EmptyState = ({ message, className = "" }) => {
   return (
-    <div className={`text-center p-4 text-(--text-light) bg-(--card-bg) rounded-md ${className}`}>
+    <div className={`text-center p-4 text-text-light bg-bg rounded-md ${className}`}>
       {message}
     </div>
   );
@@ -11,14 +11,14 @@ export const EmptyState = ({ message, className = "" }) => {
 export const SectionHeader = ({ step, icon, title, sub }) => (
     <div className="flex items-start p-2  border-b border-border">
       {step && (
-        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold`}>
+        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-text text-sm font-bold`}>
           {step}
         </span>
       )}
         <div className="text-base font-bold flex items-center gap-2.5 text-text">
             <span>{icon}</span> {title}
         </div>
-        {sub && <div className="text-xs text-textLight mt-1">{sub}</div>}
+        {sub && <div className="text-xs text-text-light mt-1">{sub}</div>}
     </div>
 );
 
@@ -29,14 +29,14 @@ const BADGE_VARIANTS = {
   cooking: 'bg-error/20 text-error',
   critical: 'bg-error/15 text-error',
   urgent: 'bg-warning/15 text-warning',
-  standard: 'bg-backgroundAlt text-textLight',
+  standard: 'bg-backgroundAlt text-text-light',
   success: 'bg-success/15 text-success',
   info: 'bg-info/15 text-info',
   iof: 'bg-info/10 text-info',
   raw: 'bg-warning/10 text-warning',
   whl: 'bg-primaryLight text-primary',
   pd: 'bg-secondaryLight/20 text-secondary',
-  default: 'bg-backgroundAlt text-textLight',
+  default: 'bg-backgroundAlt text-text-light',
 };
  
 export function Badge({ label, variant = 'default', className = '' }) {
@@ -53,7 +53,7 @@ const DOT_COLORS = {
   active: 'bg-success',
   pending: 'bg-warning',
   error: 'bg-error',
-  idle: 'bg-textLight',
+  idle: 'bg-text-light',
 };
  
 export function StatusDot({ status = 'idle', pulse = false }) {
@@ -71,13 +71,13 @@ export function SectionHeader2({ step, title, subtitle, phaseColor = 'pre' }) {
   return (
     <div className="flex items-start gap-3 mb-4">
       {step && (
-        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${colors}`}>
+        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-text text-sm font-bold ${colors}`}>
           {step}
         </span>
       )}
       <div>
         <h2 className="text-base font-semibold text-text">{title}</h2>
-        {subtitle && <p className="text-xs text-textLight mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-text-light mt-0.5">{subtitle}</p>}
       </div>
     </div>
   );
@@ -132,7 +132,7 @@ export function ActionButton({
 export function InfoRow({ label, value, valueClass = '', className='' }) {
   return (
     <div className={`flex items-center text-xs gap-2 ${className}`}>
-      <span className="text-textLight">{label}: </span>
+      <span className="text-text-light">{label}: </span>
       <span className={`font-medium text-text ${valueClass}`}>{value}</span>
     </div>
   );
@@ -141,7 +141,7 @@ export function InfoRow({ label, value, valueClass = '', className='' }) {
 // ── EmptyState ─────────────────────────────────────────────────────────────────
 // export function EmptyState({ icon: Icon, message }) {
 //   return (
-//     <div className="flex flex-col items-center gap-2 py-8 text-textLight">
+//     <div className="flex flex-col items-center gap-2 py-8 text-text-light">
 //       {Icon && <Icon size={28} className="opacity-40" />}
 //       <p className="text-sm">{message}</p>
 //     </div>
@@ -164,12 +164,12 @@ export function LoadingSpinner({ size = 20 }) {
 export function MetricCard({ label, value, unit, sub, color = 'text-primary' }) {
   return (
     <div className="bg-backgroundAlt rounded-lg p-3 flex flex-col gap-1">
-      <span className="text-xs text-textLight uppercase tracking-wide">{label}</span>
+      <span className="text-xs text-text-light uppercase tracking-wide">{label}</span>
       <div className="flex items-baseline gap-1">
         <span className={`text-xl font-bold ${color}`}>{value}</span>
-        {unit && <span className="text-xs text-textLight">{unit}</span>}
+        {unit && <span className="text-xs text-text-light">{unit}</span>}
       </div>
-      {sub && <span className="text-xs text-textLight">{sub}</span>}
+      {sub && <span className="text-xs text-text-light">{sub}</span>}
     </div>
   );
 }
@@ -185,10 +185,10 @@ export function StepFlow({ steps, current }) {
           <React.Fragment key={step.label}>
             <div className={`flex flex-col items-center gap-0.5 min-w-[56px] ${done ? 'opacity-100' : active ? 'opacity-100' : 'opacity-40'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base transition-all
-                ${done ? 'bg-success/20 text-success' : active ? 'bg-primary text-white ring-2 ring-primary/30' : 'bg-backgroundAlt text-textLight'}`}>
+                ${done ? 'bg-success/20 text-success' : active ? 'bg-primary text-white ring-2 ring-primary/30' : 'bg-backgroundAlt text-text-light'}`}>
                 {done ? '✓' : <step.icon size={14} />}
               </div>
-              <span className="text-[10px] text-textLight text-center leading-tight">{step.label}</span>
+              <span className="text-[10px] text-text-light text-center leading-tight">{step.label}</span>
             </div>
             {i < steps.length - 1 && (
               <div className={`flex-1 h-0.5 rounded-full min-w-[12px] ${i < current ? 'bg-success' : 'bg-border'}`} />

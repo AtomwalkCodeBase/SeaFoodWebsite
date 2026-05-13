@@ -143,6 +143,22 @@ const ButtonStyles = css`
       background: ${props.theme.colors.primaryLight}aa;
     }
   `}
+
+   ${(props) =>
+     props.variant === "success" &&
+     `
+    background: ${props.theme.colors.success};
+    color: white;
+    border: 1px solid ${props.theme.colors.success};
+    
+    &:hover {
+      background: ${props.theme.colors.success}AA;
+    }
+    
+    &:active {
+      background: ${props.theme.colors.success}aa;
+    }
+  `}
   
   ${(props) =>
     props.variant === "ghost" &&

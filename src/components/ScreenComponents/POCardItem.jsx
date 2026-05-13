@@ -3,6 +3,10 @@ import { INVENTORY_TYPE, PO_STATUS, PO_TYPE } from "../../constants";
 import { formatCurrency } from "../../utils";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { FiCalendar, FiChevronDown, FiChevronUp, FiHash, FiMapPin, FiPackage, FiUser } from "react-icons/fi";
+import Badge from "../Badge";
+import { BsBoxSeam } from "react-icons/bs";
+import { TbCurrencyRupee } from "react-icons/tb";
 
 const POCard = styled.div`
   background: ${({ theme }) => theme.colors.card};

@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react"
 import styled from "styled-components"
-import Layout from "../components/Layout"
-import Badge from "../components/Badge"
-import StatsCard from "../components/StatsCard"
-import DataTable, { Td } from "../components/Datatable"
+import Layout from "../../components/Layout"
+import Badge from "../../components/Badge"
+import StatsCard from "../../components/StatsCard"
+import DataTable, { Td } from "../../components/Datatable"
 import { FaListAlt, FaBoxOpen, FaIndustry, FaExclamationTriangle } from "react-icons/fa"
 import {
   BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid,

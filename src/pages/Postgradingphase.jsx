@@ -4,7 +4,7 @@ import {
   FiBox, FiList, FiZap, FiTruck, FiCheckCircle, FiAlertTriangle,
   FiActivity,
 } from 'react-icons/fi';
-import { AutoAllocateBatch, CreateParentBatch, getBatchList, getInventoryStatus, GetItemCategory, GetOrdersList, GetPlanningReport, getProcessActivityList } from '../services/productServices';
+import { AdvanceBatchActivity, AutoAllocateBatch, CreateParentBatch, getBatchList, getInventoryStatus, GetItemCategory, GetOrdersList, GetPlanningReport, getProcessActivityList } from '../services/productServices';
 import { ActionButton, Badge, EmptyState, MetricCard, Panel, StepFlow } from '../components/EmptyState';
 import Button from '../components/Button';
 import { toast } from 'react-toastify';
@@ -45,7 +45,7 @@ function StockAvailability({ availableMt }) {
 
 // ── Score Bar ──────────────────────────────────────────────────────────────────
 function ScoreBar({ score }) {
-  const color = score >= 75 ? 'bg-error' : score >= 60 ? 'bg-warning' : 'bg-textLight';
+  const color = score >= 75 ? 'bg-error' : score >= 60 ? 'bg-warning' : 'bg-text-light';
   return (
     <div className="flex items-center gap-2">
       <div className="w-16 h-1.5 bg-backgroundAlt rounded-full overflow-hidden">
@@ -63,10 +63,10 @@ function OrderRow({ order }) {
       <Badge label={order.erp_order_reference} variant="grn" />
       <span className="text-sm font-medium text-text min-w-[100px]">{order.customer_name}</span>
       {/* <Badge label={order.process} variant={PROCESS_BADGE[order.process] ?? 'default'} /> */}
-      <span className="text-xs text-textLight">{order.product_name}</span>
-      <span className="text-xs text-textLight">{order.grade_code}</span>
+      <span className="text-xs text-text-light">{order.product_name}</span>
+      <span className="text-xs text-text-light">{order.grade_code}</span>
       <span className="text-xs text-text font-medium">{order.remaining_qty_mt} MT</span>
-      <span className="text-xs text-textLight">{order.days_until_delivery}d</span>
+      <span className="text-xs text-text-light">{order.days_until_delivery}d</span>
       <StockAvailability availableMt={order.remaining_qty_mt} />
       <Badge label={order.priority} variant={PRIORITY_BADGE[order.priority_override]} />
       <div className="ml-auto">
@@ -82,6 +82,8 @@ const PROCESS_STEPS = ['Cleaning', 'Cooking', 'Glazing', 'Packing'];
 function BatchCard({ batch }) {
   const qc = useQueryClient();
 
+  console.log("batch", batch)
+
   const completedActivities = useMemo(() => {
     return batch.activity_logs?.filter((log) => log.status === "COMPLETED").map((log) => log.activity_name) || [];
   }, [batch.activity_logs]);
@@ -91,9 +93,14 @@ function BatchCard({ batch }) {
 
   const { data: processActivities = [] } = useQuery({
     queryKey: ['processActivities', batch.product],
-    queryFn: () => getProcessActivityList(batch.product),
+    queryFn: () => getProcessActivityList({ product_id: batch.product}),
+    select: (res) => res.data,
     enabled: !!batch.product,
   });
+
+  console.log("completedActivities", completedActivities)
+
+
 
   const dynamicSteps = useMemo(() => {
     if (processActivities.length > 0) {
@@ -109,30 +116,35 @@ function BatchCard({ batch }) {
   const displayExpected = selectedLog?.expected_output_mt || '0';
   const displayActual = selectedLog?.actual_output_mt || '-';
 
+  const nextStep = currentIdx >= 0 && currentIdx < dynamicSteps.length - 1 ? dynamicSteps[currentIdx + 1]  : null;
+
+  const isLastStep = currentIdx === dynamicSteps.length - 1;
 
   const advanceMutation = useMutation({
-    mutationFn: () =>  CreateParentBatch({ grn_reference: batch.id, batch_type: 'PARENT' }),
-    onSuccess: () => qc.invalidateQueries(['postBatches']),
+    mutationFn: () =>  AdvanceBatchActivity(batch.id),
+    onSuccess: () => {
+      toast.success(`Advance to ${nextStep}`);
+      qc.invalidateQueries(['batches'])
+    },
+    onError: (error) => {
+        toast.error(error?.message || "Failed to advance batch activity");
+      },
   });
-
+  
   const allocateMutation = useMutation({
-    // mutationFn: () => apiFetch(API.batchAutoAllocate(batch.id), { method: 'POST' }),
     mutationFn: () =>  AutoAllocateBatch({ grn_reference: batch.id}),
     onSuccess: () => qc.invalidateQueries(['orders']),
   });
 
-  const nextStep = currentIdx >= 0 && currentIdx < dynamicSteps.length - 1 ? dynamicSteps[currentIdx + 1]  : null;
-
-  const isLastStep = currentIdx === dynamicSteps.length - 1;
 
 
   return (
     <div className="rounded-lg border border-border bg-background p-3 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Badge label={batch.batch_number} variant="grn" />
-        <span className="text-xs text-textLight">→ {batch.orderId || "--"}</span>
+        <span className="text-xs text-text-light">→ {batch.orderId || "--"}</span>
         <Badge label={batch.species} variant="species" />
-        <span className="text-xs text-textLight">
+        <span className="text-xs text-text-light">
           Input: <strong className="text-text">{batch.input_weight_mt || "--"} MT</strong>,
           {' '}{' '}{' '}{' '}Expected Output: <strong className="text-secondary">{batch.expected_output_mt || "--"} MT</strong>,
           {' '}{' '}{' '}{' '}Actual Output: <strong className="text-secondary">{batch.actual_output_mt || "Not finished yet"} MT</strong>
@@ -157,7 +169,7 @@ function BatchCard({ batch }) {
                   ? 'bg-success/15 text-success'                     // ← Green preserved for completed
                   : isActive 
                   ? 'bg-secondary/20 text-secondary font-medium' 
-                  : 'bg-backgroundAlt text-textLight'
+                  : 'bg-backgroundAlt text-text-light'
               } ${isSelected ? 'ring-2 ring-offset-2 ring-secondary' : ''}`}>
                 {step}
               </div>
@@ -177,17 +189,17 @@ function BatchCard({ batch }) {
         
         <div className="grid grid-cols-3 gap-3 text-xs">
           <div>
-            <span className="text-textLight">Input</span><br />
+            <span className="text-text-light">Input</span><br />
             <strong className="text-text">{displayInput} MT</strong>
           </div>
           <div>
-            <span className="text-textLight">Expected Output</span><br />
+            <span className="text-text-light">Expected Output</span><br />
             <strong className="text-text">{displayExpected} MT</strong>
           </div>
           <div>
-            <span className="text-textLight">Actual Output</span><br />
+            <span className="text-text-light">Actual Output</span><br />
             <strong className={`${
-              displayActual === '-' ? 'text-textLight' : 'text-secondary'
+              displayActual === '-' ? 'text-text-light' : 'text-secondary'
             }`}>
               {displayActual} MT
             </strong>
@@ -254,7 +266,7 @@ function GradedStockPanel({ onGenerate, planLoading  }) {
         <div className="flex items-center gap-2">
           <FiBox className="text-secondary" size={16} />
           <h3 className="font-semibold text-text">Graded stock available</h3>
-          <span className="text-xs text-textLight">From ERP ItemBatch – ready for post-grading</span>
+          <span className="text-xs text-text-light">From ERP ItemBatch – ready for post-grading</span>
         </div>
         <Button variant="primary" size="sm"   onClick={onGenerate} loading={planLoading}>
           Generate batch plan
@@ -424,11 +436,11 @@ const activeSubBatches = useMemo(() => {
         <div className="flex items-center gap-2 mb-3">
           <FiList className="text-secondary" size={16} />
           <h3 className="font-semibold text-text">Outstanding orders</h3>
-          <span className="text-xs text-textLight">Priority ranked by engine score</span>
+          <span className="text-xs text-text-light">Priority ranked by engine score</span>
         </div>
 
         {/* Column headers */}
-        {/* <div className="hidden sm:flex items-center gap-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-textLight border-b border-border mb-1">
+        {/* <div className="hidden sm:flex items-center gap-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-text-light border-b border-border mb-1">
           <span className="w-24">Order</span>
           <span className="min-w-[100px]">Buyer</span>
           <span className="w-20">Process</span>
@@ -481,7 +493,7 @@ const activeSubBatches = useMemo(() => {
         <div className="flex items-center gap-2 mb-3">
           <FiZap className="text-secondary" size={16} />
           <h3 className="font-semibold text-text">Active sub-batches</h3>
-          <span className="text-xs text-textLight">Processing in progress</span>
+          <span className="text-xs text-text-light">Processing in progress</span>
         </div>
         <div className="space-y-3">
           {activeSubBatches.length === 0 ? (

@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useLocation } from "react-router-dom";
 import Layout from "../components/Layout";
 import Badge from "../components/Badge";
+import Card from "../components/Card";
 
 // ─── MOCK BATCH DATA ──────────────────────────────────────────────────────────
 const BATCH = {
@@ -353,7 +354,7 @@ const SectionLabel = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   padding: 10px 14px;
-  background: ${({ theme }) => theme.colors.backgroundAlt};
+  /*background: ${({ theme }) => theme.colors.backgroundAlt}; */
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
@@ -399,13 +400,13 @@ const UserLabel = styled.span`
 `;
 
 // ─── CARD ─────────────────────────────────────────────────────────────────────
-const Card = styled.div`
-  background: ${({ theme }) => theme.colors.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  padding: 16px;
-  margin-bottom: 16px;
-`;
+// const Card = styled.div`
+//   background: ${({ theme }) => theme.colors.backgroundAlt};
+//   border: 1px solid ${({ theme }) => theme.colors.border};
+//   border-radius: ${({ theme }) => theme.borderRadius.lg};
+//   padding: 16px;
+//   margin-bottom: 16px;
+// `;
 
 const CardTitle = styled.div`
   font-size: ${({ theme }) => theme.fontSizes.sm};
