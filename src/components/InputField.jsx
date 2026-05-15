@@ -11,7 +11,28 @@ const InputField = ({
   className = "",
   options = [],        // for select dropdown
   placeholder = ""     
-}) => (
+}) => {
+
+    if (type === "checkbox") {
+    return (
+      <div className={`flex items-center gap-4 ${className}`}>
+        <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          name={name}
+          checked={value}
+          onChange={onChange}
+          className="w-4 h-4 rounded text-primary border-border focus:ring-primary"
+        />
+          {labelIcon && labelIcon}
+          <label className="text-sm font-medium text-text-light">{label}</label>
+        </div>
+      </div>
+    );
+  }
+  
+  
+  return(
   <div className={`flex flex-col gap-1 ${className}`}>
     {labelIcon && labelIcon}
     <label className="text-sm font-medium text-text-light">{label}</label>
@@ -30,14 +51,6 @@ const InputField = ({
             </option>
           ))}
         </select>
-      ) : type === "checkbox" ? (
-        <input
-          type="checkbox"
-          name={name}
-          checked={value}
-          onChange={onChange}  // Your handle function handles checked vs value
-          className="w-4 h-4 rounded text-primary border-border focus:ring-primary"
-        />
       ) : (
         <input
           type={type}
@@ -52,6 +65,6 @@ const InputField = ({
       {unit && type !== "checkbox" && <span className="text-1 text-textLight shrink-0">{unit}</span>}
     </div>
   </div>
-);
+)};
 
 export default InputField

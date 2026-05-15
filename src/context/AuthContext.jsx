@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("dbName", db_name[1]);
         setCurrentUser(userData);
         toast.success("Login successful!");
-        window.location.href = "/seaFood/home";
+        window.location.href = "/seafood/config1";
         return true;
       }
     } catch (error) {

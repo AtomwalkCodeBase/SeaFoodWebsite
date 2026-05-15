@@ -36,13 +36,14 @@ import DailyProductionPlanInner from "./pages/Dailyproductionplan ";
 import ProductionPlannerV4 from "./pages/Referance Screen/production-planner-v4";
 import Inventory from "./pages/inventory";
 import UnifiedPlanGenerator from "./pages/Referance Screen/unified-plan-generator-v3";
+import NotFound from "./pages/NotFound";
 
 
 function App() {
   return (
       <AuthProvider>
         <ThemeProvider>
-            <Router>
+            <Router basename="/seafood">
               <Routes>
                 {/* Login Route */}
                 <Route path="/emp/login" element={<EmpLogin />} />
@@ -51,15 +52,11 @@ function App() {
                  <Route path="/dummy1" element={<ProductionPlannerV4 />} />
                  <Route path="/config" element={<ConfigDashboardV3 />} />
                  <Route path="/order" element={<Orders />} />
-                 <Route path="/orders" element={<OrdersScreen />} />
-                 <Route path="/inventory" element={<Inventory />} />
                  {/* <Route path="/inventorys" element={<InventoryScreen />} /> */}
                  <Route path="/plan-generator" element={<PlanGenerator />} />
-                 <Route path="/capacity" element={<CapacityPlanning />} />
                  <Route path="/production-plan" element={<DaliyProductionPlan />} />
                  <Route path="/batch" element={<BatchScreen />} />
                  <Route path="/new" element={<UnifiedPlanGenerator />} />
-                 <Route path="/production-plan2" element={<DailyProductionPlanInner />} />
 
                 <Route
                   element={
@@ -71,6 +68,10 @@ function App() {
                     </ProtectedRoute>
                   }
                 >
+                  <Route path="/capacity" element={<CapacityPlanning />} />
+                    <Route path="/production-plan2" element={<DailyProductionPlanInner />} />
+                 <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/orders" element={<OrdersScreen />} />
                   <Route path="/config1" element={<ConfigDashboard />} />
                   <Route path="/purchase-requisition" element={<PurchaseRequisitionScreen />} />
                   <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
@@ -84,7 +85,8 @@ function App() {
                 </Route>
 
                 {/* Catch All */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Router>
             <ToastContainer position="top-right" autoClose={3000} />

@@ -172,7 +172,7 @@ const QC_Screen = () => {
                     <div>
                       <Paragraphdata>QC check for raw material </Paragraphdata>
                     </div>
-                    <Button onClick={() => navigate("/seaFood/home")}>
+                    <Button onClick={() => navigate("/seafood/home")}>
                       ← Back
                     </Button>
                   </RequestDeskHeader>

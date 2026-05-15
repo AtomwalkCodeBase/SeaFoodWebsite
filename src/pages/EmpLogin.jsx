@@ -133,7 +133,7 @@ const EmpLogin = () => {
     fetchCompanyName()
     setCaptchaText(generateCaptcha())
     if (localStorage.getItem("userToken")) {
-      if (localStorage.getItem("seaUser"))  navigation("/seaFood/home")
+      if (localStorage.getItem("seaUser"))  navigation("/seafood/qc/tester-dashboard")
     }
   }, [])
 

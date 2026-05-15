@@ -8,7 +8,7 @@ import {
 //   SectionHeader, StepFlow, MetricCard,
 // } from './ui';
 import { ActionButton, Badge, EmptyState, InfoRow, MetricCard, Panel, StepFlow } from '../components/EmptyState';
-import { AdvanceBatchActivity, CreateParentBatch, CreateSubBatches, getBatchList, getGradingSessionsList, getProductList, getSpecies, RecordGrades } from '../services/productServices';
+import { AdvanceBatchActivity, CreateParentBatch, CreateSubBatches, getBatchList, getCustomerListView, getGradingSessionsList, getProductList, getSpecies, RecordGrades } from '../services/productServices';
 import { toast } from 'react-toastify';
 import { extractDateTime } from '../utils';
 import Button from '../components/Button';
@@ -78,6 +78,14 @@ function GrnCard({ grn, onCreateBatch }) {
     queryFn: () => getProductList(),
     select: (res) => res.data,
     onError: () => toast.error('Failed to load species'),
+  });
+
+  const { data: supplierList = [], isLoading: supplierLoading, error: suppliersError,} = useQuery({
+    queryKey: ['suppliers', { is_supplier: 'YES' }],
+    queryFn: () => getCustomerListView({ is_supplier: 'YES' }),
+    select: (res) => res.data,
+    enabled: isModalOpen,
+    onError: () => toast.error('Failed to load supplier list'),
   });
 
   const handleInputChange = (e) => {
@@ -170,15 +178,15 @@ function GrnCard({ grn, onCreateBatch }) {
           >
             Create parent batch
           </ActionButton> */}
-           <Button variant='outline' size="sm" onClick={() => setIsModalOpen(true)} loading={mutation.isPending}>
-          Proceed for Grading
+           <Button variant='primary' size="sm" onClick={() => setIsModalOpen(true)} loading={mutation.isPending}>
+          Start Grading Process
         </Button>
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 pl-1">
         <InfoRow label="Received Date" value={date} />
-        <InfoRow label="ERP Batch" value={grn.erpBatch || "--"} />
-        <InfoRow label="Location" value={grn.location || "--"} />
+        <InfoRow label="ERP Batch" value={grn.erp_batch || "--"} />
+        <InfoRow label="Location" value={grn.storage_location || "--"} />
       </div>
       {/* <div className="flex flex-wrap gap-1.5 pl-1">
         <span className="text-xs text-text-light">Expected grades:</span>
@@ -220,7 +228,7 @@ function GrnCard({ grn, onCreateBatch }) {
               />
 
               <InputField
-                label="Supplier Name"
+                label="Scheduled Date"
                 name="scheduled_date"
                 type="date"
                 value={form.scheduled_date}

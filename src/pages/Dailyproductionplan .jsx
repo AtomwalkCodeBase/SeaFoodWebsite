@@ -137,7 +137,7 @@ export default function DailyProductionPlanInner() {
               title="Pre-grading: raw material → grading → graded inventory"
               // phaseColor="pre"
             />
-            {/* <Button size='sm' onClick = {() => setIsOpenGrnModal(true)}>Add GRN</Button> */}
+            <Button size='sm' onClick = {() => setIsOpenGrnModal(true)}>Add GRN</Button>
 
             </div>
             <PreGradingPhase speciesList={speciesList} />

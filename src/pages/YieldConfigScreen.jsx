@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AddYieldConfig,
+  getAllYieldConfig,
   getProcessActivityList,
   getProductList,
   getYieldConfig,
@@ -10,6 +11,13 @@ import {
 import { toast } from "react-toastify";
 import ConfirmPopup from "../components/ConfirmPopup";
 import Badge from "../components/Badge";
+import Button from "../components/Button";
+import { FaPlus } from "react-icons/fa";
+import { SectionHeader } from "../components/EmptyState";
+import { HiOutlinePencilAlt } from "react-icons/hi";
+import Modal from "../components/Modal";
+import { useFormHandler } from "../hooks/useFormHandler";
+import InputField from "../components/InputField";
 
 // ── Reusable Components ───────────────────────────────────────────────────────
 const StatCard = ({ label, value, colorClass = "text-text" }) => (
@@ -19,11 +27,7 @@ const StatCard = ({ label, value, colorClass = "text-text" }) => (
   </div>
 );
 
-const ProductTab = ({
-  product,
-  active,
-  onClick,
-}) => (
+const ProductTab = ({ product, active, onClick }) => (
   <button
     onClick={onClick}
     className={`py-2 pl-2 pr-5 rounded-xl cursor-pointer text-left transition-all duration-200 min-w-[165px] font-body shadow-sm ${
@@ -34,7 +38,7 @@ const ProductTab = ({
   >
     <div className="text-sm font-bold">{product.label}</div>
     <div className={`text-[10px] mt-0.5 ${active ? "opacity-85" : "opacity-60"}`}>{product.desc}</div>
-    <div className={`text-base font-bold mt-1.5 ${active ? "text-white" : "text-primary"}`}>{product.yield}%</div>
+    {/* <div className={`text-base font-bold mt-1.5 ${active ? "text-white" : "text-primary"}`}>{product.yield}%</div> */}
   </button>
 );
 
@@ -68,11 +72,7 @@ const FlowNode = ({ node, isLast }) => {
   );
 };
 
-const YieldBar = ({
-  product,
-  inputMT,
-  active,
-}) => {
+const YieldBar = ({ product, inputMT, active }) => {
   const output = (inputMT * product.yield / 100).toFixed(2);
   return (
     <div className="flex items-center gap-3 py-1 border-b border-border last:border-b-0">
@@ -96,15 +96,6 @@ const SectionCard = ({ children, className = "" }) => (
   <div className={`bg-card border border-border rounded-2xl shadow-sm ${className}`}>{children}</div>
 );
 
-const SectionHeader = ({ icon, title, sub }) => (
-  <div className="p-3 border-b border-border">
-    <div className="text-base font-bold flex items-center gap-2.5 text-text">
-      <span>{icon}</span> {title}
-    </div>
-    {sub && <div className="text-xs text-textLight mt-1">{sub}</div>}
-  </div>
-);
-
 // ── Helpers ───────────────────────────────────────────────────────────
 const yieldColorClass = (pct) =>
   pct >= 100 ? "text-success" : pct >= 95 ? "text-primary" : "text-warning";
@@ -116,6 +107,7 @@ export default function YieldConfigScreen() {
   const [inputMT, setInputMT] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
   const [editFormData, setEditFormData] = useState({
     id: "",
     process_activity: "",
@@ -127,13 +119,14 @@ export default function YieldConfigScreen() {
     processing_cost_per_mt: "",
   });
 
+  const { form, handleChange, resetForm } = useFormHandler(editFormData);
+
+
   // Queries
   const { data: productsData = [], isLoading: productsLoading } = useQuery({
     queryKey: ["products"],
-    queryFn: async () => {
-      const res = await getProductList();
-      return res.data || [];
-    },
+    queryFn: () =>  getProductList(),
+    select: (res) => res.data,
   });
 
   const { data: activitiesData = [] } = useQuery({
@@ -146,14 +139,20 @@ export default function YieldConfigScreen() {
     enabled: !!selectedProductId,
   });
 
-  const { data: yieldsData = [] } = useQuery({
+  const { data: yieldResponse } = useQuery({
     queryKey: ["yields", selectedProductId],
     queryFn: async () => {
-      if (!selectedProductId) return [];
-      const res = await getYieldConfig({ product_id: selectedProductId });
-      return res.data || [];
+      if (!selectedProductId) return null;
+      const res = await getYieldConfig(null, selectedProductId);
+      return res.data || null;
     },
     enabled: !!selectedProductId,
+  });
+
+  const { data: allYieldConfig } = useQuery({
+    queryKey: ["allYields"],
+    queryFn: () =>  getAllYieldConfig(),
+    select: (res) => res.data,
   });
 
   // Set initial product
@@ -163,33 +162,56 @@ export default function YieldConfigScreen() {
     }
   }, [productsData, selectedProductId]);
 
-    // Merge activities and yields
-  const combinedActivities = useMemo(() => {
-    const activityMap = new Map(activitiesData.map((act) => [act.id || act.activity_id, act]));
+  const steps = yieldResponse?.steps || [];
+  const totalYieldPct = yieldResponse?.total_yield_pct || 0;
+  const preGradeYield = yieldResponse?.pre_grading_yield_pct || 0;
+  const postGradeYield = yieldResponse?.post_grading_yield_pct || 0;
 
-    return yieldsData
-      .map((y, index) => {
-        const act = activityMap.get(y.process_activity) || {};
-        const yieldPctRaw = parseFloat(y.yield_percentage || "1.0");
-        const yieldPct = yieldPctRaw * 100;
+  // Merge activities with yield steps
+  // Merge activities with yield steps + allYieldConfig
+  const combinedActivities = useMemo(() => {
+    const yieldActivityIds = new Set(steps.map(s => String(s.process_activity_id).trim()));
+
+    // Assuming allYieldConfig is already fetched and available
+    const allYieldMap = new Map(
+      (allYieldConfig || []).map(item => [
+        String(item.process_activity || item.process_activity_id).trim(),
+        item
+      ])
+    );
+
+    return steps
+      .map((step, index) => {
+        const act = activitiesData.find(a => 
+          String(a.id || "").trim() === String(step.process_activity_id).trim() ||
+          String(a.activity_id || "").trim() === String(step.process_activity_id).trim()
+        ) || {};
+
+        // Match with allYieldConfig
+        const matchingYieldConfig = allYieldMap.get(String(step.process_activity_id).trim()) || {};
+
+        const yieldPct = parseFloat(step.yield_pct || 100);
 
         return {
           id: index + 1,
-          name: act.activity_name || y.activity_name || "Unknown",
-          phase: y.is_pre_grading ? "PRE-GRADE" : "POST-GRADE",
+          name: step.activity_name || "Unknown",
+          phase: step.phase === "PRE_GRADE" ? "PRE-GRADE" : "POST-GRADE",
           yieldPct,
-          yieldRaw: yieldPctRaw,
-          inputMT: 0, // will be calculated later
+          yieldRaw: yieldPct / 100,
+          inputMT: 0,
           outputMT: 0,
           loss: 0,
-          workerEff: y.worker_efficiency_kg_per_hour ? `${y.worker_efficiency_kg_per_hour} kg/hr` : "N/A",
-          equipment: act.a_equipment_name || "N/A",
-          lossReason: y.loss_description || "-",
-          rawYield: { ...y, process_activity: y.process_activity || act.id },
+          workerEff: step.worker_efficiency ? `${step.worker_efficiency} kg/hr` : "N/A",
+          equipment: act.a_equipment_name || step.equipment?.join(", ") || "N/A",
+          lossReason: step.loss_description || "-",
+          
+          // As per your requirement
+          rawYield: matchingYieldConfig,           // Full yield config record
+          rawStepsData: step,                      // Original step data
         };
       })
-      .sort((a, b) => (a.rawYield.sequence || 999) - (b.rawYield.sequence || 999));
-  }, [activitiesData, yieldsData]);
+      .sort((a, b) => (a.rawStepsData.sequence || 999) - (b.rawStepsData.sequence || 999));
+  }, [steps, activitiesData, allYieldConfig]);
 
   // Calculate running totals
   let currentInputMT = inputMT;
@@ -209,29 +231,16 @@ export default function YieldConfigScreen() {
   });
 
   const finalOutput = parseFloat(currentInputMT.toFixed(2));
-  const calculatedTotalYieldPct =
-    processedActivities.length > 0
-      ? parseFloat(((currentInputMT / inputMT) * 100).toFixed(1))
-      : 100;
-
-  const preGradeYield =
-    processedActivities.find((a) => a.phase === "PRE-GRADE")?.yieldPct ?? 100;
-  const postGradeYield = processedActivities
-    .filter((a) => a.phase === "POST-GRADE")
-    .reduce((acc, a) => acc * (a.yieldRaw || 1), 1) * 100;
 
   const activeProduct = productsData?.find((p) => p.id === selectedProductId);
 
-  const uiProducts = productsData.map((p, i) => {
-    const isActive = p.id === selectedProductId;
-    return {
-      id: p.id,
-      label: p.product_code || `P-${p.id}`,
-      desc: p.product_name || "Unknown Product",
-      yield: isActive ? calculatedTotalYieldPct : [78.1, 94.7, 84.8, 87.8][i % 4],
-      steps: isActive ? processedActivities.length : 5,
-    };
-  });
+  const uiProducts = productsData.map((p, i) => ({
+    id: p.id,
+    label: p.product_code || `P-${p.id}`,
+    desc: p.product_name || "Unknown Product",
+    yield: p.id === selectedProductId ? totalYieldPct : [78.1, 94.7, 84.8, 87.8][i % 4],
+    steps: p.id === selectedProductId ? steps.length : 5,
+  }));
 
   const activeUiProduct = uiProducts.find((p) => p.id === selectedProductId) || uiProducts[0];
 
@@ -247,11 +256,7 @@ export default function YieldConfigScreen() {
   ];
 
   if (productsLoading) {
-    return (
-      <div className="font-body bg-background min-h-screen p-6 flex items-center justify-center">
-        <div className="text-text font-semibold">Loading configuration...</div>
-      </div>
-    );
+    return <div className="font-body bg-background min-h-screen p-6 flex items-center justify-center">Loading configuration...</div>;
   }
 
   if (productsData.length === 0) {
@@ -259,30 +264,48 @@ export default function YieldConfigScreen() {
       <div className="font-body bg-background min-h-screen p-6 flex items-center justify-center">
         <div className="bg-card border border-border p-8 rounded-xl shadow-sm text-center max-w-md">
           <h2 className="text-lg font-bold text-text mb-2">No Products Configured</h2>
-          <p className="text-textLight text-sm">
-            Please add a product or ensure the API returns valid data.
-          </p>
+          <p className="text-textLight text-sm">Please add a product.</p>
         </div>
       </div>
     );
   }
 
   const handleEditClick = (rawYield) => {
+
+    console.log(rawYield)
     setEditFormData({
       id: rawYield.id || "",
-      process_activity: rawYield.process_activity,
+      process_activity: String(rawYield.process_activity_id || rawYield.process_activity),
       sequence: rawYield.sequence || "",
-      yield_percentage: rawYield.yield_percentage || "",
+      yield_percentage: rawYield.yield_pct || rawYield.yield_percentage || "",
       loss_description: rawYield.loss_description || "",
-      is_pre_grading: rawYield.is_pre_grading || false,
+      is_pre_grading: Boolean(rawYield.is_pre_grading),
       worker_efficiency_kg_per_hour: rawYield.worker_efficiency_kg_per_hour || "",
       processing_cost_per_mt: rawYield.processing_cost_per_mt || "",
     });
     setIsModalOpen(true);
   };
 
+  const handleAddNew = () => {
+    setEditFormData({
+      id: "",
+      process_activity: "",
+      sequence: (steps.length + 1).toString(),
+      yield_percentage: "",
+      loss_description: "",
+      is_pre_grading: false,
+      worker_efficiency_kg_per_hour: "",
+      processing_cost_per_mt: "",
+    });
+    setIsModalOpen(true);
+  };
+
   const handleSubmit = async () => {
-    const payload = { ...editFormData };
+    const payload = {
+      ...editFormData,
+      product_id: selectedProductId,
+      process_activity: editFormData.process_activity, // Must be from process activity response id
+    };
 
     try {
       let response;
@@ -296,12 +319,13 @@ export default function YieldConfigScreen() {
         toast.success("Yield Configuration Saved.");
         setIsModalOpen(false);
         setIsConfirmOpen(false);
-        // Refetch will happen automatically via query invalidation if set up, or manual
       }
     } catch (error) {
       toast.error("Failed to save configuration.");
     }
   };
+
+  console.log("processedActivities", processedActivities)
 
   return (
     <div className="font-body min-h-screen transition-colors duration-300">
@@ -320,7 +344,7 @@ export default function YieldConfigScreen() {
 
         {/* KPI Cards */}
         <div className="flex gap-3 mb-6 flex-wrap">
-          <StatCard label="Total Yield" value={`${activeUiProduct.yield}%`} colorClass="text-warning" />
+          <StatCard label="Total Yield" value={`${totalYieldPct.toFixed(1)}%`} colorClass="text-warning" />
           <StatCard label="Pre-Grading Yield" value={`${preGradeYield.toFixed(1)}%`} colorClass="text-secondary" />
           <StatCard label="Post-Grading Yield" value={`${postGradeYield.toFixed(1)}%`} colorClass="text-[#C97AFF]" />
           <StatCard label="Final Output" value={`${finalOutput} MT`} colorClass="text-success" />
@@ -343,32 +367,47 @@ export default function YieldConfigScreen() {
 
         {/* Activity Table */}
         <SectionCard className="mb-6">
-          <SectionHeader
-            icon="🔗"
-            title={`${activeUiProduct.label} — ${activeUiProduct.desc}`}
-            sub="IQF Cooking Process"
-          />
+          <div className="flex justify-between items-center p-3 border-b border-border">
+            <SectionHeader
+              icon="🔗"
+              title={`${activeUiProduct.label} — ${activeUiProduct.desc}`}
+              sub="Process Flow"
+            />
+            {(() => {
+              const yieldActivityIds = new Set(
+                steps.map(s => String(s.process_activity_id).trim())
+              );
+
+              const hasMissingActivities = activitiesData.some(act => {
+                const actId1 = String(act.id || "").trim();
+                const actId2 = String(act.activity_id || "").trim();
+                return !yieldActivityIds.has(actId1) && !yieldActivityIds.has(actId2);
+              });
+
+              return hasMissingActivities && (
+                <Button onClick={handleAddNew}>
+                  <FaPlus /> Add Yield Step
+                </Button>
+              );
+            })()}
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-backgroundAlt">
-                  {["#", "Activity", "Phase", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="p-3 px-4 text-left text-[10px] font-semibold tracking-wider text-textLight uppercase whitespace-nowrap"
-                      >
-                        {h}
-                      </th>
-                    )
-                  )}
+                  {["#", "Activity", "Phase", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"].map((h) => (
+                    <th key={h} className="p-3 px-4 text-left text-[10px] font-semibold tracking-wider text-textLight uppercase whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {processedActivities.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="p-8 text-center text-textLight">
-                      No activities configured for this product.
+                    <td colSpan={11} className="p-12 text-center text-textLight">
+                      No yield steps configured for this product.
                     </td>
                   </tr>
                 ) : (
@@ -385,19 +424,15 @@ export default function YieldConfigScreen() {
                       <td className="p-3 px-4 font-semibold text-textLight">{a.inputMT.toFixed(3)}</td>
                       <td className="p-3 px-4 font-semibold text-text">{a.outputMT.toFixed(3)}</td>
                       <td className={`p-3 px-4 font-bold ${lossGainColorClass(a.loss)}`}>
-                        {a.loss >= 0 ? "+" : ""}
-                        {a.loss}
+                        {a.loss >= 0 ? "+" : ""}{a.loss}
                       </td>
                       <td className="p-3 px-4 text-textLight font-semibold whitespace-nowrap">{a.workerEff}</td>
                       <td className="p-3 px-4 text-textLight whitespace-nowrap">{a.equipment}</td>
                       <td className="p-3 px-4 text-textLight text-xs break-words max-w-[180px]">{a.lossReason}</td>
                       <td className="p-3 px-4">
-                        <button
-                          onClick={() => handleEditClick(a.rawYield)}
-                          className="bg-primary/10 hover:bg-primary hover:text-white text-primary px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                        >
-                          Edit
-                        </button>
+                        <Button size="sm" variant="outline"  onClick={() => handleEditClick(a.rawYield)} title="Edit" iconOnly={true}>
+                          <HiOutlinePencilAlt /> Edit
+                        </Button>
                       </td>
                     </tr>
                   ))
@@ -425,11 +460,7 @@ export default function YieldConfigScreen() {
 
         {/* Yield Comparison */}
         <SectionCard>
-          <SectionHeader
-            icon="📊"
-            title="Product Yield Comparison"
-            sub="Same raw input, different routes, different outputs"
-          />
+          <SectionHeader icon="📊" title="Product Yield Comparison" sub="Same raw input, different routes" />
           <div className="p-5">
             {uiProducts.map((p) => (
               <YieldBar key={p.id} product={p} inputMT={inputMT} active={p.id === selectedProductId} />
@@ -438,98 +469,78 @@ export default function YieldConfigScreen() {
         </SectionCard>
       </div>
 
-      {/* Edit Modal */}
-     {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border p-4 font-body">
-            <div className="flex justify-between items-center mb-3  ">
-              <h3 className="text-lg font-bold text-text">Edit Yield Configuration</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-textLight hover:text-error text-2xl font-bold leading-none">&times;</button>
-            </div>
-            <div className="space-y-6">
-              <input type="hidden" name="process_activity" value={editFormData.process_activity} />
+      {/* Edit / Add Modal */}
+      {isModalOpen && (
+        <Modal title={editFormData.id ? "Edit Yield Step" : "Add New Yield Step"} isOpen={isModalOpen} onClose={() => {setIsModalOpen(false); resetForm()}} onSave={() => setIsConfirmOpen(true)} >
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-textLight uppercase tracking-wider">Sequence</label>
-                <input
-                  type="number"
-                  value={editFormData.sequence}
-                  onChange={(e) => setEditFormData({ ...editFormData, sequence: e.target.value })}
-                  className="p-2 rounded-lg border border-border bg-inputBg text-text text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                />
-              </div>
+            {/* <div className="space-y-7"> */}
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-textLight uppercase tracking-wider">Yield Percentage</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={editFormData.yield_percentage}
-                  onChange={(e) => setEditFormData({ ...editFormData, yield_percentage: e.target.value })}
-                  className="p-2 rounded-lg border border-border bg-inputBg text-text text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                />
-              </div>
+              <InputField
+                label="Activity"
+                name="process_activity"
+                type="select"
+                value={form.process_activity}
+                onChange={handleChange}
+                options={activitiesData.map((c) => ({ value: String(c.id), label: c.activity_name }))}
+                required
+              />
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-textLight uppercase tracking-wider">Loss Description</label>
-                <input
-                  type="text"
-                  value={editFormData.loss_description}
-                  onChange={(e) => setEditFormData({ ...editFormData, loss_description: e.target.value })}
-                  className="p-2 rounded-lg border border-border bg-inputBg text-text text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                />
-              </div>
+              <InputField
+                label="Sequence"
+                name="sequence"
+                type="number"
+                value={form.sequence}
+                onChange={handleChange}
+                required
+              />
 
-              <div className="flex items-center gap-2 mt-2">
-                <input
-                  type="checkbox"
-                  id="preGradeCheck"
-                  checked={editFormData.is_pre_grading}
-                  onChange={(e) => setEditFormData({ ...editFormData, is_pre_grading: e.target.checked })}
-                  className="w-4 h-4 rounded text-primary border-border focus:ring-primary"
-                />
-                <label htmlFor="preGradeCheck" className="text-sm font-semibold text-text cursor-pointer">Is Pre-Grading</label>
-              </div>
+              <InputField
+                label="Yield Percentage"
+                name="yield_percentage"
+                type="number"
+                value={form.yield_percentage}
+                onChange={handleChange}
+                required
+                placeholder="Enter between 0 to 1"
+              />
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-textLight uppercase tracking-wider">Worker Efficiency (kg/hr)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={editFormData.worker_efficiency_kg_per_hour}
-                  onChange={(e) => setEditFormData({ ...editFormData, worker_efficiency_kg_per_hour: e.target.value })}
-                  className="p-2 rounded-lg border border-border bg-inputBg text-text text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                />
-              </div>
+              <InputField
+                label="Loss Description"
+                name="loss_description"
+                type="text"
+                value={form.loss_description}
+                onChange={handleChange}
+              />
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-textLight uppercase tracking-wider">Processing Cost Per MT</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={editFormData.processing_cost_per_mt}
-                  onChange={(e) => setEditFormData({ ...editFormData, processing_cost_per_mt: e.target.value })}
-                  className="p-2 rounded-lg border border-border bg-inputBg text-text text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                />
-              </div>
+              <InputField
+                label="Is Pre-Grading"
+                name="is_pre_grading"
+                type="checkbox"
+                value={form.is_pre_grading}
+                onChange={handleChange}
+                required
+              />
 
-            </div>
-            <div className="mt-8 flex justify-end gap-3 mt-3">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-border text-text font-semibold hover:bg-backgroundAlt transition-colors text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setIsConfirmOpen(true)}
-                className="px-4 py-2 rounded-xl bg-primary text-white font-semibold hover:bg-secondary transition-colors shadow-md shadow-primary/30 text-sm"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
+              <InputField
+                label="Worker Efficiency (kg/hr)"
+                name="worker_efficiency_kg_per_hour"
+                type="number"
+                value={form.worker_efficiency_kg_per_hour}
+                onChange={handleChange}
+                required
+              />
+
+              <InputField
+                label="Processing Cost (per MT)"
+                name="processing_cost_per_mt"
+                type="number"
+                value={form.processing_cost_per_mt}
+                onChange={handleChange}
+                required
+              />
+              {/* </div> */}
+
+ </Modal>
       )}
 
       <ConfirmPopup
@@ -537,7 +548,7 @@ export default function YieldConfigScreen() {
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleSubmit}
         title="Save Changes"
-        message="Are you sure you want to update this yield configuration?"
+        message="Are you sure you want to save this yield configuration?"
         confirmLabel="Save"
       />
     </div>

@@ -1,4 +1,4 @@
-import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl } from "../services/ConstantServies";
+import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl } from "../services/ConstantServies";
 import { authAxios, authAxiosFilePost, authAxiosget, authAxiosPatch, authAxiosPost, authAxiosPut } from "./HttpMethod";
 
 export function getemployeeList() {
@@ -70,8 +70,14 @@ export function getProductList(data) {
 export function getProcessActivityList(data) {
   return authAxios(getProcessActivityListUrl, data);
 }
-export function getYieldConfig(data) {
+
+export function getAllYieldConfig(data) {
   return authAxios(getYieldConfigUrl, data);
+}
+
+export function getYieldConfig(data, id) {
+  const url = id ? `${getYieldConfigUrl}by-product/${id}/` : getYieldConfigUrl;
+  return authAxios(url, data);
 }
 export function getMachineCapacity(data) {
   return authAxios(getMachineCapacityUrl, data);
@@ -155,6 +161,9 @@ export function GetItemCategory(data) {
 
 export function GetOrdersList(data) {
   return authAxios(OrdersUrl, data);
+}
+export function GetOrdersByDestinationList(data) {
+  return authAxios(OrdersByDestinationUrl, data);
 }
 
 export async function AddNewOrder(data) {

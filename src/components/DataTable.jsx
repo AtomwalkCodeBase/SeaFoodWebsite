@@ -14,6 +14,7 @@ const Table = styled.table`
   border-collapse: separate;
   border-spacing: 0;
   min-width: 800px;
+  color: ${({ theme }) => theme.colors.text};
 `
 
 const Th = styled.th`
@@ -24,12 +25,23 @@ const Th = styled.th`
   color: ${({ theme }) => theme.colors.text};
 `
 
-const Td = styled.td`
-  padding: 0.75rem;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.colors.text};
-`
+// const Td = styled.td`
+//   padding: 0.75rem;
+//   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+//   font-size: 0.85rem;
+//   color: ${({ theme }) => theme.colors.text};
+// `
+
+const Td = ({ children, className = "", ...props }) => {
+  return (
+    <td
+      className={`p-3 border-b border-border text-sm ${className}`.trim()}
+      {...props}
+    >
+      {children}
+    </td>
+  )
+}
 
 function DataTable({ columns, data, renderRow, expandedRow, renderExpandedRow, emptyMessage = "No data available", emptyMessageClassName = "" }) {
   const safeData = Array.isArray(data) ? data : [];

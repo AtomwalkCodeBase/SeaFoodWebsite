@@ -41,6 +41,7 @@ export const PlanningConfigUrl = `${newPPpont}/${db_name}/config/`;
 export const SpeciesUrl = `${newPPpont}/${db_name}/species/`;
 export const GradesUrl = `${newPPpont}/${db_name}/grades/`;
 export const OrdersUrl = `${newPPpont}/${db_name}/orders/`;
+export const OrdersByDestinationUrl = `${newPPpont}/${db_name}/orders/demand-by-destination/`;
 export const ItemCategoryListUrl = `${hrendpoint}/item_category_list/${db_name}/`;
 export const CapacityPlanningUrl = `${PPendPoint}/capacity/plan/${db_name}/`;
 export const PlanningReportUrl = `${PPendPoint}/engine/report/${db_name}/`;
