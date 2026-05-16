@@ -8,17 +8,19 @@ export const EmptyState = ({ message, className = "" }) => {
   );
 };
 
-export const SectionHeader = ({ step, icon, title, sub }) => (
-    <div className="flex items-start p-2  border-b border-border">
+export const SectionHeader = ({ step, icon, title, subtitle, border = true }) => (
+    <div className={`flex items-start p-2 ${border ? 'border-b border-border' : ''}`}>
       {step && (
-        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-text text-sm font-bold`}>
+        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold`}>
           {step}
         </span>
       )}
+      <div className="flex-1">
         <div className="text-base font-bold flex items-center gap-2.5 text-text">
-            <span>{icon}</span> {title}
+          <span>{icon}</span> {title}
         </div>
-        {sub && <div className="text-xs text-text-light mt-1">{sub}</div>}
+        {subtitle && <div className="text-xs text-text-light mt-1">{subtitle}</div>}
+      </div>
     </div>
 );
 
@@ -63,7 +65,7 @@ export function StatusDot({ status = 'idle', pulse = false }) {
 }
  
 // ── SectionHeader ─────────────────────────────────────────────────────────────
-export function SectionHeader2({ step, title, subtitle, phaseColor = 'pre' }) {
+export function SectionHeader2({ step, title, icon, subtitle, phaseColor = 'pre' }) {
   const colors =
     phaseColor === 'pre'
       ? 'text-phasePreText bg-phasePre'
@@ -71,12 +73,15 @@ export function SectionHeader2({ step, title, subtitle, phaseColor = 'pre' }) {
   return (
     <div className="flex items-start gap-3 mb-4">
       {step && (
-        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-text text-sm font-bold ${colors}`}>
+        <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${colors}`}>
           {step}
         </span>
       )}
       <div>
-        <h2 className="text-base font-semibold text-text">{title}</h2>
+        <div className="text-base font-bold flex items-center gap-2.5 text-text">
+        {/* <span>{icon}</span><h2 className="text-base font-semibold text-text">{title}</h2> */}
+        <span>{icon}</span>{title}
+        </div>
         {subtitle && <p className="text-xs text-text-light mt-0.5">{subtitle}</p>}
       </div>
     </div>

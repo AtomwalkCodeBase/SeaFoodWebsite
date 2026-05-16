@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AddPlanningConfig, getPlanningConfig } from "../services/productServices";
+import { AddPlanningConfig, EditPlanningConfig, getPlanningConfig } from "../services/productServices";
 import { toast } from "react-toastify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Button from "../components/Button";
@@ -69,42 +69,121 @@ export default function CapacityConfigScreen() {
   const close = () => setModal((m) => ({ ...m, open: false }));
 
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: AddPlanningConfig,
-    onSuccess: () => {
-      toast.success("Add capacity planning success")
-      queryClient.invalidateQueries(['planning-config'])
-      close()
-    },
-    onError: (err) => {
-      console.error("Create config failed", err)
+const addMutation = useMutation({
+  mutationFn: AddPlanningConfig,
+
+  onSuccess: () => {
+    toast.success("Planning config added successfully");
+
+    queryClient.invalidateQueries({
+      queryKey: ["planning-config"],
+    });
+
+    close();
+  },
+
+  onError: (err) => {
+    console.error("Create config failed", err);
+    toast.error("Failed to add config");
+  },
+});
+
+const editMutation = useMutation({
+  mutationFn: ({ id, data }) =>
+    EditPlanningConfig(data, id),
+
+  onSuccess: () => {
+    toast.success("Planning config updated successfully");
+
+    queryClient.invalidateQueries({
+      queryKey: ["planning-config"],
+    });
+
+    close();
+  },
+
+  onError: (err) => {
+    console.error("Update config failed", err);
+    toast.error("Failed to update config");
+  },
+});
+
+const getChangedFields = (original, updated) => {
+  const changed = {};
+
+  Object.keys(updated).forEach((key) => {
+    if (
+      String(updated[key]) !==
+      String(original[key] ?? "")
+    ) {
+      changed[key] = updated[key];
     }
-  })
+  });
 
-  const handleSubmit = (form) => {
-    const payload = {
-      label: form.label,
-      name: form.name,
-      machine_capacity_mt: form.machine_capacity_mt,
-      oee_percentage: form.oee_percentage,
-      shift_hours: form.shift_hours,
-      shifts_per_day: form.shifts_per_day,
-      cold_storage_capacity_mt: form.cold_storage_capacity_mt,
-      procurement_buffer_pct: form.procurement_buffer_pct,
+  return changed;
+};
 
-      priority_weight_urgency: form.priority_weight_urgency,
-      priority_weight_margin: form.priority_weight_margin,
-      priority_weight_customer: form.priority_weight_customer,
-      priority_weight_stock: form.priority_weight_stock,
+const handleSubmit = (form) => {
+  const payload = {
+    label: form.label,
+    name: form.name,
 
-      annual_revenue_target: form.annual_revenue_target,
+    machine_capacity_mt: Number(form.machine_capacity_mt),
+    oee_percentage: Number(form.oee_percentage),
+
+    shift_hours: Number(form.shift_hours),
+    shifts_per_day: Number(form.shifts_per_day),
+
+    cold_storage_capacity_mt: Number(
+      form.cold_storage_capacity_mt
+    ),
+
+    procurement_buffer_pct: Number(
+      form.procurement_buffer_pct
+    ),
+
+    priority_weight_urgency: Number(
+      form.priority_weight_urgency
+    ),
+
+    priority_weight_margin: Number(
+      form.priority_weight_margin
+    ),
+
+    priority_weight_customer: Number(
+      form.priority_weight_customer
+    ),
+
+    priority_weight_stock: Number(
+      form.priority_weight_stock
+    ),
+
+    annual_revenue_target: Number(
+      form.annual_revenue_target
+    ),
+  };
+
+  if (modal.mode === "edit") {
+    const changedPayload = getChangedFields(
+      config,
+      payload
+    );
+
+    if (Object.keys(changedPayload).length === 0) {
+      toast.info("No changes detected");
+      return;
     }
 
-    // console.log("AddPlanningConfig", payload)
+    editMutation.mutate({
+      id: config.id,
+      data: changedPayload,
+    });
 
-    // 🔥 call mutation instead of API directly
-    mutate(payload)
+    return;
   }
+
+  addMutation.mutate(payload);
+};
 
   if (isLoading) {
   return <div>Loading...</div>
@@ -122,7 +201,7 @@ if (error) {
         </div>
 
         <div className="flex justify-center items-center p-5">
-          <Button variant="primary" onClick={openAdd}><FiPlus /> {isPending ? "Adding..." : "Add"}</Button>
+          <Button variant="primary" onClick={openAdd}><FiPlus />{addMutation.isPending ? "Adding..." : "Add"}</Button>
         </div>
         <ConfigModal
           open={modal.open}
@@ -148,7 +227,7 @@ if (error) {
             <KpiCard label="Revenue Est."         value={`₹${revenueCr} Cr`}    valueClass="text-primary" />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={openEdit}><FiEdit2 /> {isPending ? "Editing..." : "Edit"}</Button>
+            <Button variant="outline" onClick={openEdit}><FiEdit2 /> {editMutation.isPending ? "Editing..." : "Edit"}</Button>
 
           </div>
         </div>

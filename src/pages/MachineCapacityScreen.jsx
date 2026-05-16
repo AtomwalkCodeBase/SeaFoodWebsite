@@ -1,20 +1,13 @@
 import { RiAlertFill } from "react-icons/ri";
 import { GiFactory } from "react-icons/gi";
-import { getMachineCapacity, getProcessActivityList } from "../services/productServices";
+import { AddMachineCapacity, getMachineCapacity, getProcessActivityList } from "../services/productServices";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmPopup from "../components/ConfirmPopup";
+import Button from "../components/Button";
+import { SectionHeader } from "../components/EmptyState";
 
 // ── Dummy data (replace with your own) ───────
-const MACHINES = [
-    { id: "EQ-CLN-01", name: "Cleaning Line A", rawCap: 10, count: 2, downtime: 8, netCap: 18.4, vsBest: 85, isBottleneck: false, products: ["IQF-CKD", "RAW-BLK", "PD-RAW"] },
-    { id: "EQ-CKR-01", name: "Cooking Line A", rawCap: 8, count: 3, downtime: 10, netCap: 21.6, vsBest: 100, isBottleneck: false, products: ["IQF-CKD", "WHL-CKD"] },
-    { id: "EQ-IQF-01", name: "IQF Tunnel", rawCap: 6, count: 2, downtime: 5, netCap: 11.4, vsBest: 53, isBottleneck: false, products: ["IQF-CKD", "PD-RAW"] },
-    { id: "EQ-PLF-01", name: "Plate Freezer", rawCap: 7, count: 1, downtime: 6, netCap: 6.6, vsBest: 30, isBottleneck: true, products: ["RAW-BLK"] },
-    { id: "EQ-GLZ-01", name: "Glazing Unit A", rawCap: 9, count: 2, downtime: 4, netCap: 17.3, vsBest: 80, isBottleneck: false, products: ["IQF-CKD", "RAW-BLK", "WHL-CKD"] },
-    { id: "EQ-PKG-01", name: "Packing Line A", rawCap: 7, count: 2, downtime: 7, netCap: 13.0, vsBest: 60, isBottleneck: false, products: ["IQF-CKD", "RAW-BLK", "PD-RAW", "WHL-CKD"] },
-    { id: "EQ-DVN-01", name: "Deveining Station", rawCap: 4, count: 3, downtime: 5, netCap: 11.4, vsBest: 53, isBottleneck: false, products: ["PD-RAW"] },
-];
 
 const PRODUCT_COLORS = {
     "IQF-CKD": "bg-primary/10 text-primary border border-primary/30",
@@ -94,10 +87,10 @@ const TD = ({ children, className = "" }) => (
 );
 
 /** Full table row */
-const MachineRow = ({ machine, isOdd, setIsAddModalOpen }) => (
+const MachineRow = ({ machine, isOdd, setIsAddModalOpen, handleEditMachine }) => (
     <tr className={`border-t border-border ${isOdd ? "bg-backgroundAlt/40" : ""}`}>
         <TD><span className="font-semibold">{machine.name}</span></TD>
-        <TD><span className="text-xs text-textLight font-mono">{machine.id}</span></TD>
+        {/* <TD><span className="text-xs text-textLight font-mono">{machine.id}</span></TD> */}
         <TD><span className="font-semibold">{machine.rawCap} MT</span></TD>
         <TD><span className="font-semibold">{machine.count}×</span></TD>
         <TD>
@@ -123,12 +116,12 @@ const MachineRow = ({ machine, isOdd, setIsAddModalOpen }) => (
       </div>
     </TD>
     <TD>
-    <button
-    onClick={() => setIsAddModalOpen(true)}
+    <Button
+   onClick={() => handleEditMachine(machine)}
     lassName="bg-primary/10 text-primary hover:bg-primary hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200"
     >
-          + Add
-    </button>
+          + Edit
+    </Button>
     </TD>
     </tr>
 );
@@ -137,13 +130,16 @@ const MachineRow = ({ machine, isOdd, setIsAddModalOpen }) => (
 export default function MachineCapacityScreen() {
     const [machines, setMachines] = useState([]);
     const [activities, setActivities] = useState([]);
-    const [formData, setFormData] = useState({
-        equipment: "",
-        display_name: "",
-        raw_capacity_mt_per_day: "",
-        machine_count: "",
-        downtime_percentage: ""
-    });
+const initialFormData = {
+  equipment: "",
+  raw_capacity_mt_per_day: "",
+  machine_count: "",
+  downtime_percentage: ""
+};
+
+const [formData, setFormData] = useState(initialFormData);
+    const [selectedMachine, setSelectedMachine] = useState(null);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -172,28 +168,99 @@ const getActivities = async () => {
   }
 };
 
+const handleAddMachine = (machine) => {
+  setIsEditMode(false);
+
+  setFormData({
+    equipment: machine.equipmentId,
+    raw_capacity_mt_per_day: "",
+    machine_count: "",
+    downtime_percentage: ""
+  });
+
+  setSelectedMachine(null);
+
+  setIsAddModalOpen(true);
+};
+
+const handleEditMachine = (machine) => {
+  setIsEditMode(true);
+
+  setSelectedMachine(machine);
+
+  setFormData({
+    equipment: machine.equipmentId,
+    raw_capacity_mt_per_day: machine.rawCap || "",
+    machine_count: machine.count || "",
+    downtime_percentage: machine.downtime || ""
+  });
+
+  setIsAddModalOpen(true);
+};
+
+const getChangedFields = (original, updated) => {
+  const changed = {};
+
+  Object.keys(updated).forEach((key) => {
+    if (
+      updated[key] !== "" &&
+      String(updated[key]) !== String(original[key] ?? "")
+    ) {
+      changed[key] = updated[key];
+    }
+  });
+
+  return changed;
+};
+
 const handleSave = async () => {
-  const payload = {
-    equipment: formData.equipment,
-    display_name: formData.display_name,
-    raw_capacity_mt_per_day: Number(formData.raw_capacity_mt_per_day),
-    machine_count: Number(formData.machine_count),
-    downtime_percentage: Number(formData.downtime_percentage)
-  };
-
-  console.log("Payload:", payload);
-
   try {
-    // const res = await AddMachineCapacity(payload);
+    if (isEditMode) {
+      const originalData = {
+        raw_capacity_mt_per_day: selectedMachine.rawCap,
+        machine_count: selectedMachine.count,
+        downtime_percentage: selectedMachine.downtime,
+      };
 
-    toast.success("Saved successfully");
+      const changedPayload = getChangedFields(
+        originalData,
+        formData
+      );
+
+      if (Object.keys(changedPayload).length === 0) {
+        toast.info("No changes detected");
+        return;
+      }
+
+      await EditMachineCapacity({
+        id: selectedMachine.id,
+        ...changedPayload,
+      });
+
+      toast.success("Updated successfully");
+    } else {
+      const payload = {
+        equipment: formData.equipment,
+        raw_capacity_mt_per_day: Number(formData.raw_capacity_mt_per_day),
+        machine_count: Number(formData.machine_count),
+        downtime_percentage: Number(formData.downtime_percentage),
+      };
+
+      await AddMachineCapacity(payload);
+
+      toast.success("Saved successfully");
+    }
 
     setIsConfirmOpen(false);
     setIsAddModalOpen(false);
 
-    getMachines(); // refresh
+    getMachines();
   } catch {
-    toast.error("Failed to save");
+    toast.error(
+      isEditMode
+        ? "Failed to update"
+        : "Failed to save"
+    );
   }
 };
 
@@ -201,14 +268,14 @@ const validActivities = activities.filter(
   (a) => a.a_equipment_name && a.a_equipment_name !== null
 );
 
-const mappedMachines = (machines.length ? machines : MACHINES).map((m) => {
+const mappedMachines =  machines.map((m) => {
   const relatedActivities = validActivities.filter(
     (a) => a.a_equipment_name === m.equipment_name
   );
 
   return {
     id: m.id,
-    name: m.display_name ? m.display_name : m.equipment_name, // ✅ fix #3
+    name: m.display_name ? m.display_name : m.equipment_name,
     rawCap: parseFloat(m.raw_capacity_mt_per_day || m.rawCap || 0),
     count: m.machine_count || m.count,
     downtime: parseFloat(m.downtime_percentage || m.downtime || 0),
@@ -223,11 +290,17 @@ const mappedMachines = (machines.length ? machines : MACHINES).map((m) => {
         <>
         <div className="p-1 font-body transition-colors duration-300">
             <div className="mx-auto space-y-6">
+              <SectionHeader title="Machine List" />
 
                 {/* ── Capacity Cards Row ── */}
-                <div className="flex gap-4 overflow-x-auto mb-3 scrollbar-thin">
+               <div className="    grid gap-4 sm:gap-5 lg:gap-6 mb-4
+    grid-cols-1
+    sm:grid-cols-2
+    md:grid-cols-3
+    xl:grid-cols-4
+    2xl:grid-cols-5">
                     {mappedMachines.length === 0 ? (
-                    <div className="text-textLight">No machines available</div>
+                    <div className="text-text-light">No machines available</div>
                     ) : (
                     mappedMachines.map((m) => (
                         <CapacityCard key={m.id} machine={m} />
@@ -264,7 +337,7 @@ const mappedMachines = (machines.length ? machines : MACHINES).map((m) => {
                             <thead className="bg-backgroundAlt">
                                 <tr>
                                     <TH>Machine</TH>
-                                    <TH>ERP Equipment</TH>
+                                    {/* <TH>ERP Equipment</TH> */}
                                     <TH>Raw Cap.</TH>
                                     <TH>Count</TH>
                                     <TH>Downtime</TH>
@@ -276,7 +349,7 @@ const mappedMachines = (machines.length ? machines : MACHINES).map((m) => {
                             </thead>
                             <tbody>
                                 {mappedMachines.map((m, i) => (
-                                    <MachineRow key={m.id} machine={m} isOdd={i % 2 !== 0} setIsAddModalOpen={setIsAddModalOpen}/>
+                                    <MachineRow key={m.id} machine={m} isOdd={i % 2 !== 0} setIsAddModalOpen={setIsAddModalOpen} handleEditMachine={handleEditMachine}/>
                                 ))}
                             </tbody>
                         </table>
@@ -300,17 +373,18 @@ const mappedMachines = (machines.length ? machines : MACHINES).map((m) => {
   <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
     <div className="bg-white p-5 rounded-xl w-[400px]">
       <h3 className="font-bold mb-3">Add Machine Capacity</h3>
-
+{/* 
       <input
         placeholder="Display Name"
         value={formData.display_name}
         onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
         className="w-full border p-2 mb-2"
-      />
+      /> */}
 
       <input
         placeholder="Raw Capacity"
         value={formData.raw_capacity_mt_per_day}
+        type="number"
         onChange={(e) => setFormData({ ...formData, raw_capacity_mt_per_day: e.target.value })}
         className="w-full border p-2 mb-2"
       />

@@ -183,7 +183,8 @@ const PaginationComponent = ({
   siblingCount = 1,
   showFirstLast = false,
   showPageSize = false,
-  showGoToPage = false
+  showGoToPage = false,
+  listName = "entries"
 }) => {
   const [pageInput, setPageInput] = useState('');
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -254,7 +255,7 @@ const PaginationComponent = ({
   return (
     <Pagination>
       <PaginationInfo>
-        Showing {startItem.toLocaleString()} to {endItem.toLocaleString()} of {totalItems.toLocaleString()} audits
+        Showing {startItem.toLocaleString()} to {endItem.toLocaleString()} of {totalItems.toLocaleString()} {listName}
       </PaginationInfo>
       
       <PaginationButtons>

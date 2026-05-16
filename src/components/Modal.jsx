@@ -12,6 +12,7 @@ const Modal = ({
   showSaveButton = true,
   saveButtonText = "Save Changes",
   cancelButtonText = "Cancel",
+  saveDisabled = false,
   setIsConfirmOpen,   // For opening confirm popup
 }) => {
   useEffect(() => {
@@ -23,6 +24,7 @@ const Modal = ({
   if (!isOpen) return null;
 
   const handleSave = () => {
+    if (saveDisabled) return;
     if (setIsConfirmOpen) {
       setIsConfirmOpen(true);
     } else if (onSave) {
@@ -65,8 +67,14 @@ const Modal = ({
             </button>
             {showSaveButton && (
               <button
+                type="button"
                 onClick={handleSave}
-                className="px-4 py-2 rounded-xl bg-primary text-white font-semibold hover:bg-secondary transition-colors shadow-md shadow-primary/30 text-sm"
+                disabled={saveDisabled}
+                className={`px-4 py-2 rounded-xl font-semibold text-sm shadow-md transition-colors ${
+                  saveDisabled
+                    ? "cursor-not-allowed bg-border text-text-light opacity-70 shadow-none"
+                    : "bg-primary text-white hover:bg-secondary shadow-primary/30"
+                }`}
               >
                 {saveButtonText}
               </button>

@@ -57,7 +57,7 @@ export const GlobalStyles = createGlobalStyle`
   table {
     width: 100%;
     border-collapse: collapse;
-    margin: 1rem 0;
+    margin: 0.6rem 0;
     
     th, td {
       padding: ${({ theme }) => theme.spacing?.md || "12px 15px"};

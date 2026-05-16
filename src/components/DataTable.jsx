@@ -43,7 +43,7 @@ const Td = ({ children, className = "", ...props }) => {
   )
 }
 
-function DataTable({ columns, data, renderRow, expandedRow, renderExpandedRow, emptyMessage = "No data available", emptyMessageClassName = "" }) {
+function DataTable({ columns, data, renderRow, expandedRow, renderExpandedRow, emptyMessage = "No data available", emptyMessageClassName = "", isLoading = false }) {
   const safeData = Array.isArray(data) ? data : [];
   const hasData = safeData.length > 0;
   const columnsCount = Array.isArray(columns) && columns.length > 0 ? columns.length : 1;
@@ -60,7 +60,16 @@ function DataTable({ columns, data, renderRow, expandedRow, renderExpandedRow, e
         </thead>
 
         <tbody>
-          {hasData ? (
+          {isLoading ? (
+            <tr>
+              <td
+                colSpan={columnsCount}
+                className={`text-center py-8 text-text-light font-semibold ${emptyMessageClassName}`}
+              >
+                loading...
+              </td>
+            </tr>
+          ) : hasData ? (
             safeData.map((row, index) => (
               <React.Fragment key={row?.id ?? index}>
                 <tr>

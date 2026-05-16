@@ -33,6 +33,18 @@ export const ORDERS_PRIORITY_OPTIONS = [
   { id: 3, value: "standard", label: "STANDARD" },
 ];
 
+export const QUERY_KEYS = {
+  CUSTOMER: ['customer'],
+  PRODUCTS: ['products'],
+  GRADES: ['grades'],
+  SPECIES: ['species'],
+  ORDERS: ['orders'],
+  ORDERS_BY_DESTINATION: ['ordersByDestination'],
+  ORDERS_BY_PRIORITY: ['ordersByPriority'],
+  PLANNING_CONFIG: ['planning-config'],
+  BATCHES: ['batches'],
+}
+
 
 const qualityControlData = [
   // MANAGER VIEW DATA

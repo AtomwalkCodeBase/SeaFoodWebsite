@@ -112,20 +112,20 @@ function BatchCard({ batch }) {
     return orderList.filter((o) =>o.grade_code === batch.grade_code && o.product_code === batch.product_code);
   }, [batch]);
 
-  console.log("completedActivities", completedActivities)
   
-
-
-
+  
+  
   const dynamicSteps = useMemo(() => {
     if (processActivities.length > 0) {
       return processActivities.sort((a, b) => a.id - b.id).map((act) => act.activity_name);
     }
     return PROCESS_STEPS; // fallback
   }, [processActivities]);
-
+  
+  console.log("dynamicSteps", dynamicSteps)
+  
   useEffect(() => {
-  if (batch.status === "SCHEDULED") {
+    if (batch.status === "SCHEDULED") {
     setSelectedActivityName(dynamicSteps[0]);
   } else if (currentActivityName) {
     setSelectedActivityName(currentActivityName);
@@ -206,7 +206,7 @@ const nextStepLabel =
 
       {/* Step indicators */}
       <div className="flex gap-2">
-        {dynamicSteps.map((step, i) => {
+        {dynamicSteps?.filter((data) => data).map((step, i) => {
           const isDone = batch.activity_logs?.some((log) => log.activity_name === step && log.status === "COMPLETED");
           const isActive = step === currentActivityName;
           const isSelected = step === selectedActivityName;
@@ -325,14 +325,14 @@ function GradedStockPanel({ onGenerate, planLoading  }) {
 
 
 
-    const {data: InventoryCategoryList = [], isLoading: InventoryCategoryLoading, error: InventoryCategoryError } = useQuery  ({
-      queryKey: ['inventory'],
+    const {data: InventoryCategoryList = [], isLoading: InventoryCategoryLoading, error: InventoryCategoryError } = useQuery({
+      queryKey: ['InventoryCategoryList'],
       queryFn: () => GetItemCategory(),
       select: (res) => res.data,
       onError: () => toast.error('Failed to load inventory list'),
     });
 
-    const {data: InventoryStatusList = [], isLoading: InventoryStatusLoading, error: InventoryStatusError } = useQuery  ({
+    const {data: InventoryStatusList = [], isLoading: InventoryStatusLoading, error: InventoryStatusError } = useQuery({
       queryKey: ['inventoryStatus'],
       queryFn: () => getInventoryStatus(),
       select: (res) => res.data,
@@ -341,7 +341,7 @@ function GradedStockPanel({ onGenerate, planLoading  }) {
 
     const gradedStockData = (InventoryStatusList?.grades || []).map(
     (item) => {
-      const matchedSpecies = InventoryCategoryList.find(
+      const matchedSpecies = InventoryCategoryList?.find(
         (cat) => String(cat.id) === String(item.species)
       );
 
@@ -591,7 +591,7 @@ const activeSubBatches = useMemo(() => {
           <h3 className="font-semibold text-text">Active sub-batches</h3>
           <span className="text-xs text-text-light">Processing in progress</span>
         </div>
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
           {activeSubBatches.length === 0 ? (
             <EmptyState icon={FiZap} message="No active batches — generate a batch plan above" />
           ) : (

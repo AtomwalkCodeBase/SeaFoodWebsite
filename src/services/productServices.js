@@ -83,29 +83,29 @@ export function getMachineCapacity(data) {
   return authAxios(getMachineCapacityUrl, data);
 }
 
-export async function UpdateYieldConfig(data) {
-  try {
-    const { id, ...rest } = data;
-    const response = await authAxiosPut(`${getYieldConfigUrl}/${id}/`, rest);
-    // if (response.status === 200) {
-    //   console.log("Pin updated successfully")
-    // }
+export async function AddMachineCapacity(data) {
+      const response = await authAxiosPost(getYieldConfigUrl, data);
     return response;
-  } catch (error) {
-    return error;
-  }
+}
+
+export async function EditMachineCapacity(data) {
+      const { id, ...rest } = data;
+    const response = await authAxiosPatch(`${getYieldConfigUrl}/${id}/`, rest);
+    return response;
+}
+
+export async function UpdateYieldConfig(data) {
+    const { id, ...rest } = data;
+    const response = await authAxiosPatch(`${getYieldConfigUrl}/${id}/`, rest);
+    return response;
 }
 
 export async function AddYieldConfig(data) {
-  try {
     const response = await authAxiosPost(getYieldConfigUrl, data);
     // if (response.status === 200) {
     //   console.log("Pin updated successfully")
     // }
     return response;
-  } catch (error) {
-    return error;
-  }
 }
 
 export function getPlanningConfig(data) {
@@ -113,15 +113,15 @@ export function getPlanningConfig(data) {
 }
 
 export async function AddPlanningConfig(data) {
-  try {
     const response = await authAxiosPost(PlanningConfigUrl, data);
-    if (response.status === 200) {
-      // console.log("Pin updated successfully")
-    }
     return response;
-  } catch (error) {
-    return error;
-  }
+
+}
+
+export async function EditPlanningConfig(data, id) {
+    const response = await authAxiosPatch(`${PlanningConfigUrl}${id}/`, data);
+    return response;
+
 }
 
 // export function getSpecies(data) {
@@ -134,12 +134,13 @@ export function getSpecies(data, id) {
 }
 
 export async function AddSpecies(data) {
-  try {
     const response = await authAxiosPost(SpeciesUrl, data);
     return response;
-  } catch (error) {
-    return error;
-  }
+}
+
+export async function UpdateSpecies(data, id) {
+  const response = await authAxiosPatch( `${SpeciesUrl}${id}/`, data);
+  return response;
 }
 
 export function getGrades(data) {
@@ -147,12 +148,12 @@ export function getGrades(data) {
 }
 
 export async function AddGrades(data) {
-  try {
     const response = await authAxiosPost(GradesUrl, data);
     return response;
-  } catch (error) {
-    return error;
-  }
+}
+export async function UpdateGrades(data, id) {
+    const response = await authAxiosPatch(`${GradesUrl}${id}/`, data);
+    return response;
 }
 
 export function GetItemCategory(data) {
@@ -162,17 +163,23 @@ export function GetItemCategory(data) {
 export function GetOrdersList(data) {
   return authAxios(OrdersUrl, data);
 }
+
+export function GetOrdersPriorityQueueList(data) {
+  return authAxios(`${OrdersUrl}priority-queue/`, data);
+}
+
 export function GetOrdersByDestinationList(data) {
   return authAxios(OrdersByDestinationUrl, data);
 }
 
 export async function AddNewOrder(data) {
-  try {
     const response = await authAxiosPost(OrdersUrl, data);
     return response;
-  } catch (error) {
-    return error;
-  }
+}
+
+export async function UpdateOrder(data, id) {
+    const response = await authAxiosPatch(`${OrdersUrl}${id}/`, data);
+    return response;
 }
 
   export function GetCapacityPlanning(days) {
@@ -198,12 +205,8 @@ export function getBatchList(data) {
 }
 
 export async function CreateParentBatch(data) {
-  try {
     const response = await authAxiosPost(BatchesUrl, data);
     return response;
-  } catch (error) {
-    return error;
-  }
 }
 
 export function getGradingSessionsList(data) {
@@ -211,12 +214,8 @@ export function getGradingSessionsList(data) {
 }
 
 export async function createGRN(data) {
-  try {
     const response = await authAxiosPost(GradingSessionsUrl, data);
     return response;
-  } catch (error) {
-    return error;
-  }
 }
 
 export async function AdvanceBatchActivity(id, data = {}) {
@@ -234,30 +233,18 @@ export async function RecordGrades(sessionId, data) {
 }
 
 export async function CreateSubBatches(batchId, data) {
-  try {
     const response = await authAxiosPost(`${BatchesUrl}${batchId}/create-sub-batches/`, data);
     return response;
-  } catch (error) {
-    return error;
-  }
 }
 
 export async function GenerateBatchPlan(data) {
-  try {
     const response = await authAxiosPost(EngineGenerateUrl, data);
     return response;
-  } catch (error) {
-    return error;
-  }
 }
 
 export async function AutoAllocateBatch(batchId, data = {}) {
-  try {
     const response = await authAxiosPost(`${BatchesUrl}${batchId}/auto-allocate/`, data);
     return response;
-  } catch (error) {
-    return error;
-  }
 }
 export async function ManualAllocateBatch(batchId, data = {}) {
     const response = await authAxiosPost(`${BatchesUrl}${batchId}/allocate/`, data);

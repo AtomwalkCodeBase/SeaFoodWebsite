@@ -1,3 +1,5 @@
+import { toast } from "react-toastify";
+
 export const formatCurrency = (amount, currency = "INR") => {
   if (!amount) return "—";
   const num = parseFloat(amount);
@@ -59,4 +61,57 @@ export const extractDateTime = (isoString) => {
       hour12: false
     })}`
   };
+};
+
+const formatField = (field) => {
+  return field.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+export const handleApiError = ( error, fallbackMessage = "Something went wrong") => {
+  const data = error?.response?.data;
+
+  if (data && typeof data === "object") {
+
+    const fieldErrors = [];
+
+    Object.entries(data).forEach(([key, value]) => {
+
+      if (key === "status_code") return;
+
+      if (Array.isArray(value)) {
+        fieldErrors.push(
+          `${formatField(key)}: ${value.join(", ")}`
+        );
+      }
+
+      else if (typeof value === "string") {
+        fieldErrors.push(
+          `${formatField(key)}: ${value}`
+        );
+      }
+    });
+
+    if (fieldErrors.length > 0) {
+      fieldErrors.forEach((msg) => toast.error(msg));
+      return;
+    }
+  }
+
+  const message = data?.message || error?.message || fallbackMessage;
+  toast.error(message);
+};
+
+export const getChangedFields = (original, updated) => {
+  const changed = {};
+
+  Object.keys(updated).forEach((key) => {
+    if (
+      String(updated[key]) !==
+      String(original[key] ?? "")
+    ) {
+      changed[key] = updated[key];
+    }
+  });
+
+  return changed;
 };

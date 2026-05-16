@@ -1,6 +1,6 @@
 import styled from "styled-components"
-import { getGrades, GetItemCategory, getSpecies } from "../services/productServices"
-import { useQuery } from "@tanstack/react-query"
+import { AddGrades, AddSpecies, getGrades, getInventoryItem, GetItemCategory, getSpecies, UpdateGrades, UpdateSpecies } from "../services/productServices"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import { useEffect, useMemo, useState } from "react"
 import Button from "../components/Button"
@@ -13,6 +13,7 @@ import DataTable, { Td } from "../components/Datatable"
 import { useFormHandler } from "../hooks/useFormHandler"
 import Modal from "../components/Modal"
 import InputField from "../components/InputField"
+import { getChangedFields } from "../utils"
 
 const PanelContent = styled.div`
   display: flex;
@@ -54,13 +55,25 @@ const SpeciesButton = styled.button`
 const chartPalette = ["#1890ff", "#13c2c2", "#722ed1", "#faad14"]
 
 const gradeColumns = [
-  "GRADE", "LABEL", "COUNT/LB", "PRICE MULT.", "RM COST/MT", "YIELD MULT.", "MARGIN/MT",
+  "GRADE", "LABEL", "COUNT/LB", "PRICE MULT.", "RM COST/MT", "YIELD MULT.", "MARGIN/MT", "ACTION"
 ]
 
 export default function SpeciesGradesPanel() {
+  const queryClient = useQueryClient();
   const [selectedSpeciesId, setSelectedSpeciesId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showGradeForm, setShowGradeForm] = useState(false)
+  const [speciesModalMode, setSpeciesModalMode] =
+  useState("add");
+
+const [gradeModalMode, setGradeModalMode] =
+  useState("add");
+
+const [editingSpecies, setEditingSpecies] =
+  useState(null);
+
+const [editingGrade, setEditingGrade] =
+  useState(null);
 
   const { data: speciesList = [], isLoading: speciesListLoading, error: speciesListError } = useQuery({
     queryKey: ['speciesList'],
@@ -111,6 +124,30 @@ export default function SpeciesGradesPanel() {
     })
     : []
 
+    const openAddSpecies = () => {
+  setSpeciesModalMode("add");
+  setEditingSpecies(null);
+  setShowForm(true);
+};
+
+const openEditSpecies = (species) => {
+  setSpeciesModalMode("edit");
+  setEditingSpecies(species);
+  setShowForm(true);
+};
+
+const openAddGrade = () => {
+  setGradeModalMode("add");
+  setEditingGrade(null);
+  setShowGradeForm(true);
+};
+
+const openEditGrade = (grade) => {
+  setGradeModalMode("edit");
+  setEditingGrade(grade);
+  setShowGradeForm(true);
+};
+
   // console.log("tableRows",gradeList)
   const chartData = tableRows.map((r) => ({
     grade: r.grade_code, // ✅ FIX
@@ -134,9 +171,17 @@ export default function SpeciesGradesPanel() {
               </SpeciesButton>
             ))}
           </SpeciesList>
-          <Button size="sm" onClick={() => setShowForm(true)}>
+          <Button size="sm" onClick={openAddSpecies}>
             <FaPlus /> Add Species
           </Button>
+          <Button
+  size="sm"
+  onClick={() =>
+    openEditSpecies(selectedSpecies)
+  }
+>
+  Edit Species
+</Button>
         </SelectorWrap>
 
         {/* Species Info */}
@@ -160,7 +205,7 @@ export default function SpeciesGradesPanel() {
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap" }}>
             <h3>Grade Configuration</h3>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.5rem" }}>
-              <Button size="sm" onClick={() => setShowGradeForm(true)}>
+              <Button size="sm" onClick={openAddGrade}>
                 <FaPlus /> Add Grade
               </Button>
             </div>
@@ -178,6 +223,14 @@ export default function SpeciesGradesPanel() {
                 {/* <Td>{(row.effectiveYield * 100)?.toFixed(1)}%</Td> */}
                 <Td>{row.effectiveYield}</Td>
                 <Td>{row.margin?.toFixed(0)}</Td>
+<Td>
+  <Button
+    size="sm"
+    onClick={() => openEditGrade(row)}
+  >
+    Edit
+  </Button>
+</Td>
                 {/* <Td>--</Td>
                   <Td>--</Td> */}
               </>
@@ -205,18 +258,18 @@ export default function SpeciesGradesPanel() {
         </Card>
       </PanelContent>
       {
-        showForm && <AddSpeciesModal showForm={showForm} setShowForm={setShowForm} />
+        showForm && <AddSpeciesModal showForm={showForm} setShowForm={setShowForm} mode={speciesModalMode} initial={editingSpecies} queryClient={queryClient}/>
       }
 
       {
-        showGradeForm && <AddGradeModal showGradeForm={showGradeForm} setShowGradeForm={setShowGradeForm} />
+        showGradeForm && <AddGradeModal showGradeForm={showGradeForm} setShowGradeForm={setShowGradeForm} mode={gradeModalMode} initial={editingGrade} selectedSpeciesId={selectedSpeciesId} queryClient={queryClient}/>
       }
     </>
   )
 }
 
 
-const AddSpeciesModal = ({ showForm, setShowForm }) => {
+const AddSpeciesModal = ({ showForm, setShowForm,mode,  initial, queryClient, }) => {
   const NEW_SPECIES_EMPTY_FORM = {
     item_category: "",
     scientific_name: "",
@@ -225,7 +278,68 @@ const AddSpeciesModal = ({ showForm, setShowForm }) => {
     export_certifications: "",
   }
 
-  const { form, handleChange, resetForm } = useFormHandler(NEW_SPECIES_EMPTY_FORM);
+  const { form, handleChange, resetForm } = useFormHandler(initial || NEW_SPECIES_EMPTY_FORM);
+
+const handleSpeciesSubmit = async () => {
+  const payload = {
+    ...form,
+
+    base_procurement_price_per_mt:
+      Number(
+        form.base_procurement_price_per_mt
+      ),
+
+    default_processing_cost_per_mt:
+      Number(
+        form.default_processing_cost_per_mt
+      ),
+
+    export_certifications:
+      form.export_certifications
+        ?.split(",")
+        ?.map((s) => s.trim()) || [],
+  };
+
+  try {
+    if (mode === "edit") {
+      const changedPayload =
+        getChangedFields(initial, payload);
+
+      if (
+        Object.keys(changedPayload).length === 0
+      ) {
+        toast.info("No changes detected");
+        return;
+      }
+
+      await UpdateSpecies(
+        changedPayload,
+        initial.id
+      );
+      await queryClient.invalidateQueries({
+  queryKey: ["speciesList"],
+});
+
+      toast.success(
+        "Species updated successfully"
+      );
+    } else {
+      await AddSpecies(payload);
+      await queryClient.invalidateQueries({
+  queryKey: ["speciesList"],
+});
+
+      toast.success(
+        "Species added successfully"
+      );
+    }
+
+    setShowForm(false);
+    resetForm();
+  } catch {
+    toast.error("Failed to save species");
+  }
+};
 
 
   const { data: InventoryCategoryList = [], isLoading: InventoryCategoryListIsLoading, error: InventoryCategoryListIsError } = useQuery({
@@ -236,7 +350,10 @@ const AddSpeciesModal = ({ showForm, setShowForm }) => {
   });
 
   return (
-    <Modal title="Add New Species" isOpen={showForm} onClose={() => { setShowForm(false); resetForm() }} width="max-w-2xl" showSaveButton={true} saveButtonText="Add Species">
+    <Modal title={`${mode === "add" ? "Add" : "Edit"} Species`} isOpen={showForm} onClose={() => { setShowForm(false); resetForm() }} width="max-w-2xl" onSave={handleSpeciesSubmit} showSaveButton={true} saveButtonText={
+    mode === "add"
+      ? "Add Species"
+      : "Update Species"}>
       {/* <div className="space-y-6"> */}
 
       <div className="grid grid-cols-2 gap-4">
@@ -292,8 +409,9 @@ const AddSpeciesModal = ({ showForm, setShowForm }) => {
   )
 }
 
-const AddGradeModal = ({ showGradeForm, setShowGradeForm }) => {
+const AddGradeModal = ({ showGradeForm, setShowGradeForm, mode, initial, selectedSpeciesId, queryClient}) => {
   const NEW_GRADE_EMPTY_FORM = {
+    stock_item: "",
     grade_code: "",
     label: "",
     count_per_pound_min: "",
@@ -302,14 +420,98 @@ const AddGradeModal = ({ showGradeForm, setShowGradeForm }) => {
     yield_multiplier: "",
   }
 
-  const { form, handleChange, resetForm } = useFormHandler(NEW_GRADE_EMPTY_FORM);
+  const { form, handleChange, resetForm } = useFormHandler(initial || NEW_GRADE_EMPTY_FORM);
+
+    const { data: InventoryItemList = [], isLoading: InventoryItemListIsLoading, error: InventoryItemListIsError } = useQuery({
+    queryKey: ['InventoryItem'],
+    queryFn: () => getInventoryItem(),
+    select: (res) => res?.data,
+    onError: () => toast.error('Failed to fetch inventory item list.'),
+  });
+
+const handleGradeSubmit = async () => {
+  const payload = {
+    ...form,
+
+    count_per_pound_min: Number(
+      form.count_per_pound_min
+    ),
+
+    count_per_pound_max: Number(
+      form.count_per_pound_max
+    ),
+
+    price_multiplier: Number(
+      form.price_multiplier
+    ),
+
+    yield_multiplier: Number(
+      form.yield_multiplier
+    ),
+
+    species_config: selectedSpeciesId,
+  };
+
+  try {
+    if (mode === "edit") {
+      const changedPayload =
+        getChangedFields(initial, payload);
+
+      if (
+        Object.keys(changedPayload).length === 0
+      ) {
+        toast.info("No changes detected");
+        return;
+      }
+
+      await UpdateGrades(
+        changedPayload,
+        initial.id
+      );
+      await queryClient.invalidateQueries({
+  queryKey: ["gradeList"],
+});
+
+      toast.success(
+        "Grade updated successfully"
+      );
+    } else {
+      await AddGrades(payload);
+      await queryClient.invalidateQueries({
+  queryKey: ["gradeList"],
+});
+
+      toast.success(
+        "Grade added successfully"
+      );
+    }
+
+    setShowGradeForm(false);
+    resetForm();
+  } catch {
+    toast.error("Failed to save grade");
+  }
+};
 
   return (
-    <Modal title="Add Grade" isOpen={showGradeForm} onClose={() => { setShowGradeForm(false); resetForm() }} width="max-w-2xl" saveButtonText="Add Grade" cancelButtonText="Close">
+    <Modal title={`${mode === "add" ? "Add" : "Edit"} Species`} isOpen={showGradeForm} onClose={() => { setShowGradeForm(false); resetForm() }} width="max-w-2xl"   saveButtonText={
+    mode === "add"
+      ? "Add Species"
+      : "Update Species"
+  } cancelButtonText="Close" onSave={handleGradeSubmit}>
       {/* <div className="space-y-6"> */}
 
       <div className="grid grid-cols-2 gap-4">
 
+        <InputField
+          label="Inventory Item"
+          name="stock_item"
+          type="select"
+          value={form.stock_item}
+          onChange={handleChange}
+          options={InventoryItemList.map((item) => ({ value: item.id, label: item.name }))}
+          required={true}
+        />
 
         <InputField
           label="Grade Code"
@@ -350,7 +552,7 @@ const AddGradeModal = ({ showGradeForm, setShowGradeForm }) => {
         />
         <InputField
           label="Price Multiplier"
-          name="count_per_pound_max"
+          name="price_multiplier"
           type="number"
           value={form.price_multiplier}
           onChange={handleChange}
@@ -358,7 +560,7 @@ const AddGradeModal = ({ showGradeForm, setShowGradeForm }) => {
         />
         <InputField
           label="Yield Multiplier"
-          name="count_per_pound_max"
+          name="yield_multiplier"
           type="number"
           value={form.yield_multiplier}
           onChange={handleChange}
