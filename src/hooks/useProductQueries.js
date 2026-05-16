@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, getCustomerListView, getGrades, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getProductList, getSpecies, UpdateOrder } from "../services/productServices";
+import { AddNewOrder, getCustomerListView, getGrades, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getProductList, getSpecies, UpdateOrder } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -85,6 +85,16 @@ export const useOrdersByPriority = (enabled = true) => {
     select: (res) => res.data,
     enabled,
 	onError: `${ErrorText} orders by destination`,
+  });
+};
+
+export const useInventoryCategory = (enabled = true) => {
+  return useApiQuery({
+    queryKey: QUERY_KEYS.INVENTORY_CATEGORY,
+    queryFn: () => GetItemCategory(),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} inventory category`,
   });
 };
 

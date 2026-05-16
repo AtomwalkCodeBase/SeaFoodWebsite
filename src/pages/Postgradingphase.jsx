@@ -85,8 +85,6 @@ function BatchCard({ batch }) {
   const [isAllocateModalOpen, setIsAllocateModalOpen] = useState(false);
   const manualAllocations = useState({});
 
-  console.log("batch", batch)
-
   const completedActivities = useMemo(() => {
     return batch.activity_logs?.filter((log) => log.status === "COMPLETED").map((log) => log.activity_name) || [];
   }, [batch.activity_logs]);
@@ -112,9 +110,6 @@ function BatchCard({ batch }) {
     return orderList.filter((o) =>o.grade_code === batch.grade_code && o.product_code === batch.product_code);
   }, [batch]);
 
-  
-  
-  
   const dynamicSteps = useMemo(() => {
     if (processActivities.length > 0) {
       return processActivities.sort((a, b) => a.id - b.id).map((act) => act.activity_name);
@@ -122,7 +117,7 @@ function BatchCard({ batch }) {
     return PROCESS_STEPS; // fallback
   }, [processActivities]);
   
-  console.log("dynamicSteps", dynamicSteps)
+  console.log("matchingOrders", matchingOrders)
   
   useEffect(() => {
     if (batch.status === "SCHEDULED") {
@@ -302,17 +297,25 @@ const nextStepLabel =
     orders={matchingOrders}
     onClose={() => setIsAllocateModalOpen(false)}
     onConfirm={(allocations) => {
-      const payload = {
-        batch_id: batch.id,
-        allocations: Object.entries(allocations).map(
-          ([order_plan_id, quantity_mt]) => ({
-            order_plan_id,
-            quantity_mt: Number(quantity_mt || 0),
-          })
-        ),
-      };
+      // const payload = {
+      //   batch_id: batch.id,
+      //   allocations: Object.entries(allocations).map(
+      //     ([order_plan_id, quantity_mt]) => ({
+      //       order_plan_id,
+      //       quantity_mt: Number(quantity_mt || 0),
+      //     })
+      //   ),
+      // };
+       const payload = {
+      // batch_id: batch.id,
+      order_plan_id: allocations.order_plan_id,
+      quantity_mt: Number(allocations.quantity_mt || 0),
+    };
 
-      manualAllocateMutation.mutate(payload);
+    console.log(payload)
+
+
+      // manualAllocateMutation.mutate(payload);
     }}
   />
 )}
@@ -431,64 +434,72 @@ const { data: planData, isLoading: planLoading, refetch: fetchPlan } = useQuery(
   });
 
 useEffect(() => {
-  if (planData?.recommended_batches) {
+  if (!planData?.recommended_batches?.length) {
+    setBatchState([]);
+    return;
+  }
+  const mapped = planData.recommended_batches.map((batch, i) => {
+    const matchedOrders = batch.fulfills_orders
+      ?.map((fo) => 
+        planData.priority_queue?.find(
+          (pq) => pq.order.erp_order_reference === fo.order
+        )
+      )
+      .filter(Boolean) || [];
 
-    const mapped = planData.recommended_batches.map((batch, i) => {
+    // Calculate weighted average yield for display
+    let totalInput = 0;
+    let weightedYield = 0;
 
-      // find matching priority queue item
-      const matchedPriority = planData.priority_queue?.find(
-        (pq) =>
-          pq.product_code === batch.product_code &&
-          pq.grade_code === batch.grade_code
-      );
-
-      return {
-        id: i,
-
-        // order details
-        orderId:
-          matchedPriority?.order?.erp_order_reference ||
-          `BATCH-${i}`,
-
-        customer:
-          matchedPriority?.order?.customer_name ||
-          "Unknown Customer",
-
-        daysLeft:
-          matchedPriority?.order?.days_until_delivery || 0,
-
-        // batch details
-        product: batch.product_code,
-        grade: batch.grade_code,
-        qty: batch.input_weight_mt,
-
-        included: true,
-        notes: "",
-
-        // metrics
-        yieldPct: matchedPriority?.yield_chain_pct || 0,
-
-        margin:
-          matchedPriority?.order?.margin_per_mt || 0,
-
-        priority:
-          matchedPriority?.label || "NORMAL",
-
-        score:
-          matchedPriority?.total || 0,
-
-        stockAvailable:
-          matchedPriority?.stock_available_mt || 0,
-
-        estimatedDays:
-          matchedPriority?.estimated_completion_days || 0,
-
-        orders: batch.fulfills_orders || [],
-      };
+    batch.fulfills_orders?.forEach((fo) => {
+      const orderDetail = matchedOrders.find((m) => m.order.erp_order_reference === fo.order);
+      if (orderDetail) {
+        const qty = fo.qty_mt || 0;
+        totalInput += qty;
+        weightedYield += qty * (orderDetail.yield_chain_pct || 0);
+      }
     });
 
-    setBatchState(mapped);
-  }
+    const avgYield = totalInput > 0 ? weightedYield / totalInput : 0;
+
+    console.log("batch", batch)
+
+    return {
+      id: i,
+      product: batch.product_code,
+      product_name: batch.batch_number,
+      grade: batch.grade_code,
+      qty: Number(batch.input_weight_mt),
+      expectedOutput: Number((batch.input_weight_mt * (avgYield / 100)).toFixed(2)),
+      included: true,
+      notes: "",
+      reason: batch.reason || "",
+      priorityScore: batch.priority_score,
+
+      // For UI
+      avgYield: Number(avgYield.toFixed(2)),
+      priority: matchedOrders[0]?.label || "STANDARD",
+
+      // All orders this batch fulfills
+      orders: matchedOrders.map((pq) => {
+        const fulfillQty = batch.fulfills_orders?.find(
+          (f) => f.order === pq.order.erp_order_reference
+        )?.qty_mt || 0;
+
+        return {
+          orderId: pq.order.erp_order_reference,
+          customer: pq.order.customer_name,
+          qty: fulfillQty,
+          daysLeft: pq.order.days_until_delivery,
+          score: pq.total,
+          label: pq.label,
+          yieldPct: pq.yield_chain_pct,
+        };
+      }),
+    };
+  });
+
+  setBatchState(mapped);
 }, [planData]);
 
   const handleGeneratePlan = async () => {
@@ -574,15 +585,15 @@ const activeSubBatches = useMemo(() => {
         />
       </Panel>
 
-      {showPlan && (
-        <PlanningResult 
-          data={planData} 
-          loading={planLoading} 
-          batchState={batchState}
-          setBatchState={setBatchState}
-          selectedDate={today}
-        />
-      )}
+        {showPlan && (
+          <PlanningResult 
+            data={planData} 
+            loading={planLoading} 
+            batchState={batchState}
+            setBatchState={setBatchState}
+            selectedDate={today}
+          />
+        )}
 
       {/* Active batches */}
       <Panel accent="post">

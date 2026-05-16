@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import { useEffect, useMemo, useState } from "react"
 import Button from "../components/Button"
-import { FaPlus } from "react-icons/fa"
+import { FaPen, FaPlus } from "react-icons/fa"
 import Card from "../components/Card"
 import { ReadField } from "./Capacityconfigscreen "
 import Badge from "../components/Badge"
@@ -14,6 +14,7 @@ import { useFormHandler } from "../hooks/useFormHandler"
 import Modal from "../components/Modal"
 import InputField from "../components/InputField"
 import { getChangedFields } from "../utils"
+import { HiOutlinePencilAlt } from "react-icons/hi"
 
 const PanelContent = styled.div`
   display: flex;
@@ -171,17 +172,14 @@ const openEditGrade = (grade) => {
               </SpeciesButton>
             ))}
           </SpeciesList>
-          <Button size="sm" onClick={openAddSpecies}>
-            <FaPlus /> Add Species
+          <div className="flex flex-wrap gap-3">
+          <Button variant={speciesList.length !== 0 ? "outline" : "primary"} size="sm" onClick={openAddSpecies}>
+            <FaPlus /> Add New Species
           </Button>
-          <Button
-  size="sm"
-  onClick={() =>
-    openEditSpecies(selectedSpecies)
-  }
->
-  Edit Species
-</Button>
+         {speciesList.length !== 0 && <Button size="sm" onClick={() =>openEditSpecies(selectedSpecies)}>
+            <HiOutlinePencilAlt />Edit Species
+          </Button>}
+          </div>
         </SelectorWrap>
 
         {/* Species Info */}
@@ -223,14 +221,11 @@ const openEditGrade = (grade) => {
                 {/* <Td>{(row.effectiveYield * 100)?.toFixed(1)}%</Td> */}
                 <Td>{row.effectiveYield}</Td>
                 <Td>{row.margin?.toFixed(0)}</Td>
-<Td>
-  <Button
-    size="sm"
-    onClick={() => openEditGrade(row)}
-  >
-    Edit
-  </Button>
-</Td>
+                <Td>
+                  <Button size="sm" variant="outline" onClick={() => openEditGrade(row)}>
+                    <HiOutlinePencilAlt />Edit
+                  </Button>
+                </Td>
                 {/* <Td>--</Td>
                   <Td>--</Td> */}
               </>

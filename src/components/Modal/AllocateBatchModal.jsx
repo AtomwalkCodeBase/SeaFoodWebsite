@@ -31,6 +31,8 @@ export default function AllocateBatchModal({
     }));
   };
 
+  console.log("orders", orders)
+
   return (
 	<Modal title="Allocate batch output to orders" width="max-w-xl" isOpen={isOpen} onClose={onClose} onSave={() => onConfirm(allocations)} saveButtonText={` Confirm allocation (${allocatedSoFar.toFixed(3)} MT)`}>
     {/* <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
@@ -94,12 +96,12 @@ export default function AllocateBatchModal({
                     </div>
 
                     <p className="text-sm text-text-light mt-1">
-                      {o.customer_name} · needs {o.pending_qty_mt} MT
+                      {o.customer_name} · needs {o.remaining_qty_mt} MT
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <input
+                    {/* <input
                       type="range"
                       min={0}
                       max={o.pending_qty_mt}
@@ -109,7 +111,7 @@ export default function AllocateBatchModal({
                         handleChange(o.id, e.target.value)
                       }
                       className="w-36"
-                    />
+                    /> */}
 
                     <input
                       type="number"

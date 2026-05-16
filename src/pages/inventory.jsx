@@ -28,6 +28,7 @@ import {
 } from "recharts";
 import { getInventoryProjection, getInventoryStatus } from "../services/productServices";
 import { SectionHeader } from "../components/EmptyState";
+import { useInventoryCategory } from "../hooks/useProductQueries";
 
 const StatsGrid = styled.div`
   display: grid;
@@ -61,7 +62,9 @@ const formatValue = (val) =>
   val !== null && val !== undefined ? val : "-";
 
 const Inventory = () => {
-  // 🔷 INVENTORY API
+    const { data: inventoryCategoryList = [], isLoading: inventoryCategoryLoading } = useInventoryCategory();
+
+    console.log("inventoryCategoryList", inventoryCategoryList )
   const {
     data: inventoryData = {},
     isLoading,
@@ -179,6 +182,12 @@ const Inventory = () => {
       </Layout>
     );
   }
+  
+  const getSpeciesName = (speciesId) => {
+    console.log("speciesId", speciesId)
+    const data = inventoryCategoryList?.find((data) => data.id === Number(speciesId));
+    return data?.name || 'Unknown Species';
+  }
 
   return (
     <Layout title="Inventory">
@@ -203,7 +212,7 @@ const Inventory = () => {
               <Td className="text-blue-400 font-medium">
                 {item.grade}
               </Td>
-              <Td>{item.species}</Td>
+              <Td>{getSpeciesName(item.species)}</Td>
 
               <Td className="text-green-400">
                 {formatValue(item.in_stock)}

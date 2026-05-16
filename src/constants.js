@@ -39,6 +39,7 @@ export const QUERY_KEYS = {
   GRADES: ['grades'],
   SPECIES: ['species'],
   ORDERS: ['orders'],
+  INVENTORY_CATEGORY: ['inventoryCategory'],
   ORDERS_BY_DESTINATION: ['ordersByDestination'],
   ORDERS_BY_PRIORITY: ['ordersByPriority'],
   PLANNING_CONFIG: ['planning-config'],

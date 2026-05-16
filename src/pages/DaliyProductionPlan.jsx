@@ -194,6 +194,9 @@ export const PlanningResult = ({ data, loading, batchState, setBatchState, selec
 
   const totalPlanned = batchState.filter(b => b.included).reduce((sum, b) => sum + Number(b.qty), 0);
   const utilization = data.capacity_available_mt ? (totalPlanned / data.capacity_available_mt) * 100 : 0;
+  const batchCount = batchState.filter((b) => b.included).length;
+  const totalOrdersInQueue = data.priority_queue?.length || 0;
+  const coveredOrders = batchState.reduce((sum, b) => sum + (b.orders?.length || 0), 0);
 
   return (
     <Card>
@@ -201,7 +204,9 @@ export const PlanningResult = ({ data, loading, batchState, setBatchState, selec
         data={data} 
         totalPlanned={totalPlanned} 
         utilization={utilization}
-        batchCount={batchState.filter(b => b.included).length}
+        batchCount={coveredOrders}
+        coveredOrders={coveredOrders}
+        totalOrders={totalOrdersInQueue}
       />
       <RecommendedBatches 
         batchState={batchState} 
@@ -213,7 +218,7 @@ export const PlanningResult = ({ data, loading, batchState, setBatchState, selec
   );
 };
 
-const CapacitySummary = ({ data, totalPlanned, utilization, batchCount }) => (
+const CapacitySummary = ({ data, totalPlanned, utilization, batchCount, coveredOrders, totalOrders }) => (
   <div className='flex flex-row gap-3 w-full mb-6'>
     {/* Daily Capacity Usage */}
     <div className='flex-[5]'>
@@ -248,135 +253,177 @@ const CapacitySummary = ({ data, totalPlanned, utilization, batchCount }) => (
       <Card className="h-[85%] flex flex-col items-center justify-center">
         <p className="text-sm text-text-light font-semibold">ORDERS COVERED</p>
         <h2 className="text-xl font-bold mt-1">
-          {batchCount} / {data.priority_queue?.length || 0}
+          {coveredOrders} <span className="text-base text-text-light">/ {totalOrders}</span>
         </h2>
       </Card>
     </div>
   </div>
 );
 
-const RecommendedBatches = ({ batchState, setBatchState, selectedDate }) => {
+const RecommendedBatches = ({
+  batchState,
+  setBatchState,
+  selectedDate,
+}) => {
+
   const updateBatch = (id, field, value) => {
-    setBatchState(prev =>
-      prev.map(b => b.id === id ? { ...b, [field]: value } : b)
+    setBatchState((prev) =>
+      prev.map((b) =>
+        b.id === id
+          ? { ...b, [field]: value }
+          : b
+      )
     );
   };
 
   const handleApprove = async () => {
-    const payload = {
-      date: selectedDate,
-      // batches: batchState.filter(b => b.included).map(b => ({
-      //   product_code: b.product,
-      //   grade_code: b.grade,
-      //   input_weight_mt: b.qty,
-      //   notes: b.notes,
-      // }))
-    };
+  const payload = {
+        date: selectedDate,
+        batches: batchState
+          .filter((b) => b.included)
+          .map((b) => ({
+            product_code: b.product,
+            grade_code: b.grade,
+            input_weight_mt: Number(b.qty),
+            expected_output_mt: Number(b.expectedOutput),
+            notes: b.notes || "",
+            fulfills_orders: b.orders.map((o) => ({
+              order: o.orderId,
+              qty_mt: Number(o.qty),
+            })),
+          })),
+      };
 
     try {
-      // await GeneratePlan(payload);
-    console.log(payload)
-      toast.success("Batches created successfully!");
+
+      console.log(payload);
+
+      // await ApprovePlanningBatches(payload);
+      toast.success(`Successfully created ${payload.batches.length} production batches!`);
+
     } catch (err) {
       toast.error("Failed to create batches");
     }
   };
 
+  console.log("batchState", batchState)
+
   return (
     <Card variant="secondary">
-      <div className="flex justify-between items-center mb-4">
-        <SectionHeader title="Recommended batches" />
-        <Button onClick={handleApprove}>
-         Approve & create {batchState.filter(b => b.included).length} batches
+
+      {/* Header */}
+      <div className="flex justify-between items-start mb-5">
+
+        <div>
+
+          <SectionHeader
+            title="Recommended batches"
+            subtitle="System has intelligently consolidated orders where possible"
+          />
+
+          {/* <p className="
+            text-sm
+            text-text-light
+            mt-1
+          ">
+            Adjust quantities, exclude
+            batches, or add notes before
+            approving.
+          </p> */}
+
+        </div>
+
+        <Button onClick={handleApprove} disabled={!batchState.some(b => b.included)}>
+          ✓ Approve &amp; Create{" "}
+          {batchState.filter((b) => b.included).length} Batches
         </Button>
+
       </div>
 
-      {batchState.map((b) => (
-        <div key={b.id} className="border border-border rounded-xl p-4 mb-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            {/* Checkbox + Order ID */}
-            <div className="flex items-center gap-3 min-w-[180px]">
-              <input
-                type="checkbox"
-                checked={b.included}
-                onChange={() => updateBatch(b.id, "included", !b.included)}
-                className="w-5 h-5 accent-green-500"
-              />
-              <div>
-                <Badge
-  variant={
-    b.priority === "URGENT"
-      ? "error"
-      : b.priority === "HIGH"
-      ? "warning"
-      : "success"
-  }
->
-  {b.priority}
-</Badge>
-                <p className="font-mono font-bold mt-1">{b.orderId}</p>
-              </div>
-            </div>
+      {/* Batch List */}
+      <div className="flex flex-col gap-4">
+        {batchState.map((b) => (
+          <div key={b.id} className="border border-border rounded-2xl px-5 py-4 bg-card">
+            <div className="flex items-start gap-5 flex-wrap">
 
-            {/* Customer + Days Left */}
-            <div className="min-w-[160px]">
-              <p className="text-sm text-text-light">Customer</p>
-              <p className="font-medium">{b.customer}</p>
-              <p className="text-xs text-amber-400">{b.daysLeft}d left</p>
-            </div>
-
-            {/* Product */}
-            <div className="min-w-[140px]">
-              <p className="text-sm text-text-light">Product</p>
-              <p className="font-medium">{b.product} {b.grade}</p>
-            </div>
-
-            {/* Quantity Slider + Input */}
-            <div className="flex-1 min-w-[220px]">
-              <div className="flex items-center gap-3">
+              {/* Checkbox */}
+              <div className="pt-2">
                 <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  value={b.qty}
-                  onChange={(e) => updateBatch(b.id, "qty", Number(e.target.value))}
-                  className="flex-1 accent-cyan-500"
+                  type="checkbox"
+                  checked={b.included}
+                  onChange={() => updateBatch(b.id, "included", !b.included)}
+                  className="w-5 h-5 accent-emerald-500"
                 />
+              </div>
+
+              {/* Orders Section */}
+              <div className="min-w-[340px] flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant={b.priority === "CRITICAL" ? "error" : b.priority === "URGENT" ? "warning" : "success"}>
+                    {b.priority}
+                  </Badge>
+                  <p className="text-sm font-semibold">Fulfills Orders</p>
+                </div>
+
+                {b.orders.map((o, idx) => (
+                  <div key={idx} className="flex justify-between items-center rounded-xl border border-border px-4 py-3 bg-background mb-2">
+                    <div>
+                      <p className="font-mono text-cyan-400 font-semibold">{o.orderId}</p>
+                      <p className="text-sm mt-0.5">{o.customer}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">{o.qty} MT</p>
+                      <p className="text-xs text-amber-400">{o.daysLeft}d left</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Product & Grade */}
+              <div className="min-w-[160px]">
+                <p className="text-xs text-text-light mb-1">Product • Grade</p>
+                <div className="flex items-center gap-2">
+                  <Badge variant="primary">{b.product}</Badge>
+                  <Badge variant="primary">{b.product_name}</Badge>
+                  {/* <span className="font-medium text-text">{b.product_name}</span> */}
+                  <span className="font-medium">{b.grade}</span>
+                </div>
+              </div>
+
+              {/* Input Quantity */}
+              <div className="min-w-[140px]">
+                <p className="text-xs text-text-light mb-1">Input Weight</p>
+                <div className="flex items-center gap-2">
+                  <InputField
+                    type="number"
+                    value={b.qty}
+                    onChange={(e) => updateBatch(b.id, "qty", Number(e.target.value))}
+                    className="w-24"
+                  />
+                  <span>MT</span>
+                </div>
+              </div>
+
+              {/* Yield & Output */}
+              <div className="min-w-[110px]">
+                <p className="text-xs text-text-light mb-1">Avg Yield</p>
+                <p className="text-lg font-bold text-emerald-400">{b.avgYield}%</p>
+                <p className="text-sm mt-1">{b.expectedOutput} MT output</p>
+              </div>
+
+              {/* Notes */}
+              <div className="flex-1 min-w-[200px]">
+                <p className="text-xs text-text-light mb-1">Notes</p>
                 <InputField
-                  type="number"
-                  value={b.qty}
-                  onChange={(e) => updateBatch(b.id, "qty", Number(e.target.value))}
-                  className="w-20"
+                  placeholder="Special instructions..."
+                  value={b.notes}
+                  onChange={(e) => updateBatch(b.id, "notes", e.target.value)}
                 />
-                <span className="text-sm font-medium">MT</span>
               </div>
-            </div>
-
-            {/* Yield & Margin */}
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-text-light">Yield</p>
-                <p className="font-semibold text-emerald-400">{b.yieldPct}%</p>
-              </div>
-              <div>
-                <p className="text-text-light">Margin</p>
-                {/* <p className="font-semibold">₹{(b.margin / 1000).toFixed(0)}K</p> */}
-                <p className="font-semibold">₹{Number(b.margin).toLocaleString()}</p>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="flex-1 min-w-[200px]">
-              <InputField
-                placeholder="Add notes..."
-                value={b.notes}
-                onChange={(e) => updateBatch(b.id, "notes", e.target.value)}
-              />
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </Card>
   );
 };
@@ -386,7 +433,7 @@ const Warnings = ({ data }) => (
     {data?.alerts?.length > 0 && (
       <Card variant="secondary">
         {data.alerts.map((alert, i) => (
-          <div key={i} className="text-yellow-400 flex items-center gap-2">
+          <div key={i} className="text-warning flex items-center gap-2">
             ⚠ {alert.title} — {alert.message}
           </div>
         ))}
