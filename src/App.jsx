@@ -37,6 +37,7 @@ import ProductionPlannerV4 from "./pages/Referance Screen/production-planner-v4"
 import Inventory from "./pages/inventory";
 import UnifiedPlanGenerator from "./pages/Referance Screen/unified-plan-generator-v3";
 import NotFound from "./pages/NotFound";
+import ProcurementManagerScreen from "./pages/Procurement Module/ProcurementManagerScreen";
 
 
 function App() {
@@ -81,6 +82,7 @@ function App() {
                   <Route path="/qc/tester-dashboard" element={<QcTesterDashboard />} />
                   <Route path="/qc/sampleTestScreen" element={<SampleTestScreen />} />
                   <Route path="/POCreationScreen" element={<POCreationScreen />} />
+                  <Route path="/procurement-screen" element={<ProcurementManagerScreen />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
 

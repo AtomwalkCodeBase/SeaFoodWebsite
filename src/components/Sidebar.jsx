@@ -28,6 +28,7 @@ import {
   FaFileInvoiceDollar,
   FaClipboardList,
   FaBoxes,
+  FaTruckLoading,
 } from "react-icons/fa"
 import { SiGooglecalendar } from "react-icons/si"
 import { PiListPlusFill } from "react-icons/pi"
@@ -539,11 +540,13 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
       { path: "/plan-generator", name: "Daily Production Planner", icon: <BsFillCalendar2RangeFill /> },
       { path: "/config", name: "Global config v1", icon: <FaGear /> },
       { path: "/new", name: "Daily production plan v1", icon: <FaGear /> },
+      
       { path: "/config1", name: "Global Config", icon: <FaGear /> },
       { path: "/orders", name: "Orders Management", icon: <BsBoxSeamFill /> },
       { path: "/capacity", name: "Production Planner", icon: "📊"},
       { path: "/inventory", name: "Inventory", icon: <FaBoxes />},
       { path: "/production-plan2", name: "Daily production plan", icon: <BsFillCalendar2RangeFill />},
+      { path: "/procurement-screen", name: "Procurement Dashboard", icon: <FaTruckLoading />},
     ]
    
 

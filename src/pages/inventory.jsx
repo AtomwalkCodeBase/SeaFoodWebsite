@@ -63,8 +63,6 @@ const formatValue = (val) =>
 
 const Inventory = () => {
     const { data: inventoryCategoryList = [], isLoading: inventoryCategoryLoading } = useInventoryCategory();
-
-    console.log("inventoryCategoryList", inventoryCategoryList )
   const {
     data: inventoryData = {},
     isLoading,
@@ -184,7 +182,6 @@ const Inventory = () => {
   }
   
   const getSpeciesName = (speciesId) => {
-    console.log("speciesId", speciesId)
     const data = inventoryCategoryList?.find((data) => data.id === Number(speciesId));
     return data?.name || 'Unknown Species';
   }

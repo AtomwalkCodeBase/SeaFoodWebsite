@@ -306,7 +306,7 @@ const RecommendedBatches = ({
     }
   };
 
-  console.log("batchState", batchState)
+  // console.log("batchState", batchState)
 
   return (
     <Card variant="secondary">

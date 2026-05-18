@@ -31,8 +31,6 @@ export default function AllocateBatchModal({
     }));
   };
 
-  console.log("orders", orders)
-
   return (
 	<Modal title="Allocate batch output to orders" width="max-w-xl" isOpen={isOpen} onClose={onClose} onSave={() => onConfirm(allocations)} saveButtonText={` Confirm allocation (${allocatedSoFar.toFixed(3)} MT)`}>
     {/* <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">

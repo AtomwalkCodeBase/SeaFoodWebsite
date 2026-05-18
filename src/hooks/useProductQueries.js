@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, getCustomerListView, getGrades, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getProductList, getSpecies, UpdateOrder } from "../services/productServices";
+import { AddNewOrder, getCustomerListView, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProductList, getSpecies, UpdateOrder } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -18,10 +18,10 @@ export const useApiQuery = ({ queryKey, queryFn, select, enabled = true, errorMe
 };
 
 //GET API
-export const useCustomers = (enabled = true) => {
+export const useCustomers = (params,enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.CUSTOMER,
-    queryFn: () => getCustomerListView(),
+    queryKey: [QUERY_KEYS.CUSTOMER, params],
+    queryFn: () => getCustomerListView(params),
     select: (res) => res.data,
     enabled,
 	errorMessage: `${ErrorText} customer list`,
@@ -98,6 +98,26 @@ export const useInventoryCategory = (enabled = true) => {
   });
 };
 
+export const usePOItemList = (params, enabled = true) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.PO_ITEM_LIST, params,],
+    queryFn: () => getPoItem(params),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Purchase Request List`,
+  });
+};
+
+export const useGRNList = (enabled = true) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.GRN_LIST],
+    queryFn: () => getGradingSessionsList(),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Purchase `,
+  });
+};
+
 //CURD API
 export const useCreateOrder = (handleCloseModal) => {
   const queryClient = useQueryClient();
@@ -108,9 +128,8 @@ export const useCreateOrder = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("Order added successfully!");
 
-      await queryClient.invalidateQueries({
-		queryKey: QUERY_KEYS.ORDERS,
-      });
+      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS});
+      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION});
 
       handleCloseModal?.();
     },
@@ -127,9 +146,8 @@ export const useUpdateOrder = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("Order updated successfully!");
 
-      await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.ORDERS,
-      });
+      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS});
+      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION});
 
       handleCloseModal?.();
     },
@@ -166,6 +184,25 @@ export const useUpdateMachine = (handleCloseModal) => {
 
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.ORDERS,
+      });
+
+      handleCloseModal?.();
+    },
+    onError: handleApiError,
+  });
+};
+
+export const useAddGRN = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => UpdateOrder(data, id),
+
+    onSuccess: async () => {
+      toast.success("GRN add successfully!");
+
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.GRN_LIST,
       });
 
       handleCloseModal?.();

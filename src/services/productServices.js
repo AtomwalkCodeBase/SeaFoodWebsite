@@ -47,8 +47,8 @@ export async function setuserpinview(o_pin, n_pin) {
   }
 }
 //seaFood Api
-export function getPoItem() {
-  return authAxios(getPoItemList);
+export function getPoItem(data) {
+  return authAxios(getPoItemList, data);
 }
 export function getPoQC(data) {
   return authAxios(getPOqcList,data);

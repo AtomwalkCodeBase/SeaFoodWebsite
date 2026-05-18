@@ -44,6 +44,8 @@ export const QUERY_KEYS = {
   ORDERS_BY_PRIORITY: ['ordersByPriority'],
   PLANNING_CONFIG: ['planning-config'],
   BATCHES: ['batches'],
+  PO_ITEM_LIST: ['po-item-list'],
+  GRN_LIST: ['grn-list'],
 }
 
 
