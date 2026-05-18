@@ -316,7 +316,7 @@ const OrdersScreen = () => {
 
   const gradesOptions = gradeList.map((gradeItem) => {
     const foundSpecies = SpeciesList.find((species) => species.id === gradeItem.species_config);
-    return foundSpecies ? { id: foundSpecies.id, value: foundSpecies.id, label: `${foundSpecies.scientific_name} (${gradeItem.grade_code})`,} : null;
+    return foundSpecies ? { id: gradeItem.id, value: gradeItem.id, label: `${foundSpecies.scientific_name} (${gradeItem.grade_code})`,} : null;
   }).filter(Boolean);
 
   const getSpeciesGradeLabel = ( speciesList, gradeList, speciesConfigId) => {
