@@ -33,6 +33,7 @@ import { toast } from 'react-toastify';
 import { useFormHandler } from '../../hooks/useFormHandler';
 import Modal from '../../components/Modal';
 import ProcurementPlanning from './ProcurementPlanning';
+import ConfirmPopup from '../../components/ConfirmPopup';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -95,7 +96,7 @@ const ProcurementManagerScreen = () => {
   const { data: POItemList = [], isLoading: poItemListLoading  } = usePOItemList();
   const { data: GrnList = [], isLoading: grnIsLoading  } = useGRNList();
   const { data: speciesList = [], isLoading: speciesLoading  } = useSpecies();
-  const { data: supplierList = [], isLoading: supplierLoading  } = useCustomers();
+  const { data: supplierList = [], isLoading: supplierLoading  } = useCustomers({"is_supplier": "YES"});
 
 
   const tabFilteredData = useFilter({
@@ -155,6 +156,8 @@ const filteredGrnList = useFilter({
 
   const handleCloseModal = () => {
     resetForm();
+    setIsOpenGrnModal(false);
+    setIsConfirmModalOpen(false);
 
   }
 
@@ -227,24 +230,14 @@ const filteredGrnList = useFilter({
       </div>
 
       <div className='col-span-1 flex justify-end'>
-        <Button size='sm'>ADD GRN</Button>
+        <Button size='sm' onClick={() => setIsOpenGrnModal(true)}>ADD GRN</Button>
       </div>
     </div>
-    
-    {grnIsLoading ? (
-      <EmptyState message="Loading..." />
-    ) : filteredGrnList.length === 0 ? (
-      <EmptyState message="No GRN Found" />
-    ) : (
-      <div className='space-y-3'>
-        {filteredGrnList.map((data) => (
+
           <GRN_CARDS
-            key={data.id}
-            grn={data}
+            grn={filteredGrnList}
+            isLoading={grnIsLoading}
           />
-        ))}
-      </div>
-    )}
   </div>
 )}
 
@@ -265,7 +258,7 @@ const filteredGrnList = useFilter({
 )}
 </Card>
 
-  <Modal isOpen={isOpenGrnModal} onClose={() => setIsOpenGrnModal(false)} onSave = {handleAddGRN} title = "Add New GRN" width = "max-w-xl" maxHeight = "max-h-[80vh]" showSaveButton = {true} saveButtonText = "Add GRN" cancelButtonText = "Cancel"
+  <Modal isOpen={isOpenGrnModal} onClose={handleCloseModal} title = "Add New GRN" width = "max-w-xl" maxHeight = "max-h-[80vh]" showSaveButton = {true} saveButtonText = "Add GRN" cancelButtonText = "Cancel"
   isConfirmOpen={isConfirmModalOpen}
   setIsConfirmOpen ={setIsConfirmModalOpen}
   >
@@ -320,6 +313,8 @@ const filteredGrnList = useFilter({
 
     </Modal>
 
+    <ConfirmPopup isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} onConfirm={handleAddGRN} message='Are you sure you want to Add GRN' title='Confirmation'  />
+
 
     </Layout>
   )
@@ -335,7 +330,7 @@ const  POCard = ({ po }) => {
   const itemCount = po.po_items.length;
  
   return (
-    <div className="bg-card rounded-2xl border border-border shadow-[0_2px_16px_var(--color-shadow)] overflow-hidden transition-all duration-200">
+    <div className="bg-card rounded-2xl border border-border shadow-[0_2px_16px_var(--color-shadow)] overflow-hidden transition-all duration-200 mb-3">
       {/* Colored top strip */}
       <div className={`h-1 w-full ${typeConf.headerBg}`} />
  
@@ -446,7 +441,7 @@ const  POCard = ({ po }) => {
   );
 }
 
-const GRN_CARDS = ( {grn }) => {
+const GRN_CARDS = ( {grn, isLoading }) => {
   const [expandedRow, setExpandedRow] = useState(null);
 
   const columns = ["","GRN Reference", "ERP Batch", "Location", "Supplier", "Total Received (MT)", "Status"];
@@ -462,6 +457,8 @@ const GRN_CARDS = ( {grn }) => {
     <DataTable
       columns={columns}
       data={grn}
+      emptyMessage=""
+      isLoading={isLoading}
       renderRow={(data) => (
         <>
         <Td className="cursor-pointer" onClick={() => handleRowClick(data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td>

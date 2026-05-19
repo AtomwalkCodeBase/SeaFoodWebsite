@@ -152,6 +152,7 @@ export const GlobalStyles = createGlobalStyle`
 
     /* Padding - All sides */
   .p-0 { padding: 0; }
+  .p-auto { padding: auto; }
   .p-1 { padding: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .p-2 { padding: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .p-3 { padding: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -182,6 +183,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Padding - Top */
   .pt-0 { padding-top: 0; }
+  .pt-auto { padding-top: auto; }
   .pt-1 { padding-top: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .pt-2 { padding-top: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .pt-3 { padding-top: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -192,6 +194,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Padding - Right */
   .pr-0 { padding-right: 0; }
+  .pr-auto { padding-right: auto; }
   .pr-1 { padding-right: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .pr-2 { padding-right: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .pr-3 { padding-right: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -202,6 +205,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Padding - Bottom */
   .pb-0 { padding-bottom: 0; }
+  .pb-auto { padding-bottom: auto; }
   .pb-1 { padding-bottom: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .pb-2 { padding-bottom: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .pb-3 { padding-bottom: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -212,6 +216,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Padding - Left */
   .pl-0 { padding-left: 0; }
+  .pl-auto { padding-left: auto; }
   .pl-1 { padding-left: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .pl-2 { padding-left: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .pl-3 { padding-left: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -242,6 +247,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Margin - All sides */
   .m-0 { margin: 0; }
+  .m-auto { margin: auto; }
   .m-1 { margin: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .m-2 { margin: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .m-3 { margin: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -272,6 +278,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Margin - Top */
   .mt-0 { margin-top: 0; }
+  .mt-auto { margin-top: auto; }
   .mt-1 { margin-top: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .mt-2 { margin-top: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .mt-3 { margin-top: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -282,6 +289,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Margin - Right */
   .mr-0 { margin-right: 0; }
+  .mr-auto { margin-right: auto; }
   .mr-1 { margin-right: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .mr-2 { margin-right: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .mr-3 { margin-right: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -292,6 +300,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Margin - Bottom */
   .mb-0 { margin-bottom: 0; }
+  .mb-auto { margin-bottom: auto; }
   .mb-1 { margin-bottom: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .mb-2 { margin-bottom: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .mb-3 { margin-bottom: ${({ theme }) => theme.spacing?.md || "1rem"}; }
@@ -302,6 +311,7 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Margin - Left */
   .ml-0 { margin-left: 0; }
+  .ml-auto { margin-left: auto; }
   .ml-1 { margin-left: ${({ theme }) => theme.spacing?.xs || "0.25rem"}; }
   .ml-2 { margin-left: ${({ theme }) => theme.spacing?.sm || "0.5rem"}; }
   .ml-3 { margin-left: ${({ theme }) => theme.spacing?.md || "1rem"}; }

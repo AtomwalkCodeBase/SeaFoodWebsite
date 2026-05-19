@@ -56,9 +56,8 @@ function GrnCard({ grn, onCreateBatch }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const EMPTY_FORM = {
-    batch_number: "",
-    input_weight_mt: "",
-    total_received_mt: 0,
+    batch_number: grn.erp_batch,
+    input_weight_mt: grn.total_received_mt,
     species_config: "",
     erp_batch: "",
   }
@@ -169,21 +168,13 @@ function GrnCard({ grn, onCreateBatch }) {
         <span className="text-xs text-text-light">{grn.supplier_name || "Supplier Name not found"}</span>
           {/* <span className="text-lg font-bold text-text">{grn.total_received_mt} MT</span> */}
           <InfoRow label="Total Received(MT)" value={grn.total_received_mt || "--"} className='font-semibold' />
-        <div className="ml-auto flex items-center gap-3">
-          {/* <ActionButton
-            variant="primary"
-            size="sm"
-            onClick={() => mutation.mutate()}
-            loading={mutation.isPending}
-          >
-            Create parent batch
-          </ActionButton> */}
+        <div className="ml-auto">
            <Button variant='primary' size="sm" onClick={() => setIsModalOpen(true)} loading={mutation.isPending}>
           Start Grading Process
         </Button>
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 pl-1">
+      <div className="grid grid-cols-3 sm:grid-cols-3 gap-x-4 gap-y-1 pl-1">
         <InfoRow label="Received Date" value={date} />
         <InfoRow label="ERP Batch" value={grn.erp_batch || "--"} />
         <InfoRow label="Location" value={grn.storage_location || "--"} />
@@ -194,18 +185,17 @@ function GrnCard({ grn, onCreateBatch }) {
           <span key={g} className="text-xs bg-accentLight text-primary px-1.5 py-0.5 rounded">{g}</span>
         ))}
       </div> */}
-       <div className="ml-auto flex items-center justify-end gap-2">
-        {/* <Button size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}> */}
-        {/* <Button variant='outline' size="sm" onClick={() => setIsModalOpen(true)} loading={mutation.isPending}>
+       {/* <div className="flex justify-end">
+        <Button variant='outline' size="sm" onClick={() => setIsModalOpen(true)} loading={mutation.isPending}>
           Proceed for Grading
-        </Button> */}
-      </div>
+        </Button>
+      </div> */}
       {/* <p className="text-[10px] text-text-light/60 font-mono pl-1">
         POST /api/planning/batches/ — creates PARENT batch with pre-grading activities
       </p> */}
     </div>
     {/* <Modal title= "Create Grading Batch" saveButtonText='Create Batch' width='max-w-xl' isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleCreateBatch} showSaveButton={true} isConfirmOpen={isConfirmOpen} setIsConfirmOpen={setIsConfirmOpen}> */}
-    <Modal title= "Create Grading Batch" saveButtonText='Create Batch' width='max-w-xl' isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleCreateBatch} showSaveButton={true}>
+    <Modal title= "Create Grading Batch" saveButtonText='Create Batch' width='max-w-xl' isOpen={isModalOpen} onClose={() => {setIsModalOpen(false);  setForm(EMPTY_FORM)}} onSave={handleCreateBatch} showSaveButton={true}>
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
@@ -220,7 +210,7 @@ function GrnCard({ grn, onCreateBatch }) {
               </div>
 
               <InputField
-                label="Enter Quantity(MT)"
+                label="Enter grading Quantity(MT)"
                 name="input_weight_mt"
                 type="number"
                 value={form.input_weight_mt}

@@ -5,12 +5,13 @@ import {
   FiActivity,
 } from 'react-icons/fi';
 import { AdvanceBatchActivity, AutoAllocateBatch, CreateParentBatch, getBatchList, getInventoryStatus, GetItemCategory, GetOrdersList, GetPlanningReport, getProcessActivityList, ManualAllocateBatch } from '../services/productServices';
-import { ActionButton, Badge, EmptyState, MetricCard, Panel, StepFlow } from '../components/EmptyState';
+import { ActionButton, Badge, EmptyState, MetricCard, Panel, SectionHeader, StepFlow } from '../components/EmptyState';
 import Button from '../components/Button';
 import { toast } from 'react-toastify';
 import DataTable, { Td } from '../components/Datatable';
 import { PlanningResult } from './DaliyProductionPlan';
 import AllocateBatchModal from '../components/Modal/AllocateBatchModal';
+import { useOrdersByPriority } from '../hooks/useProductQueries';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 const MOCK_GRADED_STOCK = [
@@ -508,13 +509,7 @@ useEffect(() => {
   };
 
   const orderColumns = [ 'ORDER ID', 'CUSTOMER', 'PRODUCT', 'Grade', 'Required', 'DAYS LEFT', 'Stock', 'PRIORITY', 'Score'];
-  const { data: orderList = [], isLoading: ordersLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => GetOrdersList(),
-    select: (res) => res.data,
-    onError: () => toast.error('Failed to load orders'),
-  });
-
+  const { data: orderList = [], isLoading: ordersLoading } = useOrdersByPriority()
   const { data: batchList = [], isLoading: batchLoading } = useQuery({
     queryKey: ['batches'],
     queryFn: () => getBatchList(),
@@ -541,9 +536,10 @@ const activeSubBatches = useMemo(() => {
       {/* Orders queue */}
       <Panel accent="post">
         <div className="flex items-center gap-2 mb-3">
-          <FiList className="text-secondary" size={16} />
+          {/* <FiList className="text-secondary" size={16} />
           <h3 className="font-semibold text-text">Outstanding orders</h3>
-          <span className="text-xs text-text-light">Priority ranked by engine score</span>
+          <span className="text-xs text-text-light">Priority ranked by engine score</span> */}
+          <SectionHeader icon={<FiList className="text-secondary" size={16} />} title="Outstanding orders" subtitle="Priority ranked by engine score" border={false}/>
         </div>
 
         {/* Column headers */}
@@ -567,7 +563,9 @@ const activeSubBatches = useMemo(() => {
           data={orderList}
           isLoading={ordersLoading}
           emptyMessage="No orders found"
-          renderRow={(order) => (
+          renderRow={(item) => {
+              const order = item.order;
+            return(
             <>
               <Td><Badge label={order.erp_order_reference} variant="grn" /></Td>
               <Td>{order.customer_name}</Td>
@@ -575,13 +573,13 @@ const activeSubBatches = useMemo(() => {
               <Td>{order.grade_code}</Td>
               <Td>{order.remaining_qty_mt} MT</Td>
               <Td>{order.days_until_delivery}d</Td>
-              <Td><StockAvailability availableMt={order.remaining_qty_mt} /></Td>
-              <Td><Badge label={order.priority} variant={PRIORITY_BADGE[order.priority_override]} /></Td>
+              <Td><StockAvailability availableMt={item.stock_available_mt} /></Td>
+              <Td><Badge label={item.label} variant={PRIORITY_BADGE[item.label]} /></Td>
               <Td>
-                 <ScoreBar score={order.score || 0} />
+                 <ScoreBar score={item.total || 0} />
               </Td>
             </>
-          )}
+          )}}
         />
       </Panel>
 
