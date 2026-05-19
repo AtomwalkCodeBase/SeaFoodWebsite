@@ -20,3 +20,19 @@ export const useFormHandler = (initialState) => {
     resetForm,
   };
 };
+
+
+export const getChangedFields = (original, updated) => {
+  const changed = {};
+
+  Object.keys(updated).forEach((key) => {
+    if (
+      updated[key] !== "" &&
+      String(updated[key]) !== String(original[key] ?? "")
+    ) {
+      changed[key] = updated[key];
+    }
+  });
+
+  return changed;
+};

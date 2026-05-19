@@ -1,6 +1,6 @@
 import { RiAlertFill } from "react-icons/ri";
 import { GiFactory } from "react-icons/gi";
-import { AddMachineCapacity, getMachineCapacity, getProcessActivityList } from "../services/productServices";
+import { AddMachineCapacity, EditMachineCapacity, getMachineCapacity, getProcessActivityList } from "../services/productServices";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmPopup from "../components/ConfirmPopup";

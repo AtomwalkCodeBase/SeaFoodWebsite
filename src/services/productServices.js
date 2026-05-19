@@ -96,7 +96,7 @@ export async function EditMachineCapacity(data) {
 
 export async function UpdateYieldConfig(data) {
     const { id, ...rest } = data;
-    const response = await authAxiosPatch(`${getYieldConfigUrl}/${id}/`, rest);
+    const response = await authAxiosPatch(`${getYieldConfigUrl}${id}/`, rest);
     return response;
 }
 

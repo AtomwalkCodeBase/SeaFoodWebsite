@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AddYieldConfig,
   getAllYieldConfig,
@@ -16,8 +16,9 @@ import { FaPlus } from "react-icons/fa";
 import { SectionHeader } from "../components/EmptyState";
 import { HiOutlinePencilAlt } from "react-icons/hi";
 import Modal from "../components/Modal";
-import { useFormHandler } from "../hooks/useFormHandler";
+import { getChangedFields, useFormHandler } from "../hooks/useFormHandler";
 import InputField from "../components/InputField";
+import { handleApiError } from "../utils";
 
 // ── Reusable Components ───────────────────────────────────────────────────────
 const StatCard = ({ label, value, colorClass = "text-text" }) => (
@@ -103,12 +104,13 @@ const lossGainColorClass = (loss) => (loss >= 0 ? "text-success" : "text-error")
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function YieldConfigScreen() {
+  const queryClient = useQueryClient();
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [inputMT, setInputMT] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const [editFormData, setEditFormData] = useState({
+  const editFormData = {
     id: "",
     process_activity: "",
     sequence: "",
@@ -117,9 +119,9 @@ export default function YieldConfigScreen() {
     is_pre_grading: false,
     worker_efficiency_kg_per_hour: "",
     processing_cost_per_mt: "",
-  });
+  };
 
-  const { form, handleChange, resetForm } = useFormHandler(editFormData);
+  const { form, setForm, handleChange, resetForm } = useFormHandler(editFormData);
 
 
   // Queries
@@ -271,9 +273,8 @@ export default function YieldConfigScreen() {
   }
 
   const handleEditClick = (rawYield) => {
-
-    console.log(rawYield)
-    setEditFormData({
+    // console.log("rawYield", rawYield)
+    setForm({
       id: rawYield.id || "",
       process_activity: String(rawYield.process_activity_id || rawYield.process_activity),
       sequence: rawYield.sequence || "",
@@ -287,46 +288,115 @@ export default function YieldConfigScreen() {
   };
 
   const handleAddNew = () => {
-    setEditFormData({
-      id: "",
-      process_activity: "",
-      sequence: (steps.length + 1).toString(),
-      yield_percentage: "",
-      loss_description: "",
-      is_pre_grading: false,
-      worker_efficiency_kg_per_hour: "",
-      processing_cost_per_mt: "",
-    });
+    resetForm();
+
+    setForm((prev) => ({
+      ...prev,
+      sequence: String(steps.length + 1),
+    }));
     setIsModalOpen(true);
   };
 
+  // const handleSubmit = async () => {
+  //   const payload = {
+  //     ...editFormData,
+  //     product_id: selectedProductId,
+  //     process_activity: editFormData.process_activity, // Must be from process activity response id
+  //   };
+
+  //   try {
+  //     let response;
+  //     if (payload.id) {
+  //       response = await UpdateYieldConfig(payload);
+  //     } else {
+  //       response = await AddYieldConfig(payload);
+  //     }
+
+  //     if (response?.status === 200 || response?.status === 201) {
+  //       toast.success("Yield Configuration Saved.");
+  //       setIsModalOpen(false);
+  //       setIsConfirmOpen(false);
+  //     }
+  //   } catch (error) {
+  //     toast.error("Failed to save configuration.");
+  //   }
+  // };
+
+  // console.log("processedActivities", processedActivities)
+
   const handleSubmit = async () => {
-    const payload = {
-      ...editFormData,
-      product_id: selectedProductId,
-      process_activity: editFormData.process_activity, // Must be from process activity response id
-    };
+  try {
+    if (form.id) {
+      // Existing/original API data
+      const originalData = steps.find(
+        (item) => String(item.id) === String(form.id)
+      );
 
-    try {
-      let response;
-      if (payload.id) {
-        response = await UpdateYieldConfig(payload);
-      } else {
-        response = await AddYieldConfig(payload);
+      // Normalize original object
+      const normalizedOriginal = {
+        process_activity: String(
+          originalData?.process_activity || ""
+        ),
+        sequence: originalData?.sequence || "",
+        yield_percentage:
+          originalData?.yield_percentage || "",
+        loss_description:
+          originalData?.loss_description || "",
+        is_pre_grading:
+          Boolean(originalData?.is_pre_grading),
+        worker_efficiency_kg_per_hour:
+          originalData?.worker_efficiency_kg_per_hour || "",
+        processing_cost_per_mt:
+          originalData?.processing_cost_per_mt || "",
+      };
+
+      // Get only changed fields
+      const changedPayload = getChangedFields( normalizedOriginal, form);
+
+      if (Object.keys(changedPayload).length === 0) {
+        toast.info("No changes detected");
+        return;
       }
 
-      if (response?.status === 200 || response?.status === 201) {
-        toast.success("Yield Configuration Saved.");
-        setIsModalOpen(false);
-        setIsConfirmOpen(false);
-      }
-    } catch (error) {
-      toast.error("Failed to save configuration.");
+      await UpdateYieldConfig({
+        id: form.id,
+        ...changedPayload,
+      });
+
+      toast.success("Updated successfully");
+    } else {
+      // ADD API payload
+      const payload = {
+        product_id: selectedProductId,
+        process_activity: Number(form.process_activity),
+        sequence: Number(form.sequence),
+        yield_percentage: form.yield_percentage,
+        loss_description: form.loss_description,
+        is_pre_grading: form.is_pre_grading,
+        worker_efficiency_kg_per_hour:
+          form.worker_efficiency_kg_per_hour,
+        processing_cost_per_mt:
+          form.processing_cost_per_mt,
+      };
+
+      await AddYieldConfig(payload);
+
+      toast.success("Saved successfully");
     }
-  };
 
-  console.log("processedActivities", processedActivities)
+    setIsModalOpen(false);
+    setIsConfirmOpen(false);
 
+    await queryClient.invalidateQueries(['yields'])
+  } catch (error) {
+    // toast.error(
+    //   form.id
+    //     ? "Failed to update"
+    //     : "Failed to save"
+    // );
+    handleApiError(error, form.id? "Failed to update" : "Failed to save")
+  }
+};
   return (
     <div className="font-body min-h-screen transition-colors duration-300">
       <div className="mx-auto max-w-[1400px]">
