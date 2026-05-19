@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, getCustomerListView, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProductList, getSpecies, UpdateOrder } from "../services/productServices";
+import { AddNewOrder, getCustomerListView, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProcurementPlan, getProductList, getSpecies, UpdateOrder } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -114,7 +114,17 @@ export const useGRNList = (enabled = true) => {
     queryFn: () => getGradingSessionsList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Purchase `,
+	onError: `${ErrorText} GRN List`,
+  });
+};
+
+export const useProcurementPlan = (enabled = true) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.PROCUREMENT_PLAN],
+    queryFn: () => getProcurementPlan(),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Procurement Plan`,
   });
 };
 

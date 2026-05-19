@@ -374,6 +374,7 @@ function GradeInputRow({
 
 // ── Grading Session Card ───────────────────────────────────────────────────────
 function GradingSessionCard({ session, onConfirm, parentBatchData }) {
+    const queryClient = useQueryClient();
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [isCreateSubModalOpen, setIsCreateSubModalOpen] = useState(false);
   const [gradeRows, setGradeRows] = useState([
@@ -390,8 +391,6 @@ function GradingSessionCard({ session, onConfirm, parentBatchData }) {
       item_batch_id: "",
     },
   ]);
-
-  // console.log("session", parentBatchData)
 
       const {data: speciesList = [], isLoading: speciesLoading, error: speciesError } = useQuery  ({
         queryKey: ['species', session.species_config],
@@ -520,7 +519,7 @@ function GradingSessionCard({ session, onConfirm, parentBatchData }) {
     }
   });
 
-  console.log(payload);
+  // console.log(payload);
     // Find the latest batch from parentBatchData
   let latestBatchId = null;
   
@@ -537,6 +536,7 @@ function GradingSessionCard({ session, onConfirm, parentBatchData }) {
 
   try {
     await CreateSubBatches(latestBatchId, payload);
+    await queryClient.invalidateQueries({queryKey: 'session'});
 
     toast.success("Sub batches created successfully");
 
@@ -562,6 +562,7 @@ function GradingSessionCard({ session, onConfirm, parentBatchData }) {
     <div className="rounded-xl border-2 border-secondary/30 bg-phasePost/30 p-4 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Badge label={session.erp_batch || "--"} variant="grn" />
+        <Badge label={session.batch_number || "--"} variant="grn" />
         <Badge label={session.species_name} variant="species" />
         <span className="text-sm font-bold text-text">{session.total_graded_mt} MT cleaned</span>
        {!hasGrading && 
@@ -862,8 +863,7 @@ export function PreGradingPhase({speciesList}) {
             ) : parentBatchError ? (
               <EmptyState message="Failed to load batches" />
             ) : (() => {
-            const pendingBatches = parentBatchData.filter(batch => batch.status !== 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            return pendingBatches.length === 0 ? (
+          const pendingBatches = parentBatchData.filter(batch => !['COMPLETED', 'GRADING'].includes(batch.status)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));            return pendingBatches.length === 0 ? (
               <EmptyState icon={FiActivity} message="No batches in progress" />
             ) : (
               pendingBatches.map((b) => {

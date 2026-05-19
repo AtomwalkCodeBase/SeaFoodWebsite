@@ -1,4 +1,4 @@
-import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl } from "../services/ConstantServies";
+import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl } from "../services/ConstantServies";
 import { authAxios, authAxiosFilePost, authAxiosget, authAxiosPatch, authAxiosPost, authAxiosPut } from "./HttpMethod";
 
 export function getemployeeList() {
@@ -249,4 +249,8 @@ export async function AutoAllocateBatch(batchId, data = {}) {
 export async function ManualAllocateBatch(batchId, data = {}) {
     const response = await authAxiosPost(`${BatchesUrl}${batchId}/allocate/`, data);
     return response;
+}
+
+export function getProcurementPlan(data) {
+  return authAxios(ProcurementPlanUrl, data);
 }

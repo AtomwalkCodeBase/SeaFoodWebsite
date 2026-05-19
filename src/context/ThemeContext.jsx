@@ -127,7 +127,7 @@ const baseThemes = {
 
     // 🌑 BACKGROUND (this is the BIG fix)
     background: "#020617",        // deep navy (NOT green)
-    backgroundAlt: "#020617",
+    backgroundAlt: "#122330",
 
     // 🧱 CARDS
     card: "#0F172A",              // visible separation from bg

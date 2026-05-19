@@ -67,7 +67,7 @@ export const GlobalStyles = createGlobalStyle`
     }
     
     th {
-      background-color: ${({ theme }) => theme.colors.primaryLight};
+      background-color: ${({ theme }) => theme.colors.backgroundAlt};
       color: ${({ theme }) => theme.colors.textLight};
       font-weight: 600;
     }

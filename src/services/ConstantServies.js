@@ -50,11 +50,4 @@ export const InventoryProjectionUrl = `${PPendPoint}/inventory/projection/${db_n
 
 export const BatchesUrl = `${newPPpont}/${db_name}/batches/`;
 export const GradingSessionsUrl = `${newPPpont}/${db_name}/grading-sessions/`;
-
-
-// https://www.atomwalk.com/pp_api/config/PMA_002/species/
-// https://crm.atomwalk.com/api/get_process_activity_list/PMA_002/?product_id=1
-
-
-
-
+export const ProcurementPlanUrl = `${PPendPoint}/engine/procurement-plan/${db_name}/`;

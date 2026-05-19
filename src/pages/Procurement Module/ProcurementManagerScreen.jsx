@@ -28,10 +28,11 @@ import Button from '../../components/Button';
 import { Badge, EmptyState, InfoRow } from '../../components/EmptyState';
 import InputField from '../../components/InputField';
 import DataTable, { Td } from '../../components/Datatable';
-import { IoIosArrowDown } from 'react-icons/io';
+import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import { toast } from 'react-toastify';
 import { useFormHandler } from '../../hooks/useFormHandler';
 import Modal from '../../components/Modal';
+import ProcurementPlanning from './ProcurementPlanning';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -166,6 +167,7 @@ const filteredGrnList = useFilter({
     ];
 
   const TABS = [
+    { key: "PLAN", label: "Procurement Plan" },
     { key: "PR", label: "Purchase Request" },
     { key: "PO", label: "Purchase Order" },
     { key: "GRN", label: "GRN List" },
@@ -197,64 +199,70 @@ const filteredGrnList = useFilter({
     setActiveTab={setActiveTab}
   />
 
-  {activeTab !== "GRN" ? (
-    <div className="space-y-4">
-      {tabFilteredData.length === 0 ? (
-        <EmptyState message="No Data Found" />
-      ) : (
-        tabFilteredData.map((po) => (
-          <POCard key={po.id} po={po} />
-        ))
-      )}
-    </div>
-  ) : (
-    <div className="">
-      <div className='grid grid-cols-4 items-end gap-3 mb-3'>
-        <div className='col-span-2'>
-          <InputField
-            label=""
-            type="text"
-            value={grnSearch}
-            onChange={(e) => setGrnSearch(e.target.value)}
-            placeholder='Search GRN Number or Supplier'
-          />
-        </div>
-
-        <div className='col-span-1'>
-          <InputField
-            label="Status"
-            type="select"
-            value={grnStatus}
-            onChange={(e) => setGrnStatus(e.target.value)}
-            options={[
-              { label: "All", value: "ALL" },
-              { label: "Completed", value: "COMPLETED" },
-              { label: "In Progress", value: "IN_PROGRESS" },
-            ]}
-          />
-        </div>
-
-        <div className='col-span-1 flex justify-end'>
-          <Button size='sm'>ADD GRN</Button>
-        </div>
+{activeTab === "GRN" && (
+  <div className="">
+    <div className='grid grid-cols-4 items-end gap-3 mb-3'>
+      <div className='col-span-2'>
+        <InputField
+          label=""
+          type="text"
+          value={grnSearch}
+          onChange={(e) => setGrnSearch(e.target.value)}
+          placeholder='Search GRN Number or Supplier'
+        />
       </div>
-      
-      {grnIsLoading ? (
-        <EmptyState message="Loading..." />
-      ) : filteredGrnList.length === 0 ? (
-        <EmptyState message="No GRN Found" />
-      ) : (
-        <div className='space-y-3'>
-          {/* {filteredGrnList.map((data) => ( */}
-            <GRN_CARDS
-              // key={data.id}
-              grn={filteredGrnList}
-            />
-          {/* ))} */}
-        </div>
-      )}
+
+      <div className='col-span-1'>
+        <InputField
+          label="Status"
+          type="select"
+          value={grnStatus}
+          onChange={(e) => setGrnStatus(e.target.value)}
+          options={[
+            { label: "All", value: "ALL" },
+            { label: "Completed", value: "COMPLETED" },
+            { label: "In Progress", value: "IN_PROGRESS" },
+          ]}
+        />
+      </div>
+
+      <div className='col-span-1 flex justify-end'>
+        <Button size='sm'>ADD GRN</Button>
+      </div>
     </div>
-  )}
+    
+    {grnIsLoading ? (
+      <EmptyState message="Loading..." />
+    ) : filteredGrnList.length === 0 ? (
+      <EmptyState message="No GRN Found" />
+    ) : (
+      <div className='space-y-3'>
+        {filteredGrnList.map((data) => (
+          <GRN_CARDS
+            key={data.id}
+            grn={data}
+          />
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+{activeTab === "PLAN" && (
+  <ProcurementPlanning />
+)}
+
+{activeTab !== "GRN" && activeTab !== "PLAN" && (
+  <div className="space-y-4">
+    {tabFilteredData.length === 0 ? (
+      <EmptyState message="No Data Found" />
+    ) : (
+      tabFilteredData.map((po) => (
+        <POCard key={po.id} po={po} />
+      ))
+    )}
+  </div>
+)}
 </Card>
 
   <Modal isOpen={isOpenGrnModal} onClose={() => setIsOpenGrnModal(false)} onSave = {handleAddGRN} title = "Add New GRN" width = "max-w-xl" maxHeight = "max-h-[80vh]" showSaveButton = {true} saveButtonText = "Add GRN" cancelButtonText = "Cancel"
@@ -456,7 +464,7 @@ const GRN_CARDS = ( {grn }) => {
       data={grn}
       renderRow={(data) => (
         <>
-        <Td className={`cursor-pointer ${expandedRow === data.id ? "rotate-180" : "rotate-0"}`} onClick={() => handleRowClick(data.id)} ><IoIosArrowDown /></Td>
+        <Td className="cursor-pointer" onClick={() => handleRowClick(data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td>
           <Td className="font-medium" >{data.grn_reference || "--"}</Td>
           <Td>{data.erp_batch || "--"}</Td>
           <Td>{data.storage_location || "--"}</Td>
@@ -489,7 +497,7 @@ const GRN_CARDS = ( {grn }) => {
         }
 
         return (
-          <div className="p-4 bg-card">
+          <div className="p-4 bg-card rounded-md">
             <h4 className="text-sm font-semibold mb-3">Grade Lines</h4>
             <table className="w-full text-sm">
               <thead>

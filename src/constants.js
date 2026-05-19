@@ -46,6 +46,7 @@ export const QUERY_KEYS = {
   BATCHES: ['batches'],
   PO_ITEM_LIST: ['po-item-list'],
   GRN_LIST: ['grn-list'],
+  PROCUREMENT_PLAN: ['procurement-plan'],
 }
 
 
