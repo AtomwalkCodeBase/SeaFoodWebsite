@@ -13,7 +13,7 @@ import ConfirmPopup from '../components/ConfirmPopup';
 
 import { ORDERS_CUSTOMER_TIER, ORDERS_PRIORITY_OPTIONS } from '../constants'
 
-import { FaIndustry, FaMoneyBillWave, FaPen, FaPlus } from 'react-icons/fa'
+import { FaEye, FaIndustry, FaMoneyBillWave, FaPen, FaPlus } from 'react-icons/fa'
 import { BsBoxSeam, BsBoxSeamFill, BsGraphUpArrow } from 'react-icons/bs'
 import { usePagination } from '../hooks/usePagination'
 import { Bar, BarChart, Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -22,6 +22,7 @@ import { useCreateOrder, useCustomers, useGrades, useOrders, useOrdersByDestinat
 import PaginationComponent from '../components/Pagination';
 import { useFormHandler } from '../hooks/useFormHandler';
 import { toast } from 'react-toastify';
+import OrderDeatilsViewModal from '../components/Modal/OrderDeatilsViewModal';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -66,7 +67,7 @@ const statusToBadgeVariant = {
   Dispatched: "secondary",
 }
 
-const orderColumns = ["ORDER ID", "CUSTOMER", "PRODUCT", "GRADE", "QTY (MT)", "SHIPMENT DATE", "DAYS LEFT", "PRIORITY", "ACTIONS"];
+const orderColumns = ["ORDER ID", "CUSTOMER", "PRODUCT", "GRADE", "QTY (MT)", "MARGIN", "SHIPMENT DATE", "DAYS LEFT", "PRIORITY", "ACTIONS"];
 
 const MIN_DAYS_FOR_ORDER_EDIT = 10;
 
@@ -203,9 +204,12 @@ const EMPTY_FORM = {
 
 const OrdersScreen = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState(null);
   const editBaselineRef = useRef(null);
+
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const isEditMode = editingOrderId != null;
 
@@ -366,11 +370,12 @@ const OrdersScreen = () => {
               <Td>{order.product_name}</Td>
               <Td>{getSpeciesGradeLabel(SpeciesList, gradeList, order.grade_config)}</Td>
               <Td>{order.quantity_mt}</Td>
+              <Td>{order.margin_per_mt}</Td>
               <Td>{order.delivery_date}</Td>
               {/* <Td>{order.days_until_delivery}d</Td> */}
               {/* <Td>{calculateDaysLeft(order.delivery_date)}</Td> */}
             {/* <Td className={`${order.days_until_delivery <= 7 ? "text-error" : order.days_until_delivery <= 10 ? 'text-warning' : 'text-success'} font-semibold`}> */}
-            <Td className={`text-success font-semibold`}>
+            <Td className={`${order.days_until_delivery <= 7 ? "text-error" : order.days_until_delivery <= 10 ? 'text-warning' : 'text-success'} font-semibold`}>
               {order.days_until_delivery}d
             </Td>
               {/* <Td>
@@ -390,13 +395,15 @@ const OrdersScreen = () => {
                 <Badge variant={getBadgeVariant(order.priority_override) || "primary"}>{order.priority_override || "--"}</Badge>
               </Td>
               <Td>
-                {canShowEditForOrder(order) ? (
-                  <Button type="button" size="sm" variant="secondary" onClick={() => openEditOrderModal(order)}>
-                    <FaPen /> Edit
+                <div className='flex gap-3'>
+                <Button size='sm' iconOnly={true} title="View" variant='outline' onClick={() => {setSelectedOrder(order) ;setShowOrderDetails(true)} }><FaEye/></Button>
+
+                {canShowEditForOrder(order) && (
+                  <Button type="button" iconOnly={true} size="sm" variant="secondary" onClick={() => openEditOrderModal(order)}>
+                    <FaPen />
                   </Button>
-                ) : (
-                  <span className="text-text-light text-xs">—</span>
                 )}
+                </div>
               </Td>
               {/* <Td>
                 <Badge variant={statusToBadgeVariant[order.status] || "primary"}>{order.status || "--"}</Badge>
@@ -411,6 +418,8 @@ const OrdersScreen = () => {
           onPageChange ={handlePageChange}
           showPageSize = {true}
         />
+
+        {showOrderDetails && <OrderDeatilsViewModal isOpen={showOrderDetails} onClose={() => {setShowOrderDetails(false); setSelectedOrder(null)}} order={selectedOrder}/> }
 
       </Card>
 
