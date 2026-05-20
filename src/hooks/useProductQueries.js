@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, createGRN, getCustomerListView, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProcurementPlan, getProductList, getSpecies, UpdateOrder } from "../services/productServices";
+import { AddNewOrder, createGRN, getAllYieldConfig, getCustomerListView, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getYieldConfig, UpdateOrder } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -20,7 +20,7 @@ export const useApiQuery = ({ queryKey, queryFn, select, enabled = true, errorMe
 //GET API
 export const useCustomers = (params,enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.CUSTOMER, params,
+    queryKey: [QUERY_KEYS.CUSTOMER, params],
     queryFn: () => getCustomerListView(params),
     select: (res) => res.data,
     enabled,
@@ -30,7 +30,7 @@ export const useCustomers = (params,enabled = true) => {
 
 export const useProduct = (enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.PRODUCTS,
+    queryKey: [QUERY_KEYS.PRODUCTS],
     queryFn: () => getProductList(),
     select: (res) => res.data,
     enabled,
@@ -40,7 +40,7 @@ export const useProduct = (enabled = true) => {
 
 export const useGrades = (enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.GRADES,
+    queryKey: [QUERY_KEYS.GRADES],
     queryFn: () => getGrades(),
     select: (res) => res.data,
     enabled,
@@ -50,7 +50,7 @@ export const useGrades = (enabled = true) => {
 
 export const useSpecies = (enabled = true, id = null) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.SPECIES,
+    queryKey: [QUERY_KEYS.SPECIES],
     queryFn: () => getSpecies(null, id),
     select: (res) => res.data,
     enabled,
@@ -60,7 +60,7 @@ export const useSpecies = (enabled = true, id = null) => {
 
 export const useOrders = (enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.ORDERS,
+    queryKey: [QUERY_KEYS.ORDERS],
     queryFn: () => GetOrdersList(),
     select: (res) => res.data,
     enabled,
@@ -70,7 +70,7 @@ export const useOrders = (enabled = true) => {
 
 export const useOrdersByDestination = (enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION,
+    queryKey: [QUERY_KEYS.ORDERS_BY_DESTINATION],
     queryFn: () => GetOrdersByDestinationList(),
     select: (res) => res.data,
     enabled,
@@ -80,7 +80,7 @@ export const useOrdersByDestination = (enabled = true) => {
 
 export const useOrdersByPriority = (enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.ORDERS_BY_PRIORITY,
+    queryKey: [QUERY_KEYS.ORDERS_BY_PRIORITY],
     queryFn: () => GetOrdersPriorityQueueList(),
     select: (res) => res.data,
     enabled,
@@ -90,7 +90,7 @@ export const useOrdersByPriority = (enabled = true) => {
 
 export const useInventoryCategory = (enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.INVENTORY_CATEGORY,
+    queryKey: [QUERY_KEYS.INVENTORY_CATEGORY],
     queryFn: () => GetItemCategory(),
     select: (res) => res.data,
     enabled,
@@ -100,7 +100,7 @@ export const useInventoryCategory = (enabled = true) => {
 
 export const usePOItemList = (params, enabled = true) => {
   return useApiQuery({
-    queryKey: [QUERY_KEYS.PO_ITEM_LIST, params,],
+    queryKey: [QUERY_KEYS.PO_ITEM_LIST, params],
     queryFn: () => getPoItem(params),
     select: (res) => res.data,
     enabled,
@@ -110,7 +110,7 @@ export const usePOItemList = (params, enabled = true) => {
 
 export const useGRNList = (enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.GRN_LIST,
+    queryKey: [QUERY_KEYS.GRN_LIST],
     queryFn: () => getGradingSessionsList(),
     select: (res) => res.data,
     enabled,
@@ -120,11 +120,41 @@ export const useGRNList = (enabled = true) => {
 
 export const useProcurementPlan = (enabled = true) => {
   return useApiQuery({
-    queryKey: QUERY_KEYS.PROCUREMENT_PLAN,
+    queryKey: [QUERY_KEYS.PROCUREMENT_PLAN],
     queryFn: () => getProcurementPlan(),
     select: (res) => res.data,
     enabled,
 	onError: `${ErrorText} Procurement Plan`,
+  });
+};
+
+export const useProcessActivityList = (enabled = true, id = null) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.PROCESS_ACTIVITY, id],
+    queryFn: () => getProcessActivityList({product_id: id}),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Activity List`,
+  });
+};
+
+export const useYieldConfig = (enabled = true, id) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.YIELD_BY_PRODUCT, id],
+    queryFn: () => getYieldConfig(null, id),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Yield List`,
+  });
+};
+
+export const useAllYieldConfig = (enabled = true, ) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.YIELD_CONFIG],
+    queryFn: () => getYieldConfig(),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Yield List`,
   });
 };
 
@@ -138,8 +168,8 @@ export const useCreateOrder = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("Order added successfully!");
 
-      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS});
-      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION});
+      await queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS, QUERY_KEYS.ORDERS_BY_DESTINATION]});
+      // await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION});
 
       handleCloseModal?.();
     },
@@ -156,8 +186,8 @@ export const useUpdateOrder = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("Order updated successfully!");
 
-      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS});
-      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION});
+      await queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS, QUERY_KEYS.ORDERS_BY_DESTINATION]});
+      // await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION});
 
       handleCloseModal?.();
     },
@@ -175,7 +205,7 @@ export const useAddMachine = (handleCloseModal) => {
       toast.success("Machine data save successfully!");
 
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.ORDERS,
+        queryKey: [QUERY_KEYS.ORDERS],
       });
 
       handleCloseModal?.();
@@ -193,7 +223,7 @@ export const useUpdateMachine = (handleCloseModal) => {
       toast.success("Machine data updated successfully!");
 
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.ORDERS,
+        queryKey: [QUERY_KEYS.ORDERS],
       });
 
       handleCloseModal?.();
@@ -210,7 +240,7 @@ export const useAddGRN = (handleCloseModal) => {
 
     onSuccess: async () => {
       toast.success("GRN add successfully!");
-      await queryClient.invalidateQueries({queryKey: QUERY_KEYS.GRN_LIST});
+      await queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST]});
       handleCloseModal?.();
     },
     onError: handleApiError,

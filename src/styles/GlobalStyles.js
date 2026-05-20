@@ -63,7 +63,6 @@ export const GlobalStyles = createGlobalStyle`
       padding: ${({ theme }) => theme.spacing?.md || "12px 15px"};
       text-align: left;
       border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-      color: ${({ theme }) => theme.colors.textLight};
     }
     
     th {

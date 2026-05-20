@@ -105,13 +105,14 @@ export const getChangedFields = (original, updated) => {
   const changed = {};
 
   Object.keys(updated).forEach((key) => {
-    if (
-      String(updated[key]) !==
-      String(original[key] ?? "")
-    ) {
+    const originalValue = String(original[key] ?? "").trim();
+    const updatedValue = String(updated[key] ?? "").trim();
+
+    if (originalValue !== updatedValue) {
       changed[key] = updated[key];
     }
   });
+
 
   return changed;
 };

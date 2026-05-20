@@ -34,19 +34,22 @@ export const ORDERS_PRIORITY_OPTIONS = [
 ];
 
 export const QUERY_KEYS = {
-  CUSTOMER: ['customer'],
-  PRODUCTS: ['products'],
-  GRADES: ['grades'],
-  SPECIES: ['species'],
-  ORDERS: ['orders'],
-  INVENTORY_CATEGORY: ['inventoryCategory'],
-  ORDERS_BY_DESTINATION: ['ordersByDestination'],
-  ORDERS_BY_PRIORITY: ['ordersByPriority'],
-  PLANNING_CONFIG: ['planning-config'],
-  BATCHES: ['batches'],
-  PO_ITEM_LIST: ['po-item-list'],
-  GRN_LIST: ['grn-list'],
-  PROCUREMENT_PLAN: ['procurement-plan'],
+  CUSTOMER: 'customer',
+  PRODUCTS: 'products',
+  GRADES: 'grades',
+  SPECIES: 'species',
+  ORDERS: 'orders',
+  INVENTORY_CATEGORY: 'inventoryCategory',
+  ORDERS_BY_DESTINATION: 'ordersByDestination',
+  ORDERS_BY_PRIORITY: 'ordersByPriority',
+  PLANNING_CONFIG: 'planning-config',
+  BATCHES: 'batches',
+  PO_ITEM_LIST: 'po-item-list',
+  GRN_LIST: 'grn-list',
+  PROCUREMENT_PLAN: 'procurement-plan',
+  PROCESS_ACTIVITY: 'process-activity',
+  YIELD_BY_PRODUCT: 'yield-by-product',
+  ALL_YIELD: 'all-yield',
 }
 
 
