@@ -23,6 +23,8 @@ import PaginationComponent from '../components/Pagination';
 import { useFormHandler } from '../hooks/useFormHandler';
 import { toast } from 'react-toastify';
 import OrderDeatilsViewModal from '../components/Modal/OrderDeatilsViewModal';
+import { useFilter } from '../hooks/useFilter';
+import { MdFilterAltOff } from 'react-icons/md';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -188,8 +190,8 @@ const DEMAND_BY_PRODUCT_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#
 const EMPTY_FORM = {
   erp_order_reference: "",
   erp_project_id: "",
-  product: 0,
-  grade_config: 0,
+  product: "",
+  grade_config: "",
   quantity_mt: "",
   customer_name: "",
   customer_tier: "",
@@ -213,26 +215,14 @@ const OrdersScreen = () => {
 
   const isEditMode = editingOrderId != null;
 
-  const { data: customerList = [], isLoading: customersLoading } = useCustomers(isModalOpen);
-  const { data: productList = [], isLoading: productsLoading } = useProduct(isModalOpen);
+const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "ALL", grade: "ALL"});
+
+  const { data: customerList = [], isLoading: customersLoading } = useCustomers({}, isModalOpen);
+  const { data: productList = [], isLoading: productsLoading } = useProduct();
   const { data: gradeList = [], isLoading: gradesLoading } = useGrades();
   const { data: SpeciesList = [], isLoading: speciesLoading } = useSpecies();
   const { data: orderList = [], isLoading: ordersLoading } = useOrders();
   const { data: ordersByDestinationList = [], isLoading: ordersByDestinationLoading } = useOrdersByDestination();
-
-  // const handleInputChange = (e) => {
-  //   const { name, value, type } = e.target;
-  //   if (
-  //     isEditMode &&
-  //     (name === "erp_order_reference" || name === "customer_name")
-  //   ) {
-  //     return;
-  //   }
-  //   setForm((prev) => ({
-  //     ...prev,
-  //     [name]: type === 'number' ? Number(value) || 0 : value,
-  //   }));
-  // };
 
   const  { form, setForm, handleChange, resetForm }  = useFormHandler(EMPTY_FORM);
 
@@ -340,10 +330,15 @@ const OrdersScreen = () => {
     { label: "Revenue Pipeline", value: "₹1,97,66,000", color: "info", icon: <FaMoneyBillWave /> },
   ]
 
-  const { paginatedData, currentPage, itemsPerPage, totalItems, handlePageChange, } = usePagination(orderList, 10)
+  const orderFilteredData = useFilter({
+    data: orderList, fields: [ "erp_order_reference", "customer_name", "product_name", "destination_country"],
+    search: filters.search, extraFilters: { priority_override: filters.priority, product: Number(filters.product), grade_config: filters.grade},
+  });
+  
 
-  const canShowEditForOrder = (order) =>
-    Number(order?.days_until_delivery) >= MIN_DAYS_FOR_ORDER_EDIT;
+  const { paginatedData, currentPage, itemsPerPage, totalItems, handlePageChange, } = usePagination(orderFilteredData, 10)
+
+  const canShowEditForOrder = (order) => Number(order?.days_until_delivery) >= MIN_DAYS_FOR_ORDER_EDIT;
 
   return (
     <Layout title="Order Management">
@@ -353,11 +348,61 @@ const OrdersScreen = () => {
         ))}
       </StatsGrid>
 
-      <Card style={{ marginTop: "1.5rem" }}>
-        <div className='flex justify-between items-center mb-2'>
-          <span className='text-text text-xl font-bold'>Order List</span>
-          <Button size='sm' onClick={openAddOrderModal}><FaPlus />Add New Orders</Button>
-        </div>
+      <Card style={{ marginTop: "1.5rem" }} title="Order List" headerAction={<Button onClick={openAddOrderModal}><FaPlus />Add New Orders</Button>}>
+        {/* <div className='flex justify-between items-center mb-4'> 
+        <SectionHeader title="Order List" border={false} />
+          <Button onClick={openAddOrderModal}><FaPlus />Add New Orders</Button>
+        </div> */}
+        <div className='grid grid-cols-12 gap-3 items-end mb-4'>
+      <div className='col-span-12 md:col-span-4'>
+        <InputField
+          label=""
+          type="text"
+          value={filters.search}
+          onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value,}))}
+          placeholder='Search by order ref, customer, product... '
+        />
+      </div>
+
+      <div className='col-span-12 sm:col-span-4 md:col-span-2'>
+        <InputField
+          label="Priority"
+          type="select"
+          value={filters.priority}
+          onChange={(e) => setFilters((prev) => ({ ...prev, priority: e.target.value }))}
+          options={[
+            { label: "All", value: "ALL" },
+            { label: "Critical", value: "CRITICAL" },
+            { label: "Urgent", value: "URGENT" },
+            { label: "Standard", value: "STANDARD" },
+            { label: "Overdue", value: "OVERDUE" },
+          ]}
+        />
+      </div>
+
+      <div className='col-span-12 sm:col-span-4 md:col-span-2'>
+        <InputField
+          label="Product"
+          type="select"
+          value={filters.product}
+          onChange={(e) =>setFilters((prev) => ({...prev, product: e.target.value }))}
+          options={[{ label: "All", value: "ALL" },...productList.map(item => ({ id: item.id, value: item.id, label: item.product_name }))]}
+        />
+      </div>
+      <div className='col-span-12 sm:col-span-4 md:col-span-2'>
+        <InputField
+          label="Grade"
+          type="select"
+          value={filters.grade}
+          onChange={(e) => setFilters((prev) => ({ ...prev, grade: e.target.value, }))}
+          options={[{ label: "All", value: "ALL" },...gradesOptions]}
+        />
+      </div>
+      <div className='col-span-12 md:col-span-2 ml-auto'>
+
+      <Button  onClick={() => setFilters({ search: "", priority: "ALL", product: "ALL", grade: "ALL"})}> <MdFilterAltOff />Clear</Button>
+      </div>
+    </div>
         <DataTable
           columns={orderColumns}
           data={paginatedData}

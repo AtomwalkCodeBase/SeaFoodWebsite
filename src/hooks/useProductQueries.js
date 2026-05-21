@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, createGRN, getAllYieldConfig, getCustomerListView, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getYieldConfig, UpdateOrder } from "../services/productServices";
+import { AddNewOrder, createGRN, getAllYieldConfig, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, UpdateOrder } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -155,6 +155,36 @@ export const useAllYieldConfig = (enabled = true, ) => {
     select: (res) => res.data,
     enabled,
 	onError: `${ErrorText} Yield List`,
+  });
+};
+
+export const useGetEmployeeList = (enabled = true, ) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.EMPLOYEE_LIST],
+    queryFn: () => getemployeeList(),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Employee List`,
+  });
+};
+
+export const useGetWorkCoverage = (enabled = true, params) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.WORKFORCE_COVERAGE, params],
+    queryFn: () => getWorkForceCoverage(params),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Workforce coverage data `,
+  });
+};
+
+export const useGetWorkAvailable = (enabled = true, date) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE, date],
+    queryFn: () => getWorkForceAvailable(date),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Workforce coverage data `,
   });
 };
 
