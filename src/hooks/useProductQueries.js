@@ -198,8 +198,10 @@ export const useCreateOrder = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("Order added successfully!");
 
-      await queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS, QUERY_KEYS.ORDERS_BY_DESTINATION]});
-      // await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION});
+     await Promise.all([
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS],}),
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS_BY_DESTINATION],}),
+      ]);
 
       handleCloseModal?.();
     },
@@ -216,8 +218,10 @@ export const useUpdateOrder = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("Order updated successfully!");
 
-      await queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS, QUERY_KEYS.ORDERS_BY_DESTINATION]});
-      // await queryClient.invalidateQueries({queryKey: QUERY_KEYS.ORDERS_BY_DESTINATION});
+     await Promise.all([
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS],}),
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS_BY_DESTINATION],}),
+      ]);
 
       handleCloseModal?.();
     },
