@@ -27,6 +27,8 @@ import PaginationComponent from '../../components/Pagination';
 import { usePagination } from '../../hooks/usePagination';
 import { useFilter } from '../../hooks/useFilter';
 import InputField from '../../components/InputField';
+import Layout from '../../components/Layout';
+import Card from '../../components/Card';
 
 const column = ["ORDER REF.", "CUSTOMER", "PRODUCT", "SPECIES", "QYT(MT)", "IN PROG.(MT)", "DELIVERY DATE", "DAYS LEFT", "PROCUR. URGENCY","SUPP. COUNT", "ACTION"]
 
@@ -55,7 +57,8 @@ const ProcurementPlanning = () => {
 
   const {currentPage, paginatedData, totalItems, handlePageChange, itemsPerPage } = usePagination(planningFiletredData, 10)
   return (
-    <div>
+    <Layout title="Procurement Planning">
+      <Card>
     <div className='grid grid-cols-4 items-end gap-3 mb-3'>
       <div className='col-span-2'>
         <InputField
@@ -114,6 +117,7 @@ const ProcurementPlanning = () => {
   onPageChange = {handlePageChange}
       
       />
+      </Card>
 
 
       <Modal
@@ -127,7 +131,7 @@ const ProcurementPlanning = () => {
         <OrderDetailContent order={selectedOrder} />
       </Modal>
 
-    </div>
+    </Layout>
   )
 }
 

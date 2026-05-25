@@ -80,12 +80,12 @@ export const AuthProvider = ({ children }) => {
           pin: userData.password,
         };
 
-      console.log("Sending login payload:", payload);
+      // console.log("Sending login payload:", payload);
       const response = await publicAxiosRequest.post(empLoginURL + `${userData.company}/`, payload, {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      console.log("Login response:", response);
+      // console.log("Login response:", response);
       if (response.status === 200) {
         setError("");
         const { token, emp_id, e_id } = response.data;
@@ -103,20 +103,20 @@ export const AuthProvider = ({ children }) => {
         // Fetch profile to determine redirect
         try {
           const profileRes = await getEmployeeInfo();
-          console.log("Profile response:", profileRes);
+          // console.log("Profile response:", profileRes);
           const userProfile = profileRes?.data[0];
-          console.log("userProfile:", userProfile);
+          // console.log("userProfile:", userProfile);
           setProfile(userProfile);
           
           if (userProfile) {
             const role = userProfile.is_manager;
-            console.log("role from is_manager:", role);
+            // console.log("role from is_manager:", role);
             const redirectUrl = role ? "/qc/manager-dashboard" : "/qc/tester-dashboard";
-            console.log("Redirecting to:", redirectUrl);
+            // console.log("Redirecting to:", redirectUrl);
             window.location.href = redirectUrl;
             return true;
           } else {
-            console.log("userProfile is null/undefined, redirecting to tester dashboard");
+            // console.log("userProfile is null/undefined, redirecting to tester dashboard");
             window.location.href = "/qc/tester-dashboard";
           }
         } catch (profileError) {
@@ -180,10 +180,10 @@ export const AuthProvider = ({ children }) => {
       window.location.href = "/customer/login.html";
     }
     if(localStorage.getItem("seaUser")){
-      window.location.href = "/user/login";
+      window.location.href = "seafood/user/login";
     }
     if(localStorage.getItem("seaUser_E")){
-      window.location.href = "/emp/login";
+      window.location.href = "seafood/emp/login";
     }
     localStorage.removeItem("seaUser")
     localStorage.removeItem("seaUser_E")

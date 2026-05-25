@@ -38,6 +38,9 @@ import Inventory from "./pages/inventory";
 import UnifiedPlanGenerator from "./pages/Referance Screen/unified-plan-generator-v3";
 import NotFound from "./pages/NotFound";
 import ProcurementManagerScreen from "./pages/Procurement Module/ProcurementManagerScreen";
+// import WorkForceAllocation from "./pages/Production Module/WorkForceAllocation";
+import ProcurementPlanning from "./pages/Procurement Module/ProcurementPlanning";
+import ProductionPipelineDashboard from "./pages/Production Module/ProductionPipelineDashboard";
 
 
 function App() {
@@ -83,6 +86,9 @@ function App() {
                   <Route path="/qc/sampleTestScreen" element={<SampleTestScreen />} />
                   <Route path="/POCreationScreen" element={<POCreationScreen />} />
                   <Route path="/procurement-screen" element={<ProcurementManagerScreen />} />
+                  {/* <Route path="/work-force" element={<WorkForceAllocation />} /> */}
+                  <Route path="/procurement-plan" element={<ProcurementPlanning />} />
+                  <Route path="/unsorted-material" element={<ProductionPipelineDashboard />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
 

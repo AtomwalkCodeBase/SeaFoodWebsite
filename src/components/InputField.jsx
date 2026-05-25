@@ -26,23 +26,25 @@ const InputField = ({
   <div className={`flex flex-col gap-1 ${className}`}>
     {labelIcon && labelIcon}
 
-    <label className="text-sm font-medium text-text-light">
-      {label}
-      {required && <span className="text-red-500 ml-1">*</span>} {/* 👈 star */}
-    </label>
+    {label && (
+  <label className="text-sm font-medium text-text-light">
+    {label}
+    {required && <span className="text-red-500 ml-1">*</span>}
+  </label>
+)}
 
-    <div className="flex items-center gap-2">
+    <div className="w-full flex items-center gap-2">
       {type === "select" ? (
         <select
           name={name}
-          value={value}
+          value={value ?? ""}
           onChange={guardedChange}
           required={required && !disabled}
           disabled={disabled}
           aria-disabled={disabled}
-          className={`flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm font-semibold text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary transition ${disabled ? "cursor-not-allowed opacity-70" : ""}`}
+          className={`w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm font-semibold text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary transition ${disabled ? "cursor-not-allowed opacity-70" : ""}`}
         >
-          <option value="">
+          <option value="" disabled={true}>
             {placeholder || `Select ${label}`}
           </option>
           {options.map((option) => (

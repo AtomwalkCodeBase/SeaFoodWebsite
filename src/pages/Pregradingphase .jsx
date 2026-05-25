@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  FiPackage, FiActivity, FiSliders, FiCheckCircle, FiAlertCircle,
-} from 'react-icons/fi';
-// import {
-//   Badge, Panel, ActionButton, InfoRow, LoadingSpinner, EmptyState,
-//   SectionHeader, StepFlow, MetricCard,
-// } from './ui';
+import { FiPackage, FiActivity, FiSliders, FiCheckCircle, FiAlertCircle,} from 'react-icons/fi';
 import { ActionButton, Badge, EmptyState, InfoRow, MetricCard, Panel, StepFlow } from '../components/EmptyState';
 import { AdvanceBatchActivity, CreateParentBatch, CreateSubBatches, getBatchList, getCustomerListView, getGradingSessionsList, getProductList, getSpecies, RecordGrades } from '../services/productServices';
 import { toast } from 'react-toastify';
@@ -15,40 +9,8 @@ import Button from '../components/Button';
 import Modal from '../components/Modal';
 import ConfirmPopup from '../components/ConfirmPopup';
 import InputField from '../components/InputField';
+import { usePOItemList } from '../hooks/useProductQueries';
 
-// ── Mock data (replace with real API) ─────────────────────────────────────────
-const MOCK_GRNS = [
-  {
-    id: 'GRN-2026-0041', species: 'Black Tiger', supplier: 'KeralaFish Exports',
-    received: '2026-05-03', erpBatch: 'BAT-INW-041', location: 'Cold Store A',
-    quantityMt: 12,
-    expectedGrades: ['20/25 (35%)', '16/20 (26%)', '26/30 (26%)', '31/40 (8%)'],
-  },
-  {
-    id: 'GRN-2026-0042', species: 'Vannamei', supplier: 'Coastal Marine',
-    received: '2026-05-04', erpBatch: 'BAT-INW-042', location: 'Cold Store B',
-    quantityMt: 8,
-    expectedGrades: ['26/30 (33%)', '31/40 (35%)', '41/50 (10%)'],
-  },
-];
-
-const MOCK_PARENT_BATCHES = [
-  {
-    id: 'BAT-P-20260504-001', species: 'Black Tiger', quantityMt: 10,
-    activity: 'Cleaning', expectedCleaned: 9.2,
-  },
-];
-
-const MOCK_GRADING_SESSIONS = [
-  {
-    id: 'GS-001', batchId: 'BAT-P-20260503-001', species: 'Black Tiger',
-    cleanedMt: 9.2, status: 'READY',
-    gradeSlots: [
-      { code: '8/12' }, { code: '13/15' }, { code: '16/20' }, { code: '20/25' },
-      { code: '26/30' }, { code: '31/40' }, { code: '41/50' }, { label: 'Waste' },
-    ],
-  },
-];
 
 // ── GRN Card ──────────────────────────────────────────────────────────────────
 function GrnCard({ grn, onCreateBatch }) {
@@ -63,7 +25,7 @@ function GrnCard({ grn, onCreateBatch }) {
   }
   const [form, setForm] = useState(EMPTY_FORM);
 
-  const { date } = extractDateTime(grn.created_at);
+  // const { date } = extractDateTime(grn.created_at);
 
   const {data: speciesList = [], isLoading: speciesLoading, error: speciesError } = useQuery  ({
     queryKey: ['species'],
@@ -163,11 +125,11 @@ function GrnCard({ grn, onCreateBatch }) {
     <>
     <div className="rounded-lg border border-border bg-background p-3 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge label={grn.grn_reference} variant="grn" />
-        <Badge label={grn.species_name} variant="species" />
+        <Badge label={grn.po_ref_number} variant="grn" />
+        <Badge label={grn.po_items[0].po_item.name} variant="species" />
         <span className="text-xs text-text-light">{grn.supplier_name || "Supplier Name not found"}</span>
           {/* <span className="text-lg font-bold text-text">{grn.total_received_mt} MT</span> */}
-          <InfoRow label="Total Received(MT)" value={grn.total_received_mt || "--"} className='font-semibold' />
+          <InfoRow label="Total Received(MT)" value={grn.po_items[0].quantity || "--"} className='font-semibold' />
         <div className="ml-auto">
            <Button variant='primary' size="sm" onClick={() => setIsModalOpen(true)} loading={mutation.isPending}>
           Start Grading Process
@@ -175,9 +137,9 @@ function GrnCard({ grn, onCreateBatch }) {
         </div>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-3 gap-x-4 gap-y-1 pl-1">
-        <InfoRow label="Received Date" value={date} />
-        <InfoRow label="ERP Batch" value={grn.erp_batch || "--"} />
-        <InfoRow label="Location" value={grn.storage_location || "--"} />
+        <InfoRow label="Received Date" value={grn.po_date} />
+        {/* <InfoRow label="ERP Batch" value={grn.erp_batch || "--"} /> */}
+        <InfoRow label="Location" value={grn.location || "--"} />
       </div>
       {/* <div className="flex flex-wrap gap-1.5 pl-1">
         <span className="text-xs text-text-light">Expected grades:</span>
@@ -766,6 +728,8 @@ export function PreGradingPhase({speciesList}) {
     { label: 'Graded stock', icon: FiCheckCircle },
   ];
 
+  const {data: PoItemList, isLoading: PoItemListIsLoading} = usePOItemList()
+
   
   const {data: sessionList = [], isLoading: speciesLoading, error: speciesError } = useQuery  ({
     queryKey: ['session'],
@@ -786,8 +750,9 @@ export function PreGradingPhase({speciesList}) {
 
   // console.log("sessionList", sessionList)
 
-   const pendingGrns = sessionList.filter(grn => grn.status !== 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  //  const pendingGrns = sessionList.filter(grn => grn.status !== 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   //  const pendingGrns = sessionList.filter(grn => grn.status === 'COMPLETED').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const filteredPoData = PoItemList?.filter((data) => data.po_status === "D")
 
    const getSpeciesName = (pendingGrns, speciesList) => {
     const matchedSpecies = speciesList.find(species => species.id === pendingGrns.species_config);
@@ -816,18 +781,19 @@ export function PreGradingPhase({speciesList}) {
           <Badge label={`${sessionList.filter(grn => grn.status !== 'COMPLETED').length} pending GRNs`} variant="info" />
         </div>
         <div className="space-y-3">
-            {speciesLoading ? (
+            {PoItemListIsLoading ? (
               <EmptyState message="Loading GRNs..." />
             ) : speciesError ? (
               <EmptyState message="Failed to load GRNs" />
-            ) : pendingGrns.length === 0 ? (
+            ) : filteredPoData.length === 0 ? (
               <EmptyState message="No pending GRNs" />
             ) : (
-              pendingGrns.map((grn) => {
-              const scientificName = getSpeciesName(grn, speciesList);
+              filteredPoData.map((grn) => {
+              // const scientificName = getSpeciesName(grn, speciesList);
               return (
                 // <GrnCard key={grn.id} grn={{...grn, species_name: scientificName}} onCreateBatch={() => qc.invalidateQueries(['session'])} />
-                <GrnCard key={grn.id} grn={{...grn, species_name: scientificName}} />
+                // <GrnCard key={grn.id} grn={{...grn, species_name: scientificName}} />
+                <GrnCard key={grn.id} grn={grn} />
               );
             })
             )}

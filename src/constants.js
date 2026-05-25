@@ -51,8 +51,9 @@ export const QUERY_KEYS = {
   YIELD_BY_PRODUCT: 'yield-by-product',
   ALL_YIELD: 'all-yield',
   EMPLOYEE_LIST: 'employee-list',
-  WORKFORCE_COVERAGE: 'workforce-coverage',
-  WORKFORCE_AVAILABLE: 'workforce-available',
+  // WORKFORCE_COVERAGE: 'workforce-coverage',
+  // WORKFORCE_AVAILABLE: 'workforce-available',
+  GET_BASE_UNIT: 'get-base-unit',
 
 }
 

@@ -40,6 +40,8 @@ import { RiDashboardFill } from "react-icons/ri"
 import { LuClipboardList } from "react-icons/lu"
 import { BsBoxSeamFill, BsFillCalendar2RangeFill } from "react-icons/bs"
 import { FaGear } from "react-icons/fa6"
+import { HiUserGroup } from "react-icons/hi"
+import { MdInventory } from "react-icons/md"
 const SidebarContainer = styled.div`
   width: ${(props) => {
     const { isOpen, uiPreferences } = props
@@ -535,18 +537,21 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
     }, 100)
   }
   const menuItems =  [
-      { path: "/dummy", name: "Production Planner v1", icon: <LuClipboardList /> },
-      { path: "/dummy1", name: "Production Planner v2", icon: <FaClipboardList /> },
-      { path: "/plan-generator", name: "Daily Production Planner", icon: <BsFillCalendar2RangeFill /> },
-      { path: "/config", name: "Global config v1", icon: <FaGear /> },
-      { path: "/new", name: "Daily production plan v1", icon: <FaGear /> },
+      // { path: "/dummy", name: "Production Planner v1", icon: <LuClipboardList /> },
+      // { path: "/dummy1", name: "Production Planner v2", icon: <FaClipboardList /> },
+      // { path: "/plan-generator", name: "Daily Production Planner", icon: <BsFillCalendar2RangeFill /> },
+      // { path: "/config", name: "Global config v1", icon: <FaGear /> },
+      // { path: "/new", name: "Daily production plan v1", icon: <FaGear /> },
       
       { path: "/config1", name: "Global Config", icon: <FaGear /> },
       { path: "/orders", name: "Orders Management", icon: <BsBoxSeamFill /> },
       { path: "/capacity", name: "Production Planner", icon: "📊"},
       { path: "/inventory", name: "Inventory", icon: <FaBoxes />},
-      { path: "/production-plan2", name: "Daily production plan", icon: <BsFillCalendar2RangeFill />},
+      { path: "/production-plan2", name: "Daily Production Plan", icon: <BsFillCalendar2RangeFill />},
       { path: "/procurement-screen", name: "Procurement Dashboard", icon: <FaTruckLoading />},
+      { path: "/work-force", name: "Work Force", icon: <HiUserGroup />},
+      { path: "/procurement-plan", name: "Procurement Plan", icon: <FaClipboardList />},
+      { path: "/unsorted-material", name: "Grading Raw material", icon: <MdInventory />},
     ]
    
 

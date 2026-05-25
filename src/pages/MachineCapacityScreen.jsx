@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import ConfirmPopup from "../components/ConfirmPopup";
 import Button from "../components/Button";
 import { SectionHeader } from "../components/EmptyState";
+import InputField from "../components/InputField";
+import Modal from "../components/Modal";
 
 // ── Dummy data (replace with your own) ───────
 
@@ -117,10 +119,10 @@ const MachineRow = ({ machine, isOdd, setIsAddModalOpen, handleEditMachine }) =>
     </TD>
     <TD>
     <Button
-   onClick={() => handleEditMachine(machine)}
+   onClick={() => handleEditMachine({...machine, mode: "edit"})}
     lassName="bg-primary/10 text-primary hover:bg-primary hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200"
     >
-          + Edit
+          Edit
     </Button>
     </TD>
     </tr>
@@ -370,40 +372,16 @@ const mappedMachines =  machines.map((m) => {
 
 
         {isAddModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-    <div className="bg-white p-5 rounded-xl w-[400px]">
-      <h3 className="font-bold mb-3">Add Machine Capacity</h3>
-{/* 
-      <input
-        placeholder="Display Name"
-        value={formData.display_name}
-        onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-        className="w-full border p-2 mb-2"
-      /> */}
+  // <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+  //   <div className="bg-white p-5 rounded-xl w-[400px]">
+  //     <h3 className="font-bold mb-3">Add Machine Capacity</h3>
+  <Modal isOpen={isAddModalOpen} title={`${isEditMode ? "Edit" : "Add" } Machine Capacity`} onClose={() => {setIsAddModalOpen(false); }} onSave={() => setIsConfirmOpen(true)} saveButtonText={isEditMode? "Edit" : "Add"} >
 
-      <input
-        placeholder="Raw Capacity"
-        value={formData.raw_capacity_mt_per_day}
-        type="number"
-        onChange={(e) => setFormData({ ...formData, raw_capacity_mt_per_day: e.target.value })}
-        className="w-full border p-2 mb-2"
-      />
+      <InputField label="Raw Capacity" value={formData.raw_capacity_mt_per_day} onChange={(e) => setFormData({ ...formData, raw_capacity_mt_per_day: e.target.value })} required={true} placeholder="Enter raw capacity" />
+      <InputField label="Machine Count" value={formData.machine_count} onChange={(e) => setFormData({ ...formData, machine_count: e.target.value })} required={true} placeholder="Enter machine count" />
+      <InputField label="Downtime %" value={formData.downtime_percentage} onChange={(e) => setFormData({ ...formData, downtime_percentage: e.target.value })} required={true} placeholder="Enter downtime %" />
 
-      <input
-        placeholder="Machine Count"
-        value={formData.machine_count}
-        onChange={(e) => setFormData({ ...formData, machine_count: e.target.value })}
-        className="w-full border p-2 mb-2"
-      />
-
-      <input
-        placeholder="Downtime %"
-        value={formData.downtime_percentage}
-        onChange={(e) => setFormData({ ...formData, downtime_percentage: e.target.value })}
-        className="w-full border p-2 mb-2"
-      />
-
-      <div className="flex justify-end gap-2">
+      {/* <div className="flex justify-end gap-2">
         <button onClick={() => setIsAddModalOpen(false)}>Cancel</button>
         <button
           onClick={() => setIsConfirmOpen(true)}
@@ -411,9 +389,8 @@ const mappedMachines =  machines.map((m) => {
         >
           Save
         </button>
-      </div>
-    </div>
-  </div>
+      </div> */}
+   </Modal>
 )}
         </>
     );

@@ -2,17 +2,17 @@
 
 @theme {
   --color-primary: var(--color-primary);
-  --color-primary-light: var(--color-primary-light);
+  --color-primary-light: var(--color-primaryLight);
   --color-secondary: var(--color-secondary);
-  --color-secondary-light: var(--color-secondary-light);
+  --color-secondary-light: var(--color-secondaryLight);
   --color-accent: var(--color-accent);
-  --color-accent-light: var(--color-accent-light);
+  --color-accent-light: var(--color-accentLight);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
   --color-info: var(--color-info);
   --color-background: var(--color-background);
-  --color-background-alt: var(--color-background-alt);
+  --color-background-alt: var(--color-backgroundAlt);
   --color-card: var(--color-card);
   --color-text: var(--color-text);
   --color-text-light: var(--color-textLight);

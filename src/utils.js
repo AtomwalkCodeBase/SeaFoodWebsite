@@ -63,6 +63,13 @@ export const extractDateTime = (isoString) => {
   };
 };
 
+export const formatDate = (dateStr) => {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    day: '2-digit', month: 'short', year: 'numeric'
+  })
+}
+
 const formatField = (field) => {
   return field.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 };

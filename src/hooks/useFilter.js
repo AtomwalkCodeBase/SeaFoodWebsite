@@ -1,31 +1,25 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 const getNestedValue = (obj, path) => {
     if (!obj || !path) return [];
 
     const parts = path.split(".");
-
+    
     const extract = (current, index) => {
         if (current == null) return [];
 
-        // finished path
         if (index >= parts.length) {
             return [current];
         }
 
         let key = parts[index];
 
-        // handle array field => grades[]
+        // Handle array notation: po_items[]
         if (key.includes("[]")) {
             key = key.replace("[]", "");
-
             const arr = current[key];
-
             if (!Array.isArray(arr)) return [];
-
-            return arr.flatMap((item) =>
-                extract(item, index + 1)
-            );
+            return arr.flatMap((item) => extract(item, index + 1));
         }
 
         return extract(current[key], index + 1);
@@ -37,60 +31,53 @@ const getNestedValue = (obj, path) => {
 const matchValue = (value, search) => {
     if (value == null) return false;
 
-    // primitive
-    if (
-        typeof value === "string" ||
-        typeof value === "number" ||
-        typeof value === "boolean"
-    ) {
-        return String(value)
-            .toLowerCase()
-            .includes(search.toLowerCase());
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        return String(value).toLowerCase().includes(search.toLowerCase());
     }
 
-    // array
     if (Array.isArray(value)) {
         return value.some((v) => matchValue(v, search));
     }
 
-    // object
     if (typeof value === "object") {
-        return Object.values(value).some((v) =>
-            matchValue(v, search)
-        );
+        return Object.values(value).some((v) => matchValue(v, search));
     }
 
     return false;
 };
 
-export const useFilter = ({ data = [], fields = [], search = "", extraFilters = {}}) => {
-  const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      // SEARCH FILTER
-      const searchMatch =
-        !search ||
-        fields.some((field) => {
-          const values = getNestedValue(item, field);
+export const useFilter = ({ data = [], fields = [], search = "", extraFilters = {} }) => {
+    return useMemo(() => {
+        return data.filter((item) => {
+            // === SEARCH FILTER ===
+            const searchMatch = !search || fields.some((field) => {
+                const values = getNestedValue(item, field);
+                return values.some((value) => matchValue(value, search));
+            });
 
-          return values.some((value) =>
-            matchValue(value, search)
-          );
+            // === EXTRA FILTERS (Support nested paths) ===
+            const extraMatch = Object.entries(extraFilters).every(([key, filterValue]) => {
+                if (!filterValue || filterValue === "ALL") return true;
+
+                // Date Range Filter
+                if (key === "dateRange" && filterValue?.field) {
+                    const itemDate = new Date(getNestedValue(item, filterValue.field)[0]);
+                    const fromDate = filterValue.from ? new Date(filterValue.from) : null;
+                    const toDate = filterValue.to ? new Date(filterValue.to) : null;
+
+                    if (fromDate && itemDate < fromDate) return false;
+                    if (toDate && itemDate > toDate) return false;
+                    return true;
+                }
+
+                // Nested value filter (e.g., "grnItem.status")
+                const values = getNestedValue(item, key);
+                return values.some((val) => val === filterValue);
+            });
+
+            return searchMatch && extraMatch;
         });
-
-      // EXTRA FILTERS
-      const extraMatch = Object.entries(extraFilters).every(
-        ([key, value]) => {
-          if (!value || value === "ALL") return true;
-
-          return item[key] === value;
-        }
-      );
-
-      return searchMatch && extraMatch;
-    });
-  }, [data, fields, search, extraFilters]);
-
-  return filteredData;
+    }, [data, fields, search, extraFilters]);
 };
 
 // Usage Examples

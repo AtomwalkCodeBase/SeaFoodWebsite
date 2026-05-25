@@ -12,6 +12,9 @@ import DataTable, { Td } from '../components/Datatable';
 import { PlanningResult } from './DaliyProductionPlan';
 import AllocateBatchModal from '../components/Modal/AllocateBatchModal';
 import { useOrdersByPriority } from '../hooks/useProductQueries';
+import { useFilter } from '../hooks/useFilter';
+import { usePagination } from '../hooks/usePagination';
+import PaginationComponent from '../components/Pagination';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 const MOCK_GRADED_STOCK = [
@@ -108,7 +111,7 @@ function BatchCard({ batch }) {
     });
 
   const matchingOrders = useMemo(() => {
-    return orderList.filter((o) =>o.grade_code === batch.grade_code && o.product_code === batch.product_code);
+    return orderList.filter((o) =>o.grade_code === batch.grade_code && o.product_code === batch.product_code && Number(o.remaining_qty_mt || 0) > 0);
   }, [batch]);
 
   const dynamicSteps = useMemo(() => {
@@ -298,25 +301,27 @@ const nextStepLabel =
     orders={matchingOrders}
     onClose={() => setIsAllocateModalOpen(false)}
     onConfirm={(allocations) => {
-      // const payload = {
-      //   batch_id: batch.id,
-      //   allocations: Object.entries(allocations).map(
-      //     ([order_plan_id, quantity_mt]) => ({
-      //       order_plan_id,
-      //       quantity_mt: Number(quantity_mt || 0),
-      //     })
-      //   ),
-      // };
-       const payload = {
-      // batch_id: batch.id,
-      order_plan_id: allocations.order_plan_id,
-      quantity_mt: Number(allocations.quantity_mt || 0),
-    };
+      // const items = Object.entries(allocations)
+      //   .filter(([, quantity]) => Number(quantity) > 0)
+      //   .map(([order_plan_id, quantity_mt]) => ({
+      //     batch_id: batch.id,
+      //     order_plan_id,
+      //     quantity_mt: Number(quantity_mt || 0),
+      //   }));
 
-    console.log(payload)
+      const items = Object.entries(allocations)
+  .filter(([, quantity]) => Number(quantity) > 0)
+  .map(([order_plan_id, quantity_mt]) => ({
+    order_plan_id,
+    quantity_mt: Number(quantity_mt || 0),
+  }));
 
+      if (items.length === 0) {
+        toast.warn("Enter quantity for at least one order before confirming.");
+        return;
+      }
 
-      // manualAllocateMutation.mutate(payload);
+      items.forEach((item) => manualAllocateMutation.mutate(item));
     }}
   />
 )}
@@ -412,20 +417,28 @@ function GradedStockPanel({ onGenerate, planLoading  }) {
 // ── Phase 2 Root ───────────────────────────────────────────────────────────────
 export function PostGradingPhase() {
   const qc = useQueryClient();
-      const [selectedDate, setSelectedDate] = useState("");
-    const [showPlan, setShowPlan] = useState(false);
-    const [deferredOrders, setDeferredOrders] = useState(new Set());
-    const [batchState, setBatchState] = useState([]);
-
+  const [selectedDate, setSelectedDate] = useState("");
+  const [showPlan, setShowPlan] = useState(false);
+  const [deferredOrders, setDeferredOrders] = useState(new Set());
+  const [batchState, setBatchState] = useState([]);
+  const [status, setStatus] = useState("");
+  
   const STEPS = [
     { label: 'Graded stock', icon: FiBox },
     { label: 'Batch plan', icon: FiZap },
     { label: 'Processing', icon: FiList },
     { label: 'Orders fulfilled', icon: FiTruck },
   ];
-
-   const today = new Date().toISOString().slice(0, 10);
-
+  
+  const today = new Date().toISOString().slice(0, 10);
+  
+  const { data: orderList = [], isLoading: ordersLoading } = useOrdersByPriority()
+  const { data: batchList = [], isLoading: batchLoading } = useQuery({
+    queryKey: ['batches'],
+    queryFn: () => getBatchList(),
+    select: (res) => res.data,
+    onError: () => toast.error('Failed to load batches'),
+  });
 const { data: planData, isLoading: planLoading, refetch: fetchPlan } = useQuery({
     queryKey: ['planning-engine', today],
     queryFn: () => GetPlanningReport(today),
@@ -463,12 +476,13 @@ useEffect(() => {
 
     const avgYield = totalInput > 0 ? weightedYield / totalInput : 0;
 
-    console.log("batch", batch)
+    // console.log("matchedOrders", matchedOrders)
+    // console.log("2", batch)
 
     return {
       id: i,
       product: batch.product_code,
-      product_name: batch.batch_number,
+      product_name: matchedOrders.product_name,
       grade: batch.grade_code,
       qty: Number(batch.input_weight_mt),
       expectedOutput: Number((batch.input_weight_mt * (avgYield / 100)).toFixed(2)),
@@ -509,19 +523,24 @@ useEffect(() => {
   };
 
   const orderColumns = [ 'ORDER ID', 'CUSTOMER', 'PRODUCT', 'Grade', 'Required', 'DAYS LEFT', 'Stock', 'PRIORITY', 'Score'];
-  const { data: orderList = [], isLoading: ordersLoading } = useOrdersByPriority()
-  const { data: batchList = [], isLoading: batchLoading } = useQuery({
-    queryKey: ['batches'],
-    queryFn: () => getBatchList(),
-    select: (res) => res.data,
-    onError: () => toast.error('Failed to load batches'),
-  });
 
 const activeSubBatches = useMemo(() => {
   return batchList.filter(batch => batch.batch_type === "SUB_BATCH" && batch.status !== "COMPLETED");
 }, [batchList]);
 
+const filteredOrderList = useFilter({
+  data: orderList,
+  fields: [
+    "",
+    "supplier_name",
+  ],
+  // search: grnSearch,
+  extraFilters: {
+    label: status,
+  },
+});
 
+const {currentPage, paginatedData, totalItems, handlePageChange} = usePagination(filteredOrderList, 10)
 
   return (
     <div className="space-y-5">
@@ -560,7 +579,7 @@ const activeSubBatches = useMemo(() => {
         </div> */}
         <DataTable
           columns={orderColumns}
-          data={orderList}
+          data={paginatedData}
           isLoading={ordersLoading}
           emptyMessage="No orders found"
           renderRow={(item) => {
@@ -581,6 +600,8 @@ const activeSubBatches = useMemo(() => {
             </>
           )}}
         />
+
+        <PaginationComponent totalItems={totalItems} onPageChange={handlePageChange} currentPage={currentPage} />
       </Panel>
 
         {showPlan && (

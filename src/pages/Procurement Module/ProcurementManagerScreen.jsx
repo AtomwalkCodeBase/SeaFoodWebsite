@@ -2,10 +2,10 @@ import React, { useMemo, useState } from 'react'
 import Layout from '../../components/Layout'
 import styled from 'styled-components';
 import { theme } from '../../styles/Theme';
-import { useAddGRN, useCustomers, useGRNList, usePOItemList, useProduct, useSpecies } from '../../hooks/useProductQueries';
+import { useAddGRN, useCustomers, useGetBaseUnitList, useGRNList, usePOItemList, useProduct, useSpecies } from '../../hooks/useProductQueries';
 import StatsCard from '../../components/StatsCard';
 import { FiPackage } from 'react-icons/fi';
-import { MdOutlineWaterDrop } from 'react-icons/md';
+import { MdFilterAltOff, MdOutlineWaterDrop } from 'react-icons/md';
 import { TbFish } from 'react-icons/tb';
 import Card from '../../components/Card';
 import Tabs from '../../components/Tabs';
@@ -34,6 +34,9 @@ import { useFormHandler } from '../../hooks/useFormHandler';
 import Modal from '../../components/Modal';
 import ProcurementPlanning from './ProcurementPlanning';
 import ConfirmPopup from '../../components/ConfirmPopup';
+import { usePagination } from '../../hooks/usePagination';
+import PaginationComponent from '../../components/Pagination';
+import { formatToDDMMYYYY } from '../../utils';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -75,11 +78,12 @@ const Subtitle = styled.p`
   }
 
 const EMPTY_FORM = {
-  grn_reference: "",
-  supplier_id: "",
-  total_received_mt: 0,
-  species_config: "",
-  erp_batch: "",
+  quantity_received: 0,
+  invoice_unit_price: 0,
+  no_expiry_days: 0,
+  remarks: "",
+  grn_date: "",
+  unit_of_quantity: "",
 };
 
 const ProcurementManagerScreen = () => {
@@ -90,13 +94,18 @@ const ProcurementManagerScreen = () => {
   const [grnStatus, setGrnStatus] = useState("ALL");
   const [grnSearch, setGrnSearch] = useState("");
   const [PRSearch, setPRSearch] = useState("");
+  const [selectedPR, setSelectedPR] = useState(null);
+  const [selectedUnit, setSelectedUnit] = useState(null);
 
   const { form, handleChange, resetForm  } = useFormHandler(EMPTY_FORM)
 
   const { data: POItemList = [], isLoading: poItemListLoading  } = usePOItemList();
   const { data: GrnList = [], isLoading: grnIsLoading  } = useGRNList();
-  const { data: speciesList = [], isLoading: speciesLoading  } = useSpecies();
-  const { data: supplierList = [], isLoading: supplierLoading  } = useCustomers({"is_supplier": "YES"});
+  const { data: baseUnitList = [], isLoading: baseUnitLoading  } = useGetBaseUnitList(isOpenGrnModal);
+
+  const baseUnitOption = baseUnitList?.filter((unit) => unit.unit_type === "W").map((data) => {
+    return { id: data.id, value: data.id, label: data.name}
+  } )
 
 
   const tabFilteredData = useFilter({
@@ -121,34 +130,56 @@ const filteredGrnList = useFilter({
   },
 });
 
+    // console.log("selectedPR", selectedPR)
+
+
   const handleAddGRN = () => {
-    if (!form.grn_reference?.trim()) {
-      return toast.error('Please enter GRN reference number');
-    }
+    // if (!form.grn_reference?.trim()) {
+    //   return toast.error('Please enter GRN reference number');
+    // }
 
-    if (!form.supplier_id) {
-      return toast.error('Please select supplier');
-    }
+    // if (!form.supplier_id) {
+    //   return toast.error('Please select supplier');
+    // }
 
-    if (!form.total_received_mt || Number(form.total_received_mt) <= 0) {
-      return toast.error('Please enter total received quantity');
-    }
+    // if (!form.total_received_mt || Number(form.total_received_mt) <= 0) {
+    //   return toast.error('Please enter total received quantity');
+    // }
 
-    if (!form.species_config) {
-      return toast.error('Please select species');
-    }
+    // if (!form.species_config) {
+    //   return toast.error('Please select species');
+    // }
 
-    if (!form.erp_batch?.trim()) {
-      return toast.error('Please enter ERP batch');
-    }
+    // if (!form.erp_batch?.trim()) {
+    //   return toast.error('Please enter ERP batch');
+    // }
+
+    if (!selectedPR) return toast.error('Please select a Purchase Request');
+    if (!selectedPR.po_items[0].po_item.id) return toast.error('Please select an Item to receive');
+    if (!form.quantity_received || Number(form.quantity_received) <= 0) return toast.error('Please enter quantity received');
+    if (!form.grn_date) return toast.error('Please enter GRN date');
 
     const payload = {
-      grn_reference: form.grn_reference,
-      supplier_id: Number(form.supplier_id),
-      total_received_mt: String(form.total_received_mt),
-      species_config: form.species_config,
-      erp_batch: form.erp_batch,
-    };
+       po_data: {
+       order_id: selectedPR.id,
+       item_id: selectedPR.po_items[0].po_item.id,
+       call_mode: "ADD",
+       quantity_received: form.quantity_received,
+       unit_of_quantity: form.unit_of_quantity,
+      //  invoice_unit_price: form.invoice_unit_price || 0,
+       grn_date: formatToDDMMYYYY(form.grn_date),
+       remarks: form.remarks || "",
+      }
+
+    }
+
+    // const payload = {
+    //   grn_reference: form.grn_reference,
+    //   supplier_id: Number(form.supplier_id),
+    //   total_received_mt: String(form.total_received_mt),
+    //   species_config: form.species_config,
+    //   erp_batch: form.erp_batch,
+    // };
 
     createGRNMutation.mutate(payload);
     // console.log("payload",payload)
@@ -158,6 +189,8 @@ const filteredGrnList = useFilter({
     resetForm();
     setIsOpenGrnModal(false);
     setIsConfirmModalOpen(false);
+    setSelectedPR(null);
+    setSelectedUnit(null);
 
   }
 
@@ -170,7 +203,7 @@ const filteredGrnList = useFilter({
     ];
 
   const TABS = [
-    { key: "PLAN", label: "Procurement Plan" },
+    // { key: "PLAN", label: "Procurement Plan" },
     { key: "PR", label: "Purchase Request" },
     { key: "PO", label: "Purchase Order" },
     { key: "GRN", label: "GRN List" },
@@ -229,9 +262,9 @@ const filteredGrnList = useFilter({
         />
       </div>
 
-      <div className='col-span-1 flex justify-end'>
+      {/* <div className='col-span-1 flex justify-end'>
         <Button size='sm' onClick={() => setIsOpenGrnModal(true)}>ADD GRN</Button>
-      </div>
+      </div> */}
     </div>
 
           <GRN_CARDS
@@ -247,24 +280,24 @@ const filteredGrnList = useFilter({
 
 {activeTab !== "GRN" && activeTab !== "PLAN" && (
   <div className="space-y-4">
-    {tabFilteredData.length === 0 ? (
+    {/* {tabFilteredData.length === 0 ? (
       <EmptyState message="No Data Found" />
     ) : (
-      tabFilteredData.map((po) => (
-        <POCard key={po.id} po={po} />
-      ))
-    )}
+      tabFilteredData.map((po) => ( */}
+        <POCard po={tabFilteredData} isLoading={poItemListLoading} activeTab={activeTab} isOpenGrnModal={(po) => { setSelectedPR(po); setIsOpenGrnModal(true); }} />
+      {/* ))
+    )} */}
   </div>
 )}
 </Card>
 
-  <Modal isOpen={isOpenGrnModal} onClose={handleCloseModal} title = "Add New GRN" width = "max-w-xl" maxHeight = "max-h-[80vh]" showSaveButton = {true} saveButtonText = "Add GRN" cancelButtonText = "Cancel"
+  <Modal isOpen={isOpenGrnModal} onClose={handleCloseModal} title = "Create GRN" width = "max-w-xl" maxHeight = "max-h-[80vh]" showSaveButton = {true} saveButtonText = "Add GRN" cancelButtonText = "Cancel"
   isConfirmOpen={isConfirmModalOpen}
   setIsConfirmOpen ={setIsConfirmModalOpen}
   >
     <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+              {/* <div className="col-span-2">
                 <InputField
                   label="GRN Reference Number"
                   name="grn_reference"
@@ -273,8 +306,79 @@ const filteredGrnList = useFilter({
                   onChange={handleChange}
                   required
                 />
-              </div>
+              </div> */}
 
+              <div className="col-span-2">
+                <InputField
+                  label="Selected Purchase Request"
+                  type="text"
+                  value={selectedPR ? selectedPR.po_ref_number : ""}
+                  onChange={() => {}}
+                  disabled
+                />
+              </div>
+{/* 
+              <div className="col-span-2">
+                <InputField
+                  label="Select Item"
+                  name="item_id"
+                  type="select"
+                  value={selectedItem ? selectedItem.id : ""}
+                  onChange={(e) => {
+                    const itemId = e.target.value;
+                    const item = (selectedPR?.po_items || []).find((it) => String(it.id) === String(itemId));
+                    setSelectedItem(item || null);
+                    handleChange({ target: { name: 'item_id', value: itemId } });
+                  }}
+                  options={(selectedPR?.po_items || []).map((it) => ({ value: it.id, label: it.po_item?.name || it.name }))}
+                />
+              </div> */}
+
+              <InputField
+                label="Quantity Received"
+                name="quantity_received"
+                type="number"
+                value={form.quantity_received}
+                onChange={handleChange}
+              />
+
+              <InputField
+                label="Unit of Quantity"
+                name="unit_of_quantity"
+                type="select"
+                value={form.unit_of_quantity}
+                options={baseUnitOption}
+                onChange={handleChange}
+              />
+
+
+              <InputField
+                label="Expiry days"
+                name="no_expiry_days"
+                type="number"
+                value={form.no_expiry_days}
+                onChange={handleChange}
+              />
+
+              <InputField
+                label="GRN Date"
+                name="grn_date"
+                type="date"
+                value={form.grn_date}
+                onChange={handleChange}
+              />
+
+               <div className="col-span-2">
+              <InputField
+                label="Remarks"
+                name="remarks"
+                type="text"
+                value={form.remarks}
+                onChange={handleChange}
+              />
+               </div>
+
+{/* 
               <InputField
                 label="Supplier Name"
                 name="supplier_id"
@@ -307,7 +411,7 @@ const filteredGrnList = useFilter({
                 type="text"
                 value={form.erp_batch}
                 onChange={handleChange}
-              />
+              /> */}
             </div>
         </div>
 
@@ -322,122 +426,136 @@ const filteredGrnList = useFilter({
 
 export default ProcurementManagerScreen
 
-const  POCard = ({ po }) => {
-  const [expanded, setExpanded] = useState(true);
+const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
+  const [expandedRow, setExpandedRow] = useState(null);
   const typeConf = TYPE_CONFIG[po.po_type] || TYPE_CONFIG["R"];
   const statusConf = STATUS_CONFIG[po.po_status] || STATUS_CONFIG["P"];
   const TypeIcon = typeConf.icon;
-  const itemCount = po.po_items.length;
+  const purchase_column = [ "" ,"Ref. no", "Supplier", "Item count" ,"Date", "Tax Amt", "Total Amt.",`${activeTab === "PR" ? "Action" : ""}`]
+
+  const [filters, setFilters] = useState({ search: "", fromDate: "", toDate: ""});
+
+  const filteredPoList = useFilter({
+      data: po, fields: [ "po_ref_number", "supplier_ref_number", "supplier_name", "po_items[].po_item.name", "po_items[].po_item.item_number"],
+    search: filters.search, extraFilters: { dateRange: { from: filters.fromDate, to: filters.toDate, field: "po_date",},},
+  })
+
+  const {paginatedData, totalItems, currentPage, handlePageChange} = usePagination(filteredPoList, 10)
  
   return (
-    <div className="bg-card rounded-2xl border border-border shadow-[0_2px_16px_var(--color-shadow)] overflow-hidden transition-all duration-200 mb-3">
-      {/* Colored top strip */}
-      <div className={`h-1 w-full ${typeConf.headerBg}`} />
- 
-      {/* Header */}
-      <div className="px-5 pt-4 pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl ${typeConf.badgeBg}`}>
-              <TypeIcon size={18} className={typeConf.badgeText} />
-            </div>
-            <div>
-              <p className="font-bold text-text text-base leading-tight tracking-tight">
-                {po.po_ref_number}
-              </p>
-              <p className={`text-xs font-medium mt-0.5 ${typeConf.badgeText}`}>
-                {typeConf.label}
-              </p>
-            </div>
-          </div>
- 
-          <div className="flex flex-col items-end gap-1.5">
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusConf.bg} ${statusConf.text}`}
+    <>
+     <div className='grid grid-cols-4 gap-3 items-end mb-4'>
+      {/* <div className='col-span-12 md:col-span-4'> */}
+        <InputField
+          label=""
+          type="text"
+          value={filters.search}
+          onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value,}))}
+          placeholder='Search by order ref, product... '
+        />
+      {/* </div> */}
+      <InputField
+          label="From Date"
+          type="date"
+          value={filters.fromDate}
+          onChange={(e) =>
+            setFilters((prev) => ({
+              ...prev,
+              fromDate: e.target.value,
+            }))
+          }
+        />
+
+        <InputField
+          label="To Date"
+          type="date"
+          value={filters.toDate}
+          onChange={(e) =>
+            setFilters((prev) => ({
+              ...prev,
+              toDate: e.target.value,
+            }))
+          }
+        />
+
+        <Button  onClick={() => setFilters({ search: "", fromDate: "", toDate: ""})}> <MdFilterAltOff />Clear</Button>
+      </div>
+    <DataTable
+    columns={purchase_column}
+    data={paginatedData}
+    emptyMessage=""
+    isLoading={isLoading}
+    renderRow={(data) => (
+      <>
+      <Td className="cursor-pointer" onClick={() =>  setExpandedRow((prev) => prev === data.id ? null : data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td>
+      <Td>{data.po_ref_number}</Td>
+      <Td>{data.supplier_name}</Td>
+      <Td>{data.po_items.length}</Td>
+      <Td>{data.po_date}</Td>
+      <Td>{data.tax_amount}</Td>
+      <Td>{data.total}</Td>
+      <Td>{(activeTab === "PR" && data.po_status !== "D") && <Button onClick={() => isOpenGrnModal(data)}>Create GRN</Button>}</Td>
+      </>
+    )}
+    expandedRow={expandedRow}
+     renderExpandedRow={(data) => (
+    <div className="p-3 bg-card rounded-md">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border text-left">
+            <th className="py-2">Item Name</th>
+            <th className="py-2">Item Number</th>
+            <th className="py-2">Quantity</th>
+            <th className="py-2">Unit Price</th>
+            <th className="py-2">Tax Rate</th>
+            <th className="py-2">Tax Amount</th>
+            <th className="py-2">Total Price</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {data.po_items?.map((item) => (
+            <tr
+              key={item.id}
+              className="border-b border-border/50"
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dot}`} />
-              {statusConf.label}
-            </span>
-            <span className="text-xs text-text-light font-mono bg-background-alt px-2 py-0.5 rounded-md">
-              {po.po_currency}
-            </span>
-          </div>
-        </div>
- 
-        {/* Meta row */}
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-          <MetaChip icon={FiUser} label="Supplier" value={po.supplier_name} />
-          <MetaChip icon={FiCalendar} label="PO Date" value={po.po_date} />
-          <MetaChip icon={FiClock} label="Due" value={po.expected_due_date} />
-          <MetaChip icon={FiMapPin} label="Location" value={po.location} />
-          <MetaChip icon={FiTag} label="Branch" value={po.branch_id} />
-        </div>
-      </div>
- 
-      {/* Divider */}
-      <div className="h-px bg-border mx-5" />
- 
-      {/* Items section */}
-      <div className="px-5 pt-3 pb-1">
-        <button
-          onClick={() => setExpanded((p) => !p)}
-          className="w-full flex items-center justify-between group border border-amber-300"
-        >
-          <div className="flex items-center gap-2 p-2">
-            <FiPackage size={14} className="text-text-light opacity-60" />
-            <span className="text-xs font-semibold text-text-light uppercase tracking-wider">
-              Items
-            </span>
-            <span className="text-xs bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded-full">
-              {itemCount}
-            </span>
-          </div>
-          <span className="text-text-light opacity-50 group-hover:opacity-80 transition-opacity">
-            {expanded ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
-          </span>
-        </button>
- 
-        {expanded && (
-          <div className="mt-2">
-            {po.po_items.map((item, idx) => (
-              <ItemRow
-                key={item.id}
-                item={item}
-                currency={po.po_currency}
-                isLast={idx === po.po_items.length - 1}
-              />
-            ))}
-          </div>
-        )}
-      </div>
- 
-      {/* Footer totals */}
-      <div className="mx-5 mb-4 mt-2 rounded-xl bg-primary-light border border-border/60 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-text-light opacity-60 w-16">Subtotal</span>
-              <span className="text-sm text-text font-medium">
-                {formatCurrency(po.total - po.tax_amount, po.po_currency)}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-text-light opacity-60 w-16">Tax</span>
-              <span className="text-sm text-text font-medium">
-                {po.tax_amount === 0 ? "—" : formatCurrency(po.tax_amount, po.po_currency)}
-              </span>
-            </div>
-          </div>
- 
-          <div className="text-right">
-            <p className="text-xs text-text-light opacity-60 mb-0.5">Grand Total</p>
-            <p className="text-xl font-extrabold text-primary tracking-tight">
-              {formatCurrency(po.total, po.po_currency)}
-            </p>
-          </div>
-        </div>
-      </div>
+              <td className="py-2">
+                {item.po_item?.name}
+              </td>
+
+              <td className="py-2">
+                {item.po_item?.item_number}
+              </td>
+
+              <td className="py-2">
+                {item.quantity}
+              </td>
+
+              <td className="py-2">
+                {item.unit_price}
+              </td>
+
+              <td className="py-2">
+                {item.tax_rate}
+              </td>
+
+              <td className="py-2">
+                {item.tax_amount}
+              </td>
+
+              <td className="py-2 font-semibold">
+                {item.total_price}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+  )}
+/>
+
+<PaginationComponent totalItems={totalItems} currentPage={currentPage} onPageChange={handlePageChange} />
+</>
   );
 }
 
@@ -469,7 +587,8 @@ const GRN_CARDS = ( {grn, isLoading }) => {
           <Td>{data.total_received_mt || "--"} MT</Td>
           <Td>
             {/* <Badge1 variant={data.status === "COMPLETED" ? "success" : "warning"}>{data.status === "COMPLETED" ? "Completed" : "In Progress"}</Badge1> */}
-           {data.status === "COMPLETED" ? "Completed" : "In Progress"}
+            <Badge label={data.status === "COMPLETED" ? "Completed" : "In Progress"} variant={data.status === "COMPLETED" ? "success" : "info"} />
+           {/* {data.status === "COMPLETED" ? "Completed" : "In Progress"} */}
           </Td>
         </>
       )}

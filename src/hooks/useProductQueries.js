@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, createGRN, getAllYieldConfig, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, UpdateOrder } from "../services/productServices";
+import { AddNewOrder, createGradingSession, createGRN, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, UpdateOrder } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -50,7 +50,7 @@ export const useGrades = (enabled = true) => {
 
 export const useSpecies = (enabled = true, id = null) => {
   return useApiQuery({
-    queryKey: [QUERY_KEYS.SPECIES],
+    queryKey: [QUERY_KEYS.SPECIES, id],
     queryFn: () => getSpecies(null, id),
     select: (res) => res.data,
     enabled,
@@ -188,6 +188,16 @@ export const useGetWorkAvailable = (enabled = true, date) => {
   });
 };
 
+export const useGetBaseUnitList = (enabled = true) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.GET_BASE_UNIT],
+    queryFn: () => GetBaseUnitList(),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Base unit `,
+  });
+};
+
 //CURD API
 export const useCreateOrder = (handleCloseModal) => {
   const queryClient = useQueryClient();
@@ -274,7 +284,50 @@ export const useAddGRN = (handleCloseModal) => {
 
     onSuccess: async () => {
       toast.success("GRN add successfully!");
-      await queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST]});
+      await Promise.all([
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.PO_ITEM_LIST],}),
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST],}),
+      ]);
+      handleCloseModal?.();
+    },
+    onError: handleApiError,
+  });
+};
+
+export const useCreateGradingSession = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createGradingSession,
+
+    onSuccess: async () => {
+      toast.success("Grading started successfully");
+
+     await Promise.all([
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.PO_ITEM_LIST],}),
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST],}),
+      ]);
+
+      handleCloseModal?.();
+    },
+    onError: handleApiError,
+  });
+};
+
+export const useGradeSegregation = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ sessionId, data }) => RecordGrades(sessionId, data),
+    
+    onSuccess: async () => {
+      toast.success("Grade wise segregation successfully. Inventory is Updated.");
+
+     await Promise.all([
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.PO_ITEM_LIST],}),
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST],}),
+      ]);
+
       handleCloseModal?.();
     },
     onError: handleApiError,

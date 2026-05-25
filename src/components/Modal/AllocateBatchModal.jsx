@@ -114,6 +114,8 @@ export default function AllocateBatchModal({
                     <input
                       type="number"
                       step="0.001"
+                      min="0"
+                      max={o.remaining_qty_mt}
                       value={value}
                       onChange={(e) =>
                         handleChange(o.id, e.target.value)

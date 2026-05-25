@@ -16,7 +16,7 @@ export const SectionHeader = ({ step, icon, title, subtitle, border = true }) =>
         </span>
       )}
       <div className="flex-1">
-        <div className="text-base font-bold flex items-center gap-2.5 text-text">
+        <div className="text-xl font-bold flex items-center gap-2.5 text-text">
           <span>{icon}</span> {title}
         </div>
         {subtitle && <div className="text-xs text-text-light mt-1">{subtitle}</div>}
@@ -96,7 +96,7 @@ export function Panel({ children, className = '', accent }) {
     ? 'border-l-4 border-l-secondary'
     : '';
   return (
-    <div className={`bg-card rounded-xl border border-border shadow-sm ${border} p-4 ${className}`}>
+    <div className={`bg-card rounded-xl border border-border mb-4 shadow-sm ${border} p-4 ${className}`}>
       {children}
     </div>
   );

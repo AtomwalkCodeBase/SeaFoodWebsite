@@ -10,6 +10,7 @@ import Badge from '../components/Badge';
 import styled from 'styled-components';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
+import { theme } from '../styles/Theme';
 
 const ScoreBarWrap = styled.div`
   width: 100%;
@@ -199,7 +200,7 @@ export const PlanningResult = ({ data, loading, batchState, setBatchState, selec
   const coveredOrders = batchState.reduce((sum, b) => sum + (b.orders?.length || 0), 0);
 
   return (
-    <Card>
+    <Card hoverable={false} style={{borderLeft: `4px solid ${theme.colors.secondary}`}}>
       <CapacitySummary 
         data={data} 
         totalPlanned={totalPlanned} 
