@@ -233,7 +233,7 @@ const flow = [
 //         </SectionCard>
 //       </div>
     <div className="font-body min-h-screen transition-colors duration-300">
-      <div className="mx-auto max-w-[1400px]">
+      <div className="mx-auto">
 
         <div className="flex gap-3 mb-4 flex-wrap">
           {productsData?.map((p) => (

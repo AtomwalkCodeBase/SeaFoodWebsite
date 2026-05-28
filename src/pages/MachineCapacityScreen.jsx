@@ -8,6 +8,7 @@ import Button from "../components/Button";
 import { SectionHeader } from "../components/EmptyState";
 import InputField from "../components/InputField";
 import Modal from "../components/Modal";
+import { handleApiError } from "../utils";
 
 // ── Dummy data (replace with your own) ───────
 
@@ -139,8 +140,9 @@ const initialFormData = {
   downtime_percentage: ""
 };
 
+
 const [formData, setFormData] = useState(initialFormData);
-    const [selectedMachine, setSelectedMachine] = useState(null);
+const [selectedMachine, setSelectedMachine] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -257,10 +259,10 @@ const handleSave = async () => {
     setIsAddModalOpen(false);
 
     getMachines();
-  } catch {
+  } catch(error) {
     toast.error(
       isEditMode
-        ? "Failed to update"
+        ? `Failed to update ${handleApiError(error)}`
         : "Failed to save"
     );
   }
@@ -375,7 +377,7 @@ const mappedMachines =  machines.map((m) => {
   // <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
   //   <div className="bg-white p-5 rounded-xl w-[400px]">
   //     <h3 className="font-bold mb-3">Add Machine Capacity</h3>
-  <Modal isOpen={isAddModalOpen} title={`${isEditMode ? "Edit" : "Add" } Machine Capacity`} onClose={() => {setIsAddModalOpen(false); }} onSave={() => setIsConfirmOpen(true)} saveButtonText={isEditMode? "Edit" : "Add"} >
+  <Modal isOpen={isAddModalOpen} title={`${isEditMode ? "Edit" : "Add" } Machine Capacity (${isEditMode && selectedMachine.name})`} onClose={() => {setIsAddModalOpen(false); }} onSave={() => setIsConfirmOpen(true)} saveButtonText={isEditMode? "Edit" : "Add"} >
 
       <InputField label="Raw Capacity" value={formData.raw_capacity_mt_per_day} onChange={(e) => setFormData({ ...formData, raw_capacity_mt_per_day: e.target.value })} required={true} placeholder="Enter raw capacity" />
       <InputField label="Machine Count" value={formData.machine_count} onChange={(e) => setFormData({ ...formData, machine_count: e.target.value })} required={true} placeholder="Enter machine count" />

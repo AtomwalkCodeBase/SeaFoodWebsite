@@ -53,7 +53,7 @@ const DaliyProductionPlan = () => {
 
   const { data: planData, isLoading: planLoading, refetch: fetchPlan } = useQuery({
     queryKey: ['planning-engine', selectedDate],
-    queryFn: () => GetPlanningReport(selectedDate),
+    queryFn: () => GetPlanningReport({date:selectedDate}),
     enabled: false,
     select: (res) => res.data,
     onError: () => toast.error("Failed to generate plan"),
@@ -205,7 +205,7 @@ export const PlanningResult = ({ data, loading, batchState, setBatchState, selec
         data={data} 
         totalPlanned={totalPlanned} 
         utilization={utilization}
-        batchCount={coveredOrders}
+        batchCount={batchCount}
         coveredOrders={coveredOrders}
         totalOrders={totalOrdersInQueue}
       />

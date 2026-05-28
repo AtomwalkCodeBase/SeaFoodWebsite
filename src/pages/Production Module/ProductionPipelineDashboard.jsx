@@ -40,6 +40,7 @@ const getStatusDisplay = (grnItem) => {
   
   return statusMap[grnItem.status] || { label: "Unknown", variant: "warning" };
 };
+const today = new Date().toISOString().split("T")[0];
 
 const ProductionPipelineDashboard = () => {
   const [activeTab, setActiveTab] = useState("GRN");
@@ -49,36 +50,45 @@ const ProductionPipelineDashboard = () => {
   const [segregationData, setSegregationData] = useState(null);
   const [segregationDataView, setSegregationDataView] = useState(null);
 
-  const {data: PoItemList, isLoading: poItemListIsLoading, error: poItemListError} = usePOItemList();
+  const {data: PoItemList, isLoading: poItemListIsLoading, error: poItemListError} = usePOItemList({po_type: "R"});
   const {data: grnList, isLoading: grnLoading, error: grnError} = useGRNList();
   
   const filteredPoData = PoItemList?.filter((data) => data.po_status === "D");
 
   const combinationData = filteredPoData?.reduce((result, poItem) => {
       const matchingGrn = grnList?.find(
-          (grn) => poItem.grn_detail?.grn_number === grn.grn_reference
+          (grn) => poItem.grn_detail?.grn_number === grn?.grn_reference
       );
 
-      if (matchingGrn) {
-          result.push({ poItem, grnItem: matchingGrn });
-      }
-      return result;
+    result.push({
+          poItem,
+          grnItem: matchingGrn || null,
+        });
+
+        return result;
   }, []) || [];
 
+   console.log("combinationData",combinationData)
+
   
-    const filteredPoList = useFilter({
-        data: combinationData, fields: [ "poItem.po_ref_number", "poItem.po_items[].po_item.name", "poItem.supplier_name", "poItem.po_items[].po_item.item_number", "poItem.supplier_ref_number", "poItem.grn_detail.grn_number"],
-      search: filters.search, extraFilters: {"grnItem.status": filters.status, "poItem.po_items[0].po_item.item_number": filters.item_number, dateRange: {field: "poItem.grn_detail.grn_date", from: filters.fromDate, to: filters.toDate,},},
-    })
+  const filteredPoList = useFilter({
+    data: combinationData, fields: ["poItem.po_ref_number", "poItem.po_items[].po_item.name", "poItem.supplier_name", "poItem.po_items[].po_item.item_number", "poItem.supplier_ref_number", "poItem.grn_detail.grn_number"],
+    search: filters.search, extraFilters: { "grnItem?.status": filters.status, "poItem.po_items[0].po_item.item_number": filters.item_number, dateRange: { field: "poItem.grn_detail?.grn_date", from: filters.fromDate, to: filters.toDate, }, },
+  })
   
-    const {paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange} = usePagination(filteredPoList, 10)
+    const {paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange} = usePagination(filteredPoList, 10);
+
+    // console.log("filteredPoList", JSON.stringify(filteredPoList))
+
+    const inProgressQc = filteredPoList.filter((item) => item?.grnItem?.status === "IN_PROGRESS").length;
+    const draftPO = filteredPoList.filter((item) => item?.poItem?.ref_po?.po_status === "D").length;
    
 
   const STATS_CARD = [
-    {label: "Total GRN", icon: <GrNotes />, value: "2", color: "primary"},
-    {label: "Active QC",icon: <BsBookmarkCheckFill />, value: "2", color: "secondary"},
-    {label: "In Progress QC",icon: <FaRegHourglassHalf />, value: "2", color: "accent"},
-    {label: "Draft PO", icon: <RiDraftFill />, value: "2", color: "success"}
+    {label: "Total GRN", icon: <GrNotes />, value: filteredPoList.length, color: "primary"},
+    // {label: "Active QC",icon: <BsBookmarkCheckFill />, value: "2", color: "secondary"},
+    {label: "In Progress QC",icon: <FaRegHourglassHalf />, value: inProgressQc, color: "accent"},
+    {label: "Draft PO", icon: <RiDraftFill />, value: draftPO, color: "success"}
   ] 
 
   return (
@@ -179,8 +189,8 @@ const ProductionPipelineDashboard = () => {
             status: "ALL",
             item_number: "",
             qcManager: "",
-            fromDate: "",
-            toDate: "",
+            fromDate: today,
+            toDate: today,
           })
         }
         className="w-full h-10"
@@ -195,26 +205,26 @@ const ProductionPipelineDashboard = () => {
         columns={PIPELINE_COLUMNS}
         data={paginatedData}
         renderRow={(data) => {
-          const status = getStatusDisplay(data.grnItem);
+          const status = getStatusDisplay(data?.grnItem);
           return(
           <>
           {/* <Td className="cursor-pointer" onClick={() =>  setExpandedRow((prev) => prev === data.id ? null : data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td> */}
           <Td>{data?.poItem?.po_ref_number}</Td>
-          <Td>{data?.poItem?.grn_detail.grn_number}</Td>
+          <Td>{data?.poItem?.grn_detail?.grn_number}</Td>
           <Td>{data?.poItem?.po_items[0].po_item.name}</Td>
-          <Td>{data?.poItem?.po_items[0].quantity}MT</Td>
-          <Td>{data?.grnItem?.total_graded_mt}MT</Td>
-          <Td>{data?.grnItem?.waste_mt}MT</Td>
+          <Td>{data?.poItem?.po_items[0].quantity} MT</Td>
+          <Td>{data?.grnItem?.total_graded_mt || 0} MT</Td>
+          <Td>{data?.grnItem?.waste_mt || 0} MT</Td>
           {/* <Td>{data?.poItem?.supplier_name}</Td> */}
           {/* <Td>{data?.poItem?.grn_detail.grn_date}</Td> */}
           {/* <Td>{data?.grnItem?.qc_inspector || "Not Assigned"}</Td> */}
           <Td><Badge variant={status.variant}>{status.label}</Badge></Td>
           <Td className='flex gap-3'>
-            { !data.grnItem && 
-            <Button size='sm' onClick={() => setStartGradingData(data.poItem)}><FaFlask />Start Grading</Button>
+            { !data?.grnItem && 
+            <Button size='sm' onClick={() => setStartGradingData(data?.poItem)}><FaFlask />Start Grading</Button>
             }
              {data?.grnItem?.grade_lines.length === 0 ?
-            <Button size='sm' onClick={() => setSegregationData({ grnItem: data.grnItem, poItem: data.poItem})}><FaLayerGroup /> Grade Segregation </Button> 
+            <Button size='sm' onClick={() => setSegregationData({ grnItem: data?.grnItem, poItem: data?.poItem})}><FaLayerGroup /> Grade Segregation </Button> 
               : <Button size='sm' onClick={() => setSegregationDataView(data.grnItem)}>
                 <FaEye className="mr-1" /> View Grades
               </Button>
@@ -448,6 +458,7 @@ const STATUS_CONFIG = {
 const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
   const qcData = segregationData?.grnItem;
   const poData = segregationData?.poItem;
+  // console.log()
 
   const EMPTY_GRADE_ROW = { grade_config_id: "", quantity_mt: "", unit_of_quantity: ""};
   const [gradeRows, setGradeRows] = useState([EMPTY_GRADE_ROW ]);
@@ -493,21 +504,32 @@ setGradeRows((prev) =>
   const handleSubmit = async () => {
    const grade_data_list = gradeRows.map(row => ({
       grade_config_id: row.grade_config_id,
-      unit_of_quantity: row.unit_of_quantity || "MT",
+      unit_of_quantity: Number(row.unit_of_quantity),
       quantity_mt: Number(row.quantity_mt) || 0,
     }));
 
-    const payload = {
-      g_session_id: qcData?.id,
-      po_id: poData?.id,                    // PO ID from poItem
-      grade_data_list,
-      waste_mt: Number(wasteMt) || 0,
-      notes: notes.trim() || "Normal grading completed",
-    };
+    const formData = new FormData();
 
-    console.log("Final Payload:", payload); // For debugging
+    formData.append("g_session_id", qcData?.id);
+    formData.append("call_mode", "CLOSE");
+    formData.append("po_id", poData?.id);
+    formData.append("waste_mt", Number(wasteMt) || 0);
+    formData.append(
+      "notes",
+      notes.trim() || "Normal grading completed"
+    );
 
-    // createGradeSegregation.mutate(payload);
+    // append array data
+    formData.append(
+      "grade_data_list",
+      JSON.stringify(grade_data_list)
+    );
+
+    for (let pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
+    createGradeSegregation.mutate(formData);
   };
 
   useEffect(() => {
@@ -555,7 +577,7 @@ setGradeRows((prev) =>
                     name="unit_of_quantity"
                     type="select"
                     value={row.unit_of_quantity}
-                    options={baseUnitList?.filter((data)=> data.unit_type === "W")?.map(item => ({ id: item.id, value: item.name, label: item.name}))}
+                    options={baseUnitList?.filter((data)=> data.unit_type === "W")?.map(item => ({ id: item.id, value: item.id, label: item.name}))}
                     onChange={(e) =>handleInputChange(index, e)}
                   />
                 </div>

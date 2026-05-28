@@ -45,6 +45,7 @@ export const OrdersByDestinationUrl = `${newPPpont}/${db_name}/orders/demand-by-
 export const ItemCategoryListUrl = `${hrendpoint}/item_category_list/${db_name}/`;
 export const CapacityPlanningUrl = `${PPendPoint}/capacity/plan/${db_name}/`;
 export const PlanningReportUrl = `${PPendPoint}/engine/report/${db_name}/`;
+export const CreateBatchUrl = `${PPendPoint}/engine/generate/${db_name}/`;
 export const InventoryStatusUrl = `${PPendPoint}/inventory/status/${db_name}/`;
 export const InventoryProjectionUrl = `${PPendPoint}/inventory/projection/${db_name}/`;
 
@@ -57,4 +58,5 @@ export const WorkForceReleaseUrl = `${PPendPoint}/workforce/release/${db_name}/`
 export const WorkForceAvailableUrl = `${PPendPoint}/workforce/available/${db_name}/`;
 export const WorkForceAllocationUrl = `${PPendPoint}/workforce/allocations/${db_name}/`;
 export const CreateGRNUrl = `${PPendPoint}/process_grn/${db_name}/`;
+export const RecordGradesUrl = `${PPendPoint}/process_grading_session/${db_name}/`;
 export const GetBaseUnitListUrl = `${hrendpoint}/get_base_unit_list/${db_name}/`;

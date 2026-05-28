@@ -40,6 +40,7 @@ export const QUERY_KEYS = {
   SPECIES: 'species',
   ORDERS: 'orders',
   INVENTORY_CATEGORY: 'inventoryCategory',
+  INVENTORY_STATUS: 'inventoryStatus',
   ORDERS_BY_DESTINATION: 'ordersByDestination',
   ORDERS_BY_PRIORITY: 'ordersByPriority',
   PLANNING_CONFIG: 'planning-config',
@@ -51,9 +52,10 @@ export const QUERY_KEYS = {
   YIELD_BY_PRODUCT: 'yield-by-product',
   ALL_YIELD: 'all-yield',
   EMPLOYEE_LIST: 'employee-list',
-  // WORKFORCE_COVERAGE: 'workforce-coverage',
-  // WORKFORCE_AVAILABLE: 'workforce-available',
+  WORKFORCE_COVERAGE: 'workforce-coverage',
+  WORKFORCE_AVAILABLE: 'workforce-available',
   GET_BASE_UNIT: 'get-base-unit',
+  GENERATE_BATCH: 'generate-recommended-batch',
 
 }
 

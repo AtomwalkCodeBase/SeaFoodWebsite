@@ -1,4 +1,4 @@
-import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl, WorkForceCoverageUrl, WorkForceAssignUrl, WorkForceReleaseUrl, WorkForceAllocationUrl, CreateGRNUrl, GetBaseUnitListUrl } from "../services/ConstantServies";
+import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl, WorkForceCoverageUrl, WorkForceAssignUrl, WorkForceReleaseUrl, WorkForceAllocationUrl, CreateGRNUrl, GetBaseUnitListUrl, RecordGradesUrl, CreateBatchUrl, WorkForceAvailableUrl } from "../services/ConstantServies";
 import { authAxios, authAxiosFilePost, authAxiosget, authAxiosPatch, authAxiosPost, authAxiosPut } from "./HttpMethod";
 
 export function getemployeeList() {
@@ -187,10 +187,9 @@ export async function UpdateOrder(data, id) {
     return authAxios(CapacityPlanningUrl, data);
   }
 
-  export function GetPlanningReport(date) {
-      let data = { "date": date};
-    return authAxios(PlanningReportUrl, data);
-  }
+export function GetPlanningReport(params = {}) {
+  return authAxios(PlanningReportUrl, params);
+}
 
   export function getInventoryStatus(data) {
   return authAxios(InventoryStatusUrl, data);
@@ -223,8 +222,8 @@ export async function AdvanceBatchActivity(id, data = {}) {
     return response;
 }
 
-export async function RecordGrades(sessionId, data) {
-    const response = await authAxiosPost(`${GradingSessionsUrl}${sessionId}/record-grades/`, data);
+export async function RecordGrades(data) {
+    const response = await authAxiosFilePost(RecordGradesUrl, data);
     return response;
 }
 
@@ -234,7 +233,7 @@ export async function CreateSubBatches(batchId, data) {
 }
 
 export async function GenerateBatchPlan(data) {
-    const response = await authAxiosPost(EngineGenerateUrl, data);
+    const response = await authAxiosPost(CreateBatchUrl, data);
     return response;
 }
 
@@ -251,8 +250,7 @@ export function getProcurementPlan(data) {
   return authAxios(ProcurementPlanUrl, data);
 }
 
-export function getWorkForceCoverage(date) {
-  let data = { "date": date };
+export function getWorkForceCoverage(data) {
   return authAxios(WorkForceCoverageUrl, data);
 }
 
@@ -262,13 +260,14 @@ export async function AssignWorkForce(data) {
     return response;
 }
 
-export async function ReleaseWorkForce(allocation_id, data) {
-    const response = await authAxiosPost(`${WorkForceReleaseUrl}${allocation_id}/`, data);
+export async function ReleaseWorkForce(data = {}) {
+    const { allocation_id, ...rest } = data;
+    const response = await authAxiosPost(`${WorkForceReleaseUrl}${allocation_id}/`, rest);
     return response;
 }
 
 export function getWorkForceAvailable(params) {
-  return authAxios(WorkForceCoverageUrl, params);
+  return authAxios(WorkForceAvailableUrl, params);
 }
 
 export async function WorkForceAllocation(data) {

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, createGradingSession, createGRN, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, UpdateOrder } from "../services/productServices";
+import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -98,6 +98,16 @@ export const useInventoryCategory = (enabled = true) => {
   });
 };
 
+export const useInventoryStatus = (enabled = true) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.INVENTORY_STATUS],
+    queryFn: () => getInventoryStatus(),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} inventory status`,
+  });
+};
+
 export const usePOItemList = (params, enabled = true) => {
   return useApiQuery({
     queryKey: [QUERY_KEYS.PO_ITEM_LIST, params],
@@ -178,10 +188,10 @@ export const useGetWorkCoverage = (enabled = true, params) => {
   });
 };
 
-export const useGetWorkAvailable = (enabled = true, date) => {
+export const useGetWorkAvailable = (enabled = true, params = {}) => {
   return useApiQuery({
-    queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE, date],
-    queryFn: () => getWorkForceAvailable(date),
+    queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE, params],
+    queryFn: () => getWorkForceAvailable(params),
     select: (res) => res.data,
     enabled,
 	onError: `${ErrorText} Workforce coverage data `,
@@ -195,6 +205,37 @@ export const useGetBaseUnitList = (enabled = true) => {
     select: (res) => res.data,
     enabled,
 	onError: `${ErrorText} Base unit `,
+  });
+};
+
+export const useGetRecommendedBatch = (enabled = true, params = {}) => {
+  const normalizedParams = { ...params };
+  const excludedOrdersRaw =
+    normalizedParams.exclude ?? normalizedParams.exclude_orders;
+  const excludedOrders = Array.isArray(excludedOrdersRaw)
+    ? excludedOrdersRaw
+    : typeof excludedOrdersRaw === "string"
+      ? excludedOrdersRaw
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : [];
+
+  // Avoid axios array query serialization (exclude[]=...).
+  // Backend expects a plain query value key.
+  if (excludedOrders.length > 0) {
+    normalizedParams.exclude = excludedOrders.join(",");
+  } else {
+    delete normalizedParams.exclude;
+  }
+  delete normalizedParams.exclude_orders;
+
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.GENERATE_BATCH, normalizedParams],
+    queryFn: () => GetPlanningReport(normalizedParams),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} Recommended batches `,
   });
 };
 
@@ -318,7 +359,7 @@ export const useGradeSegregation = (handleCloseModal) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ sessionId, data }) => RecordGrades(sessionId, data),
+    mutationFn: RecordGrades,
     
     onSuccess: async () => {
       toast.success("Grade wise segregation successfully. Inventory is Updated.");
@@ -326,6 +367,66 @@ export const useGradeSegregation = (handleCloseModal) => {
      await Promise.all([
         queryClient.invalidateQueries({queryKey: [QUERY_KEYS.PO_ITEM_LIST],}),
         queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST],}),
+      ]);
+
+      handleCloseModal?.();
+    },
+    onError: handleApiError,
+  });
+};
+
+export const useGenerateBatchPlan = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: GenerateBatchPlan,
+    
+    onSuccess: async () => {
+      toast.success("Plan generated . Go to the Batch Tabs");
+
+     await Promise.all([
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.INVENTORY_STATUS],}),
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS_BY_PRIORITY],}),
+      ]);
+
+      handleCloseModal?.();
+    },
+    onError: handleApiError,
+  });
+};
+
+export const useAssignWorker = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: AssignWorkForce,
+    
+    onSuccess: async () => {
+      toast.success("Employee assign to the Batch activity");
+
+     await Promise.all([
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.WORKFORCE_COVERAGE],}),
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE],}),
+      ]);
+
+      handleCloseModal?.();
+    },
+    onError: handleApiError,
+  });
+};
+
+export const useReleaseWorker = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ReleaseWorkForce,
+    
+    onSuccess: async () => {
+      toast.success("Employee release from the Batch activity");
+
+     await Promise.all([
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.WORKFORCE_COVERAGE],}),
+        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE],}),
       ]);
 
       handleCloseModal?.();
