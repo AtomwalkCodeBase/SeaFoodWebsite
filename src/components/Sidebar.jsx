@@ -36,7 +36,7 @@ import { ImUserTie } from "react-icons/im";
 import { useAuth } from "../context/AuthContext"
 import { useTheme } from "../context/ThemeContext"
 import { IoTicket } from "react-icons/io5"
-import { RiDashboardFill } from "react-icons/ri"
+import { RiDashboardFill, RiNodeTree } from "react-icons/ri"
 import { LuClipboardList } from "react-icons/lu"
 import { BsBoxSeamFill, BsFillCalendar2RangeFill } from "react-icons/bs"
 import { FaGear } from "react-icons/fa6"
@@ -551,7 +551,9 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
       { path: "/procurement-screen", name: "Procurement Dashboard", icon: <FaTruckLoading />},
       { path: "/work-force", name: "Work Force", icon: <HiUserGroup />},
       { path: "/procurement-plan", name: "Procurement Plan", icon: <FaClipboardList />},
-      { path: "/unsorted-material", name: "Grading Raw material", icon: <MdInventory />},
+      // { path: "/unsorted-material", name: "Grading Raw material", icon: <MdInventory />},
+      { path: "/unsorted-material", name: "Intake Dashboard", icon: <MdInventory />},
+      { path: "/batch-planning", name: "Batch Planning", icon: <RiNodeTree />},
     ]
    
 

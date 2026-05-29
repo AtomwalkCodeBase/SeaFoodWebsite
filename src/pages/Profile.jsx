@@ -1134,7 +1134,7 @@ const Profile = () => {
   const isFmsLogin = localStorage.getItem("fmsUser")
   const isEmpId = localStorage.getItem('empId')
 
-    console.log("profile", profile)
+    // console.log("profile", profile)
   const {
     theme,
     currentTheme,

@@ -91,7 +91,7 @@ function App() {
                   <Route path="/work-force" element={<WorkforceScreen />} />
                   <Route path="/procurement-plan" element={<ProcurementPlanning />} />
                   <Route path="/unsorted-material" element={<ProductionPipelineDashboard />} />
-                  <Route path="/new-production-plan" element={<PostGradingScreen />} />
+                  <Route path="/batch-planning" element={<PostGradingScreen />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
 

@@ -180,10 +180,10 @@ export const AuthProvider = ({ children }) => {
       window.location.href = "/customer/login.html";
     }
     if(localStorage.getItem("seaUser")){
-      window.location.href = "seafood/user/login";
+      window.location.href = "/seafood/user/login";
     }
     if(localStorage.getItem("seaUser_E")){
-      window.location.href = "seafood/emp/login";
+      window.location.href = "/seafood/emp/login";
     }
     localStorage.removeItem("seaUser")
     localStorage.removeItem("seaUser_E")

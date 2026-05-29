@@ -43,8 +43,8 @@ const variantMap = new Map([
 ]);
 
 const TABS = [
-    {key: "plan", label: "Plan batch Creation"},
-    {key: "batch", label: "Batches"}
+    {key: "plan", label: "Planning"},
+    {key: "batch", label: "Active Batches"}
 ]
 
 const getIncludedSelections = (batchState = [], recommendedList = []) =>
@@ -215,10 +215,10 @@ const handleApprove = useCallback(() => {
   const {currentPage, paginatedData, totalItems, handlePageChange} = usePagination(filteredOrderList, 10)
 
   return (
-    <Layout title="Production Planning">
+    <Layout title="Batch Planning">
         <SubtitleSection>
         <div>
-          <Subtitle>See all Purchase requests List </Subtitle>
+          <Subtitle>Generate batches, monitor production activity, and track utilization.</Subtitle>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <input

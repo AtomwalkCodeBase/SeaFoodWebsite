@@ -214,7 +214,7 @@ const filteredGrnList = useFilter({
   ]
 
   return (
-    <Layout title="Purchase Requests">
+    <Layout title="Procurement Operations">
               {/* <SubtitleSection>
               <div>
                 <Subtitle>See all Purchase requests List </Subtitle>

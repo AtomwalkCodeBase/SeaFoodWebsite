@@ -173,7 +173,7 @@ const Inventory = () => {
 
   if (error) {
     return (
-      <Layout title="Inventory">
+      <Layout title="Inventory Status">
         <div className="text-red-500 p-4">
           Failed to load inventory
         </div>
@@ -187,7 +187,7 @@ const Inventory = () => {
   }
 
   return (
-    <Layout title="Inventory">
+    <Layout title="Inventory Status">
       {/* 🔷 Stats */}
       <StatsGrid>
         {metrics.map((m, idx) => (

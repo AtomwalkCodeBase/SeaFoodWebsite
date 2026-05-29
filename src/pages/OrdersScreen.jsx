@@ -379,6 +379,20 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "
           ]}
         />
       </div>
+      {/* <div className='col-span-12 sm:col-span-4 md:col-span-2'>
+        <InputField
+          label="Order Status"
+          type="select"
+          value={filters.priority}
+          onChange={(e) => setFilters((prev) => ({ ...prev, priority: e.target.value }))}
+          options={[
+            { label: "All", value: "ALL" },
+            { label: "Completed", value: "CRITICAL" },
+            { label: "Partial Complete", value: "URGENT" },
+            { label: "Not Started", value: "STANDARD" },
+          ]}
+        />
+      </div> */}
 
       <div className='col-span-12 sm:col-span-4 md:col-span-2'>
         <InputField
