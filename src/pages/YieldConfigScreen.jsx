@@ -246,17 +246,16 @@ const flow = [
             <StatCard key={data.label} label={data.label} value={data.value} colorClass={data.colorClass} />
           ))}
 
-          <div className="bg-card border border-border rounded-xl p-4 shadow-sm min-w-[180px]">
+          <div className="bg-card border border-border rounded-xl p-3 shadow-sm min-w-45">
              <div className="text-xs font-medium uppercase tracking-wider text-textLight mb-2">Simulate Input</div>
              <div className="flex items-center gap-2">
-               <input
-                 type="number"
+              <InputField
+               type="number"
                  value={inputMT}
                  min={1}
                  max={9999}
                  onChange={(e) => setInputMT(Math.max(1, parseFloat(e.target.value) || 1))}
-                 className="w-20 p-2 text-base font-bold rounded-lg border border-border bg-inputBg text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-               />
+              />
                <span className="text-sm text-textLight font-medium">MT</span>
              </div>
            </div>
@@ -315,7 +314,7 @@ const flow = [
            />
          </Card>
 
-         <div className="flex gap-4 mb-6 flex-wrap">
+         <div className="flex gap-4 flex-wrap">
            <SectionCard className="flex-[2] min-w-[300px] border-l-4 border-l-primary">
              <SectionHeader icon="📦" title="Material Flow" subtitle={`${inputMT} MT input → ${finalOutput} MT output`}/>
              <div className="p-6 flex flex-wrap gap-3 items-center">

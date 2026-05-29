@@ -29,6 +29,7 @@ import {
 import { getInventoryProjection, getInventoryStatus } from "../services/productServices";
 import { SectionHeader } from "../components/EmptyState";
 import { useInventoryCategory } from "../hooks/useProductQueries";
+import { formatNumber } from "../utils";
 
 const StatsGrid = styled.div`
   display: grid;
@@ -52,7 +53,7 @@ const inventoryColumns = [
   "AVAILABLE",
   "REQUIRED",
   "SHORTFALL",
-  "PURCHASE",
+  "PURCHASE (15% buf)",
   "EST. COST",
   "ORDERS",
 ];
@@ -165,7 +166,7 @@ const Inventory = () => {
     },
     {
       label: "PROCUREMENT COST",
-      value: `${inventoryData?.summary?.total_procurement_cost}`,
+      value: `${formatNumber(inventoryData?.summary?.total_procurement_cost)}`,
       color: "primary",
       icon: <FaMoneyBillWave />,
     },
@@ -196,7 +197,7 @@ const Inventory = () => {
       </StatsGrid>
 
       {/* 🔷 TABLE */}
-      <Card style={{ marginTop: "2rem" }}>
+      <Card style={{ marginTop: "1.5rem" }}>
         <SectionHeader title="Grade-wise Inventory" />
 
         <DataTable
@@ -211,15 +212,15 @@ const Inventory = () => {
               </Td>
               <Td>{getSpeciesName(item.species)}</Td>
 
-              <Td className="text-green-400">
+              <Td className="text-green-400 font-semibold">
                 {formatValue(item.in_stock)}
               </Td>
 
-              <Td className="text-yellow-400">
+              <Td className="text-yellow-400 font-semibold">
                 {formatValue(item.committed)}
               </Td>
 
-              <Td className="text-cyan-400">
+              <Td className="text-cyan-400 font-semibold">
                 {formatValue(item.available)}
               </Td>
 
@@ -228,7 +229,7 @@ const Inventory = () => {
               <Td
                 className={
                   item.shortfall > 0
-                    ? "text-red-400 font-medium"
+                    ? "text-red-400 font-semibold"
                     : ""
                 }
               >
@@ -251,7 +252,7 @@ const Inventory = () => {
       </Card>
 
       {/* 🔷 CHART */}
-      <Card style={{ marginTop: "2rem" }}>
+      <Card style={{ marginTop: "1.5rem" }}>
         <SectionHeader title="14-day stock projection" />
 
         <div className="h-[300px]">

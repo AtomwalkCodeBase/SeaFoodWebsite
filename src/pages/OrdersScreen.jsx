@@ -6,6 +6,7 @@ import StatsCard from '../components/StatsCard';
 import Card from '../components/Card';
 import DataTable, { Td } from '../components/Datatable';
 import Badge from '../components/Badge';
+import {Badge as Badge2 }from '../components/EmptyState';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
 import Modal from '../components/Modal';
@@ -25,6 +26,7 @@ import { toast } from 'react-toastify';
 import OrderDeatilsViewModal from '../components/Modal/OrderDeatilsViewModal';
 import { useFilter } from '../hooks/useFilter';
 import { MdFilterAltOff } from 'react-icons/md';
+import { formatNumber } from '../utils';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -52,6 +54,23 @@ const ScoreFill = styled.div`
   background: ${({ color }) => color || "#1890ff"};
   transition: width 0.3s ease;
 `
+const SubtitleSection = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing.lg};
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+const Subtitle = styled.p`
+  color: ${({ theme }) => theme.colors.textLight};
+`;
 const variantMap = new Map([
   ["critical", "error"],
   ["urgent", "warning"],
@@ -62,14 +81,19 @@ function getBadgeVariant(status) {
   return variantMap.get(status.toLowerCase());
 }
 
-const statusToBadgeVariant = {
-  "In Production": "success",
-  Scheduled: "info",
-  Confirmed: "primary",
-  Dispatched: "secondary",
+const orderStatus = (order_status) => {
+    if (!order_status) return { label: "Not assigned", variant: "error" };
+
+  const statusMap = {
+    PARTIAL : {label: "Partial", variant: "info"},
+    COMPLETED : {label: "Completed", variant: "success"},
+    NOT_STARTED : {label: "Not Started", variant: "error"},
+    }
+
+  return statusMap[order_status] || { label: "Unknown", variant: "warning" }
 }
 
-const orderColumns = ["ORDER ID", "CUSTOMER", "PRODUCT", "GRADE", "QTY (MT)", "MARGIN", "SHIPMENT DATE", "DAYS LEFT", "PRIORITY", "ACTIONS"];
+const orderColumns = ["CUSTOMER(ORDER Id)", "PRODUCT", "GRADE", "QTY (MT)", "MARGIN", "SHIPMENT DATE", "STATUS", "DAYS LEFT", "PRIORITY", "ACTIONS"];
 
 const MIN_DAYS_FOR_ORDER_EDIT = 10;
 
@@ -215,7 +239,7 @@ const OrdersScreen = () => {
 
   const isEditMode = editingOrderId != null;
 
-const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "ALL", grade: "ALL"});
+const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "ALL", product: "ALL", grade: "ALL"});
 
   const { data: customerList = [], isLoading: customersLoading } = useCustomers({}, isModalOpen);
   const { data: productList = [], isLoading: productsLoading } = useProduct();
@@ -330,9 +354,25 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "
     { label: "Revenue Pipeline", value: "₹1,97,66,000", color: "info", icon: <FaMoneyBillWave /> },
   ]
 
+  const updatedOrderList = orderList?.map((item) => {
+  let order_status = "NOT_STARTED";
+
+  if (item.fulfillment_pct >= 100 || item.remaining_qty_mt === 0) {
+    order_status = "COMPLETED";
+  } 
+  else if (item.fulfilled_qty_mt > 0 && item.remaining_qty_mt > 0) {
+    order_status = "PARTIAL";
+  }
+
+  return {
+    ...item,
+    order_status,
+  };
+});
+
   const orderFilteredData = useFilter({
-    data: orderList, fields: [ "erp_order_reference", "customer_name", "product_name", "destination_country"],
-    search: filters.search, extraFilters: { priority_override: filters.priority, product: Number(filters.product), grade_config: filters.grade},
+    data: updatedOrderList, fields: [ "erp_order_reference", "customer_name", "product_name", "destination_country"],
+    search: filters.search, extraFilters: { priority_override: filters.priority, product: Number(filters.product), grade_config: filters.grade, order_status: filters.status},
   });
   
 
@@ -342,19 +382,28 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "
 
   return (
     <Layout title="Order Management">
+      <SubtitleSection>
+        <div>
+          <Subtitle>Manage customer orders, shipment schedules, margins, and priorities.</Subtitle>
+        </div>
+        <div>
+          <Button onClick={openAddOrderModal}><FaPlus />Add New Orders</Button>
+        </div>
+
+      </SubtitleSection>
       <StatsGrid>
         {metrics.map((m, idx) => (
           <StatsCard key={idx} icon={m.icon} label={m.label} value={m.value} color={m.color} />
         ))}
       </StatsGrid>
 
-      <Card style={{ marginTop: "1.5rem" }} title="Order List" headerAction={<Button onClick={openAddOrderModal}><FaPlus />Add New Orders</Button>}>
+      <Card style={{ marginTop: "1.5rem" }} title="Order List" headerAction={      <Button onClick={() => setFilters({ search: "", priority: "ALL", product: "ALL", grade: "ALL", status: "ALL"})}> <MdFilterAltOff />Clear</Button>}>
         {/* <div className='flex justify-between items-center mb-4'> 
         <SectionHeader title="Order List" border={false} />
           <Button onClick={openAddOrderModal}><FaPlus />Add New Orders</Button>
         </div> */}
-        <div className='grid grid-cols-12 gap-3 items-end mb-4'>
-      <div className='col-span-12 md:col-span-4'>
+        <div className='grid grid-cols-6 gap-3 items-end mb-4'>
+      <div className='col-span-2 md:col-span-2'>
         <InputField
           label=""
           type="text"
@@ -364,7 +413,7 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "
         />
       </div>
 
-      <div className='col-span-12 sm:col-span-4 md:col-span-2'>
+      <div className='col-span-1'>
         <InputField
           label="Priority"
           type="select"
@@ -379,22 +428,22 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "
           ]}
         />
       </div>
-      {/* <div className='col-span-12 sm:col-span-4 md:col-span-2'>
+      <div className='col-span-1'>
         <InputField
           label="Order Status"
           type="select"
-          value={filters.priority}
-          onChange={(e) => setFilters((prev) => ({ ...prev, priority: e.target.value }))}
+          value={filters.status}
+          onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
           options={[
             { label: "All", value: "ALL" },
-            { label: "Completed", value: "CRITICAL" },
-            { label: "Partial Complete", value: "URGENT" },
-            { label: "Not Started", value: "STANDARD" },
+            { label: "Completed", value: "COMPLETED" },
+            { label: "Partial Complete", value: "PARTIAL" },
+            { label: "Not Started", value: "NOT_STARTED" },
           ]}
         />
-      </div> */}
+      </div>
 
-      <div className='col-span-12 sm:col-span-4 md:col-span-2'>
+      <div className='col-span-1'>
         <InputField
           label="Product"
           type="select"
@@ -403,7 +452,7 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "
           options={[{ label: "All", value: "ALL" },...productList.map(item => ({ id: item.id, value: item.id, label: item.product_name }))]}
         />
       </div>
-      <div className='col-span-12 sm:col-span-4 md:col-span-2'>
+      <div className='col-span-1'>
         <InputField
           label="Grade"
           type="select"
@@ -412,26 +461,24 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "
           options={[{ label: "All", value: "ALL" },...gradesOptions]}
         />
       </div>
-      <div className='col-span-12 md:col-span-2 ml-auto'>
-
-      <Button  onClick={() => setFilters({ search: "", priority: "ALL", product: "ALL", grade: "ALL"})}> <MdFilterAltOff />Clear</Button>
-      </div>
     </div>
         <DataTable
           columns={orderColumns}
           data={paginatedData}
           isLoading={ordersLoading}
           emptyMessage="No orders found"
-          renderRow={(order) => (
+          renderRow={(order) => {
+            const order_status = orderStatus(order.order_status)
+            return(
             <>
-              <Td>{order.erp_order_reference}</Td>
-              <Td>{order.customer_name}</Td>
+              {/* <Td>{order.erp_order_reference}</Td> */}
+              <Td>{order.customer_name}<br/><Badge2 label={order.erp_order_reference} variant='grn' /></Td>
               <Td>{order.product_name}</Td>
               <Td>{getSpeciesGradeLabel(SpeciesList, gradeList, order.grade_config)}</Td>
               <Td>{order.quantity_mt}</Td>
-              <Td>{order.margin_per_mt}</Td>
+              <Td>{formatNumber(order.margin_per_mt)}</Td>
               <Td>{order.delivery_date}</Td>
-              {/* <Td>{order.days_until_delivery}d</Td> */}
+              <Td><Badge variant={order_status.variant}>{order_status.label}</Badge></Td>
               {/* <Td>{calculateDaysLeft(order.delivery_date)}</Td> */}
             {/* <Td className={`${order.days_until_delivery <= 7 ? "text-error" : order.days_until_delivery <= 10 ? 'text-warning' : 'text-success'} font-semibold`}> */}
             <Td className={`${order.days_until_delivery <= 7 ? "text-error" : order.days_until_delivery <= 10 ? 'text-warning' : 'text-success'} font-semibold`}>
@@ -468,7 +515,7 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", product: "
                 <Badge variant={statusToBadgeVariant[order.status] || "primary"}>{order.status || "--"}</Badge>
               </Td> */}
             </>
-          )}
+          )}}
         />
         <PaginationComponent
           totalItems = {totalItems}

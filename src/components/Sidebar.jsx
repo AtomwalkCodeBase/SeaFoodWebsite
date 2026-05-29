@@ -35,7 +35,7 @@ import { PiListPlusFill } from "react-icons/pi"
 import { ImUserTie } from "react-icons/im";
 import { useAuth } from "../context/AuthContext"
 import { useTheme } from "../context/ThemeContext"
-import { IoTicket } from "react-icons/io5"
+import { IoBarChart, IoTicket } from "react-icons/io5"
 import { RiDashboardFill, RiNodeTree } from "react-icons/ri"
 import { LuClipboardList } from "react-icons/lu"
 import { BsBoxSeamFill, BsFillCalendar2RangeFill } from "react-icons/bs"
@@ -543,11 +543,11 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
       // { path: "/config", name: "Global config v1", icon: <FaGear /> },
       // { path: "/new", name: "Daily production plan v1", icon: <FaGear /> },
       
-      { path: "/config1", name: "Global Config", icon: <FaGear /> },
+      { path: "/configuration", name: "Configuration", icon: <FaGear /> },
       { path: "/orders", name: "Orders Management", icon: <BsBoxSeamFill /> },
-      { path: "/capacity", name: "Production Planner", icon: "📊"},
+      { path: "/capacity", name: "Production Planner", icon: <IoBarChart />},
       { path: "/inventory", name: "Inventory", icon: <FaBoxes />},
-      { path: "/production-plan2", name: "Daily Production Plan", icon: <BsFillCalendar2RangeFill />},
+      // { path: "/production-plan2", name: "Daily Production Plan", icon: <BsFillCalendar2RangeFill />},
       { path: "/procurement-screen", name: "Procurement Dashboard", icon: <FaTruckLoading />},
       { path: "/work-force", name: "Work Force", icon: <HiUserGroup />},
       { path: "/procurement-plan", name: "Procurement Plan", icon: <FaClipboardList />},

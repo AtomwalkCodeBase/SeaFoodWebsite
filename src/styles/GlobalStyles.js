@@ -487,4 +487,87 @@ export const GlobalStyles = createGlobalStyle`
       grid-template-columns: 1fr;
     }
   }
+
+.custom-range {
+  accent-color: transparent;
+  appearance: none;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Webkit Browsers */
+.custom-range::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 9999px;
+ background: linear-gradient(
+    to right,
+    var(--primary-color) 0%,
+    var(--primary-color) var(--range-progress, 50%),
+    #dbe7ef var(--range-progress, 50%),
+    #dbe7ef 100%
+  );
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.custom-range::-webkit-slider-progress {
+  background: var(--primary-color);
+  border-radius: 9999px;
+  height: 8px;
+  border: none !important;
+}
+
+.custom-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--primary-color);
+  border: 2px solid white;
+  border-radius: 9999px;
+  cursor: pointer;
+  margin-top: -4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  outline: none !important;
+}
+
+/* Firefox */
+.custom-range::-moz-range-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: #dbe7ef;
+  border: none !important;
+}
+
+.custom-range::-moz-range-progress {
+  background: var(--primary-color);
+  height: 8px;
+  border-radius: 9999px;
+}
+
+.custom-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--primary-color);
+  border: 2px solid white;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+/* Remove ALL focus borders & outlines */
+.custom-range:focus,
+.custom-range:focus-visible,
+.custom-range:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Extra aggressive removal for stubborn browsers */
+.custom-range::-webkit-slider-runnable-track:focus,
+.custom-range::-webkit-slider-thumb:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 `

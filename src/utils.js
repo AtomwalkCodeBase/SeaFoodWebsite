@@ -123,3 +123,22 @@ export const getChangedFields = (original, updated) => {
 
   return changed;
 };
+
+export const formatNumber = (num) => {
+  if (num === null || num === undefined || isNaN(num)) return '0';
+  
+  const number = Number(num);
+  const [integerPart, decimalPart] = number.toString().split('.');
+  
+  // Indian format: last 3 digits, then groups of 2 digits
+  const lastThree = integerPart.slice(-3);
+  const remaining = integerPart.slice(0, -3);
+  
+  const formattedInteger = remaining 
+    ? remaining.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + lastThree
+    : lastThree;
+  
+  return decimalPart 
+    ? `${formattedInteger}.${decimalPart}` 
+    : formattedInteger;
+};

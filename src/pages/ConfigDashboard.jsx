@@ -99,11 +99,27 @@ const SpeciesList = styled.div`
   gap: 0.5rem;
   flex-wrap: wrap;
 `
+const SubtitleSection = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing.lg};
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+const Subtitle = styled.p`
+  color: ${({ theme }) => theme.colors.textLight};
+`;
 
 const TABS = [
-  { key: "config", label: "⚙️ Planning config" },
+  { key: "config", label: "⚙️ Capacity" },
   { key: "species", label: "🦐 Species & grades" },
-  { key: "yield", label: "🔗 Yield chain" },
+  { key: "yield", label: "🔗 Yield Setup" },
   { key: "machines", label: "🏭 Machines" },
   { key: "suppliers", label: "🚚 Suppliers" },
 ]
@@ -112,8 +128,13 @@ export default function ConfigDashboard() {
   const [tab, setTab] = useState("config")
 
   return (
-    <Layout title="Production planning configuration">
-        <Card>
+    <Layout title="System Configuration">
+      <SubtitleSection>
+        <div>
+          <Subtitle>Manage production setup, species, grades, yields, and machines.</Subtitle>
+        </div>
+      </SubtitleSection>
+        <Card hoverable={false} className="mt-3">
           <Tabs tabs={TABS} activeTab={tab} setActiveTab={setTab} />
         {tab === "config" && (
           <CapacityConfigScreen />
@@ -131,7 +152,7 @@ export default function ConfigDashboard() {
           <MachineCapacityScreen />
         )}
 
-        {tab === "suppliers" && (
+        {/* {tab === "suppliers" && (
           <Card title="Supplier Data" variant="secondary">
             <SimpleTable>
               <thead>
@@ -156,7 +177,7 @@ export default function ConfigDashboard() {
               </tbody>
             </SimpleTable>
           </Card>
-        )}
+        )} */}
             </Card>
     </Layout>
   )

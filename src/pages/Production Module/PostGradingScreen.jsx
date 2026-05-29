@@ -254,7 +254,7 @@ const handleApprove = useCallback(() => {
 
         </Card>
 
-        <Card title="pending Orders">
+        <Card title="Outstanding orders">
             <DataTable
           columns={orderColumns}
           data={paginatedData}

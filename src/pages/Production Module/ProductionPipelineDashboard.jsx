@@ -43,8 +43,7 @@ const getStatusDisplay = (grnItem) => {
 const today = new Date().toISOString().split("T")[0];
 
 const ProductionPipelineDashboard = () => {
-  const [activeTab, setActiveTab] = useState("GRN");
-  const [filters, setFilters] = useState({ search: "", status: "", item_number: "", qcManager: "", fromDate: "", toDate: ""});
+  const [filters, setFilters] = useState({ search: "", status: "", item_number: "", qcManager: "", fromDate: today, toDate: today});
   const [expandedRow, setExpandedRow] = useState(null);
   const [startGradingData, setStartGradingData] = useState(null);
   const [segregationData, setSegregationData] = useState(null);
@@ -55,7 +54,7 @@ const ProductionPipelineDashboard = () => {
   
   const filteredPoData = PoItemList?.filter((data) => data.po_status === "D");
 
-  const combinationData = filteredPoData?.reduce((result, poItem) => {
+  const combinationData = (filteredPoData?.reduce((result, poItem) => {
       const matchingGrn = grnList?.find(
           (grn) => poItem.grn_detail?.grn_number === grn?.grn_reference
       );
@@ -66,10 +65,12 @@ const ProductionPipelineDashboard = () => {
         });
 
         return result;
-  }, []) || [];
-
-   console.log("combinationData",combinationData)
-
+  }, []) || []).sort((a, b) => {
+      const aCompleted = a.grnItem?.status === "COMPLETED";
+      const bCompleted = b.grnItem?.status === "COMPLETED";
+      if (aCompleted === bCompleted) return 0;
+      return aCompleted ? 1 : -1;
+  });
   
   const filteredPoList = useFilter({
     data: combinationData, fields: ["poItem.po_ref_number", "poItem.po_items[].po_item.name", "poItem.supplier_name", "poItem.po_items[].po_item.item_number", "poItem.supplier_ref_number", "poItem.grn_detail.grn_number"],
@@ -93,7 +94,7 @@ const ProductionPipelineDashboard = () => {
 
   return (
     <Layout title="Production Pipeline">
-      <div className='statsGrid'>
+      <div className='grid grid-cols-3 gap-3'>
         {STATS_CARD.map((data) => (
           <StatsCard label={data.label} icon={data.icon} color={data.color} value={data.value} />
         ))}

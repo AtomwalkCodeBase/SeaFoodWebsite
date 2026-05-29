@@ -262,12 +262,6 @@ const MachineUtilization = ({ machines = [] }) => {
   );
 };
 
-// ─── BatchCard ────────────────────────────────────────────────────────────────
-// Matches the dark-card layout in the reference image:
-// Row 1: [checkbox] [order-id] [label badge] [product badge] [grade badge] · [customer] · [Xd left]
-// Row 2: slider ──────●── [qty input] MT  |  Output: X MT  Yield: XX%  Margin: ₹X,XX,XXX
-// Row 3: Notes… (full width input)
-
 const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChange, onNotesChange }) => {
   // look up order info from priority_queue by order reference
   const orderRef  = batch.fulfills_orders?.[0]?.order;
@@ -303,7 +297,7 @@ const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChang
     >
       <div className="px-4 py-3">
         {/* ── Row 1: order meta ── */}
-        <div className="flex items-center gap-2 flex-wrap mb-3 max-w-full flex-1">
+        <div className="flex items-center gap-4 flex-wrap mb-3 max-w-full flex-1">
           {/* checkbox */}
           {/* <button
             onClick={() => onToggle(index)}
@@ -322,7 +316,7 @@ const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChang
   {state.included && <FiCheck size={11} />}
 </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col w-48">
               <div>
           {/* order id */}
           <span className="text-xs font-bold text-primary">
@@ -354,7 +348,11 @@ const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChang
               </span>
             </>
           )}
+
               </div>
+          <span className="text-xs text-textLight">
+            Order: {order.quantity_mt || "—"} | Remaining: {order.remaining_qty_mt || "—"}
+          </span>
 
           </div>
 
@@ -387,17 +385,22 @@ const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChang
  
 
           {/* slider */}
-          <div className="flex-1 min-w-[120px]">
-            <input
-              type="range"
-              min={0.1}
-              max={maxQty}
-              step={0.1}
-              disabled={!state.included}
-              value={state.qty}
-              onChange={(e) => onQtyChange(index, parseFloat(e.target.value))}
-              className="w-full h-1.5 appearance-none rounded-full cursor-pointer accent-primary disabled:opacity-40"
-            />
+<div className="flex-1 min-w-[120px]">
+  <input
+    type="range"
+    min={0}
+    max={maxQty}
+    step={0.1}
+    disabled={!state.included}
+    value={Math.max(0, state.qty)}
+    onChange={(e) => onQtyChange(index, parseFloat(e.target.value))}
+    style={{
+      "--range-progress": `${Math.max(0, (state.qty / maxQty) * 100)}%`,
+      "--primary-color": "var(--color-primary)",
+    }}
+    className="custom-range w-full h-2 appearance-none rounded-full cursor-pointer 
+               disabled:opacity-40"
+  />
                      {/* stock label */}
           <span className="text-xs text-textLight whitespace-nowrap mx-auto">
             Stock: <strong className="text-text">{queueItem?.stock_available_mt ?? "—"} MT</strong>

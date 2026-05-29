@@ -78,7 +78,7 @@ function App() {
                     <Route path="/production-plan2" element={<DailyProductionPlanInner />} />
                  <Route path="/inventory" element={<Inventory />} />
                   <Route path="/orders" element={<OrdersScreen />} />
-                  <Route path="/config1" element={<ConfigDashboard />} />
+                  <Route path="/configuration" element={<ConfigDashboard />} />
                   <Route path="/purchase-requisition" element={<PurchaseRequisitionScreen />} />
                   <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
                   <Route path="/qc-check" element={<QC_Screen />} />

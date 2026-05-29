@@ -239,17 +239,15 @@ if (error) {
             title="Capacity parameters"
           />
           <div className="px-4 pb-4 space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              <ReadField label="Machine capacity" value={config.machine_capacity_mt} unit="MT/d" />
-              <ReadField label="OEE %"            value={config.oee_percentage}      unit="%" />
-              <ReadField label="Effective cap."   value={effectiveCap}               unit="MT/d" />
-              <ReadField label="Shift hours"      value={config.shift_hours}         unit="hrs" />
-              <ReadField label="Shifts/day"       value={config.shifts_per_day} />
-            </div>
-            <div className="grid grid-cols-2 gap-3 max-w-sm">
-              <ReadField label="Cold storage"       value={config.cold_storage_capacity_mt} unit="MT" />
-              <ReadField label="Procurement buffer" value={config.procurement_buffer_pct}   unit="%" />
-            </div>
+          <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <ReadField label="Machine capacity" value={config.machine_capacity_mt} unit="MT/d" />
+            <ReadField label="OEE %" value={config.oee_percentage} unit="%" />
+            <ReadField label="Effective cap." value={effectiveCap} unit="MT/d" />
+            <ReadField label="Shift hours" value={config.shift_hours} unit="hrs" />
+            <ReadField label="Shifts/day" value={config.shifts_per_day} />
+            <ReadField label="Cold storage" value={config.cold_storage_capacity_mt} unit="MT" />
+            <ReadField label="Procurement buffer" value={config.procurement_buffer_pct} unit="%" />
+          </div>
           </div>
         </SectionCard>
 
@@ -263,7 +261,7 @@ if (error) {
           <div className="px-4 pb-4 space-y-3">
 
             {/* Weight inputs row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+            <div className="grid grid-cols-4 md:grid-cols-4 gap-3 mb-3">
               {[
                 { label: "Delivery urgency", key: "priority_weight_urgency"  },
                 { label: "Margin/MT",        key: "priority_weight_margin"   },
@@ -395,7 +393,7 @@ const KpiCard = ({ label, value, valueClass }) => (
 );
 
 export const ReadField = ({ label, value, unit, className = "" }) => (
-  <div className={`flex flex-col gap-1 ${className}`}>
+  <div className={`flex flex-col gap-1 w-full min-w-0 ${className}`}>
     <label className="text-1 font-medium text-text-light">{label}</label>
     <div className="flex items-center gap-2">
       <div className="flex-1 rounded-3 border border-border bg-backgroundAlt px-3 py-2 text-2 font-semibold text-text">

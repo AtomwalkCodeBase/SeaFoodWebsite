@@ -8,15 +8,15 @@ export const EmptyState = ({ message, className = "" }) => {
   );
 };
 
-export const SectionHeader = ({ step, icon, title, subtitle, border = true }) => (
-    <div className={`flex items-start p-2 ${border ? 'border-b border-border' : ''}`}>
+export const SectionHeader = ({ step, icon, title, subtitle, border = true, text_primary = false, className = '' }) => (
+    <div className={`flex items-start p-2 ${border ? 'border-b border-border' : ''} ${className}`}>
       {step && (
         <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold`}>
           {step}
         </span>
       )}
       <div className="flex-1">
-        <div className="text-xl font-bold flex items-center gap-2.5 text-text">
+        <div className={`text-xl font-bold flex items-center gap-2.5 ${text_primary ? "text-primary" : "text-text"}`}>
           <span>{icon}</span> {title}
         </div>
         {subtitle && <div className="text-xs text-text-light mt-1">{subtitle}</div>}

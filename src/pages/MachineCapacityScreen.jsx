@@ -9,6 +9,8 @@ import { SectionHeader } from "../components/EmptyState";
 import InputField from "../components/InputField";
 import Modal from "../components/Modal";
 import { handleApiError } from "../utils";
+import { FaRegRectangleList } from "react-icons/fa6";
+import { MdOutlineListAlt } from "react-icons/md";
 
 // ── Dummy data (replace with your own) ───────
 
@@ -294,10 +296,10 @@ const mappedMachines =  machines.map((m) => {
         <>
         <div className="p-1 font-body transition-colors duration-300">
             <div className="mx-auto space-y-6">
-              <SectionHeader title="Machine List" />
+              <SectionHeader title="Machine List" icon={<MdOutlineListAlt className="text-2xl text-primary" />} text_primary={true} className="mb-3" />
 
                 {/* ── Capacity Cards Row ── */}
-               <div className="    grid gap-4 sm:gap-5 lg:gap-6 mb-4
+               <div className="grid gap-4 sm:gap-5 lg:gap-6 mb-4
     grid-cols-1
     sm:grid-cols-2
     md:grid-cols-3
@@ -374,24 +376,11 @@ const mappedMachines =  machines.map((m) => {
 
 
         {isAddModalOpen && (
-  // <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-  //   <div className="bg-white p-5 rounded-xl w-[400px]">
-  //     <h3 className="font-bold mb-3">Add Machine Capacity</h3>
   <Modal isOpen={isAddModalOpen} title={`${isEditMode ? "Edit" : "Add" } Machine Capacity (${isEditMode && selectedMachine.name})`} onClose={() => {setIsAddModalOpen(false); }} onSave={() => setIsConfirmOpen(true)} saveButtonText={isEditMode? "Edit" : "Add"} >
 
       <InputField label="Raw Capacity" value={formData.raw_capacity_mt_per_day} onChange={(e) => setFormData({ ...formData, raw_capacity_mt_per_day: e.target.value })} required={true} placeholder="Enter raw capacity" />
       <InputField label="Machine Count" value={formData.machine_count} onChange={(e) => setFormData({ ...formData, machine_count: e.target.value })} required={true} placeholder="Enter machine count" />
       <InputField label="Downtime %" value={formData.downtime_percentage} onChange={(e) => setFormData({ ...formData, downtime_percentage: e.target.value })} required={true} placeholder="Enter downtime %" />
-
-      {/* <div className="flex justify-end gap-2">
-        <button onClick={() => setIsAddModalOpen(false)}>Cancel</button>
-        <button
-          onClick={() => setIsConfirmOpen(true)}
-          className="bg-primary text-white px-3 py-1 rounded"
-        >
-          Save
-        </button>
-      </div> */}
    </Modal>
 )}
         </>
