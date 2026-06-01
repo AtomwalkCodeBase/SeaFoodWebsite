@@ -163,6 +163,9 @@ export function GetItemCategory(data) {
 export function GetOrdersList(data) {
   return authAxios(OrdersUrl, data);
 }
+export function GetOrdersFulfillList(id, params = {}) {
+  return authAxios(`${OrdersUrl}${id}/fulfillment/`, params);
+}
 
 export function GetOrdersPriorityQueueList(data) {
   return authAxios(`${OrdersUrl}priority-queue/`, data);

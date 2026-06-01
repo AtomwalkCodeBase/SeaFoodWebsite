@@ -121,7 +121,7 @@ const TABS = [
   { key: "species", label: "🦐 Species & grades" },
   { key: "yield", label: "🔗 Yield Setup" },
   { key: "machines", label: "🏭 Machines" },
-  { key: "suppliers", label: "🚚 Suppliers" },
+  // { key: "suppliers", label: "🚚 Suppliers" },
 ]
 
 export default function ConfigDashboard() {

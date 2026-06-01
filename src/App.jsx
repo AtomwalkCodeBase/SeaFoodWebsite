@@ -43,6 +43,7 @@ import ProcurementPlanning from "./pages/Procurement Module/ProcurementPlanning"
 import ProductionPipelineDashboard from "./pages/Production Module/ProductionPipelineDashboard";
 import PostGradingScreen from "./pages/Production Module/PostGradingScreen";
 import WorkforceScreen from "./pages/Production Module/WorkForceAllocation";
+import OrderFulfillmentScreen from "./pages/OrderFulfilmentScreen";
 
 
 function App() {
@@ -92,6 +93,7 @@ function App() {
                   <Route path="/procurement-plan" element={<ProcurementPlanning />} />
                   <Route path="/unsorted-material" element={<ProductionPipelineDashboard />} />
                   <Route path="/batch-planning" element={<PostGradingScreen />} />
+                  <Route path="/order-fulfillment" element={<OrderFulfillmentScreen />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
 

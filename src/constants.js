@@ -56,6 +56,7 @@ export const QUERY_KEYS = {
   WORKFORCE_AVAILABLE: 'workforce-available',
   GET_BASE_UNIT: 'get-base-unit',
   GENERATE_BATCH: 'generate-recommended-batch',
+  ORDER_FULFILLMENT: 'order-fulfillment',
 
 }
 
