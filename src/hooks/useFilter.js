@@ -72,7 +72,10 @@ export const useFilter = ({ data = [], fields = [], search = "", extraFilters = 
 
                 // Nested value filter (e.g., "grnItem.status")
                 const values = getNestedValue(item, key);
-                return values.some((val) => val === filterValue);
+                return values.some((val) => {
+                    if (val == null) return false;
+                    return String(val).toLowerCase() === String(filterValue).toLowerCase();
+                });
             });
 
             return searchMatch && extraMatch;

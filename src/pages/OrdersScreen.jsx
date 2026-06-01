@@ -347,6 +347,8 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "A
       return `${foundSpecies.scientific_name} (${foundGrade.grade_code})`;
   };
 
+  const selectedProductBaseUnit = productList.find((product) => product.id === Number(form.product))?.base_unit || "MT";
+
   const metrics = [
     { label: "ACTIVE ORDERS", value: orderList.length, color: "primary", icon: <BsBoxSeamFill /> },
     { label: "TOTAL DEMAND", value: `${totalDemand.toFixed(2)} MT`, color: "success", icon: <BsGraphUpArrow /> },
@@ -372,7 +374,13 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "A
 
   const orderFilteredData = useFilter({
     data: updatedOrderList, fields: [ "erp_order_reference", "customer_name", "product_name", "destination_country"],
-    search: filters.search, extraFilters: { priority_override: filters.priority, product: Number(filters.product), grade_config: filters.grade, order_status: filters.status},
+    search: filters.search,
+    extraFilters: {
+      priority_override: filters.priority,
+      product: filters.product === "ALL" ? "ALL" : filters.product,
+      grade_config: filters.grade === "ALL" ? "ALL" : filters.grade,
+      order_status: filters.status,
+    },
   });
   
 
@@ -649,7 +657,7 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "A
                 />
 
                 <InputField
-                  label="Quantity (per MT)"
+                  label={`Quantity (per ${selectedProductBaseUnit})`}
                   name="quantity_mt"
                   type="number"
                   value={form.quantity_mt}

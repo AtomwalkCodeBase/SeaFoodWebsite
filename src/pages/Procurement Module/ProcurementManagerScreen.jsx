@@ -36,7 +36,7 @@ import ProcurementPlanning from './ProcurementPlanning';
 import ConfirmPopup from '../../components/ConfirmPopup';
 import { usePagination } from '../../hooks/usePagination';
 import PaginationComponent from '../../components/Pagination';
-import { formatToDDMMYYYY } from '../../utils';
+import { formatNumber, formatToDDMMYYYY } from '../../utils';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -497,7 +497,7 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
       <Td>{data.po_items.length}</Td>
       <Td>{data.po_date}</Td>
       <Td>{data.tax_amount}</Td>
-      <Td>{data.total}</Td>
+      <Td>{formatNumber(data.total)}</Td>
       <Td>{(activeTab === "PR" && data.po_status !== "D") && <Button onClick={() => isOpenGrnModal(data)}>Create GRN</Button>}</Td>
       </>
     )}
@@ -536,7 +536,7 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
               </td>
 
               <td className="py-2">
-                {item.unit_price}
+                {formatNumber(item.unit_price)}
               </td>
 
               <td className="py-2">
@@ -548,7 +548,7 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
               </td>
 
               <td className="py-2 font-semibold">
-                {item.total_price}
+                {formatNumber(item.total_price)}
               </td>
             </tr>
           ))}
@@ -638,12 +638,14 @@ const GRN_CARDS = ( {grn, isLoading }) => {
                     <td className="p-2">{grade.percentage_of_total || "--"}%</td>
                     <td className="p-2">
                       {grade.unit_price_per_mt 
-                        ? `₹${parseFloat(grade.unit_price_per_mt).toLocaleString()}`
+                        // ? `₹${parseFloat(grade.unit_price_per_mt).toLocaleString()}`
+                        ? `₹${formatNumber(grade.unit_price_per_mt)}`
                         : "--"}
                     </td>
                     <td className="p-2">
                       {grade.line_value 
-                        ? `₹${parseFloat(grade.line_value).toLocaleString()}`
+                        // ? `₹${parseFloat(grade.line_value).toLocaleString()}`
+                        ? `₹${formatNumber(grade.line_value)}`
                         : "--"}
                     </td>
                   </tr>
