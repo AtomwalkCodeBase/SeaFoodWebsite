@@ -246,7 +246,7 @@ const TABLE_COLS = ["Stage", "Workers Req.", "Allocated", "Coverage", "Efficienc
 
 // ─── main screen ──────────────────────────────────────────────────────────────
 
-const getEmployeeId = (employee) => employee?.employee_id ?? employee?.id;
+const getEmployeeId = (employee) => employee?.emp_id ?? employee?.employee_id;
 const getEmployeeName = (employee) => employee?.name ?? employee?.employee_name ?? "";
 const getActivityKey = (activity) => activity?.batch_activity_id ?? activity?.id;
 
@@ -294,12 +294,17 @@ const WorkforceScreen = () => {
       employee_id: getEmployeeId(employee),
       name: getEmployeeName(employee),
     });
+    // console.log({
+    //   id: activityId,
+    //   employee_id: getEmployeeId(employee),
+    //   name: getEmployeeName(employee),
+    // })
 
     setSelectedEmpByActivity((prev) => ({ ...prev, [activityId]: "" }));
   };
 
   const handleRelease = (activity, employee) => {
-    const allocationId = employee.allocation_id ?? employee.employee_id;
+    const allocationId = employee.id;
     releaseWorker({ allocation_id: allocationId });
   };
 

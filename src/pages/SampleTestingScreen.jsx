@@ -250,7 +250,7 @@ const SampleTestScreen = () => {
         }
     }, [batchData]);
 
-    console.log(batchData)
+    // console.log(batchData)
 
     // Setup initial state from batchData if present
     // const incomingSamples = batchData?.samples || [];

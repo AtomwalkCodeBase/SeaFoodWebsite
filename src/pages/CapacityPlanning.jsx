@@ -19,6 +19,7 @@ import { FaFilterCircleXmark } from 'react-icons/fa6'
 import { TbProgressBolt } from 'react-icons/tb'
 import { CiInboxOut } from 'react-icons/ci'
 import { useNavigate } from 'react-router-dom'
+import PaginationComponent from '../components/Pagination'
 
 const StatsGrid = styled.div`
   display: grid;
@@ -92,8 +93,8 @@ const CapacityPlanning = () => {
                     <StatsCard key={idx} label={m.label} icon={m.icon} value={m.value} color={m.color} />
                 ))}
             </StatsGrid>
-            <Card>
-                <div className='flex gap-3 items-center'>
+            <Card className="mt-4">
+                <div className='flex gap-3 items-end'>
                     <InputField label="Enter Number of Days You want to see" name="no_of_days" type="number" value={days} onChange={(e) => setDays(e.target.value)} />
 
                     <Button onClick={() => setAppliedDays(days)}> Show </Button>
@@ -135,6 +136,14 @@ const CapacityPlanning = () => {
                         </>
                     )}
                 />
+                <PaginationComponent
+                          totalItems = {totalItems}
+                          itemsPerPage = {itemsPerPage}
+                          currentPage = {currentPage}
+                          onPageChange ={handlePageChange}
+                        //   showPageSize = {true}
+                        />
+                
 
             </Card>
 

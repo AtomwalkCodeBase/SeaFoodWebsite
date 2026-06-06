@@ -3,15 +3,18 @@ import Button from "../Button";
 import Modal from "../Modal";
 
 export default function AllocateBatchModal({
-	isOpen,
+  isOpen,
   batch,
   orders = [],
   onClose,
   onConfirm,
+  isSaving = false,
 }) {
   const totalAvailable = Number(batch.actual_output_mt || 0);
+  const totalUnallocated = Number(batch.unallocated_mt || 0);
 
   const [allocations, setAllocations] = useState({});
+  const [selectedOrders, setSelectedOrders] = useState([]);
 
   const allocatedSoFar = useMemo(() => {
     return Object.values(allocations).reduce(
@@ -20,7 +23,7 @@ export default function AllocateBatchModal({
     );
   }, [allocations]);
 
-  const remaining = totalAvailable - allocatedSoFar;
+  const remaining = totalUnallocated - allocatedSoFar;
 
   const handleChange = (id, value) => {
     const num = Number(value || 0);
@@ -31,132 +34,141 @@ export default function AllocateBatchModal({
     }));
   };
 
+  const handleSelectOrder = (id, isSelected) => {
+    if (isSelected) {
+      setSelectedOrders((prev) => [...prev, id]);
+    } else {
+      setSelectedOrders((prev) => prev.filter((orderId) => orderId !== id));
+      setAllocations((prev) => {
+        const newAllocations = { ...prev };
+        delete newAllocations[id];
+        return newAllocations;
+      });
+    }
+  };
+
   return (
-	<Modal title="Allocate batch output to orders" width="max-w-xl" isOpen={isOpen} onClose={onClose} onSave={() => onConfirm(allocations)} saveButtonText={` Confirm allocation (${allocatedSoFar.toFixed(3)} MT)`}>
-    {/* <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl rounded-2xl bg-background border border-border p-5 space-y-5">
+    <Modal
+      title="Allocate batch output to orders"
+      width="max-w-2xl"
+      isOpen={isOpen}
+      onClose={onClose}
+      onSave={() => onConfirm(allocations)}
+      saveButtonText={` Confirm allocation (${allocatedSoFar.toFixed(3)} MT)`}
+      saveDisabled={allocatedSoFar <= 0 || remaining < 0 || isSaving}
+    >
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-xl bg-backgroundAlt p-4">
+          <p className="text-xs text-text-light uppercase">
+            Batch output
+          </p>
 
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-text">
-              Allocate batch output to orders
-            </h2>
-
-            <p className="text-sm text-text-light mt-1">
-              {batch.batch_number} · {batch.grade_code}
-            </p>
-          </div>
-
-          <button onClick={onClose}>✕</button>
-        </div> */}
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-xl bg-backgroundAlt p-4">
-            <p className="text-xs text-text-light uppercase">
-              Batch output available
-            </p>
-
-            <p className="text-3xl font-bold text-success mt-2">
-              {totalAvailable.toFixed(3)} MT
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-backgroundAlt p-4">
-            <p className="text-xs text-text-light uppercase">
-              Allocated so far
-            </p>
-
-            <p className="text-3xl font-bold text-secondary mt-2">
-              {allocatedSoFar.toFixed(3)} MT
-            </p>
-          </div>
+          <p className="text-xl font-bold text-success mt-2">
+            {totalAvailable.toFixed(3)} MT
+          </p>
         </div>
 
-        <div className="space-y-3">
-          {orders.map((o) => {
-            const value = allocations[o.id] || "";
+        <div className="rounded-xl bg-backgroundAlt p-4">
+          <p className="text-xs text-text-light uppercase">
+            Total Unallocated
+          </p>
 
-            return (
-              <div
-                key={o.id}
-                className="rounded-xl border border-border p-4 bg-backgroundAlt"
-              >
-                <div className="flex items-center justify-between gap-4">
+          <p className="text-xl font-bold text-accent mt-2">
+            {totalUnallocated.toFixed(3)} MT
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-backgroundAlt p-4">
+          <p className="text-xs text-text-light uppercase">
+            Allocated so far
+          </p>
+
+          <p className="text-xl font-bold text-secondary mt-2">
+            {allocatedSoFar.toFixed(3)} MT
+          </p>
+        </div>
+      </div>
+
+      <p className="text-text-light mt-3 mb-1 ml-2 text-sm font-semibold">**Click the checkbox to allocate batch output to orders**</p>
+
+      <div className="space-y-3">
+        {orders.map((o) => {
+          const value = allocations[o.id] || "";
+          const isSelected = selectedOrders.includes(o.id);
+
+          return (
+            <div
+              key={o.id}
+              className={`rounded-xl border p-4 bg-backgroundAlt mb-3 ${isSelected ? "border-primary border-2": "border-border bg-background-alt/40"}`}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    disabled={selectedOrders.length > 0 && !isSelected}
+                    onChange={(e) => handleSelectOrder(o.id, e.target.checked)}
+                    className={`w-5 h-5 rounded border-border accent-primary ${
+                      selectedOrders.length > 0
+                        ? isSelected
+                          ? 'cursor-pointer'
+                          : 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }`}/>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-text">
-                        {o.order_number}
+                      <p className={`font-semibold ${isSelected ? "text-text" : "text-text/50"}`}>
+                        {o.erp_order_reference}
                       </p>
 
                       <span className="text-xs px-2 py-1 rounded-full bg-danger/10 text-danger">
-                        {o.priority}
+                        {o.priority_override}
                       </span>
                     </div>
 
                     <p className="text-sm text-text-light mt-1">
                       {o.customer_name} · needs {o.remaining_qty_mt} MT
                     </p>
-                  </div>
 
-                  <div className="flex items-center gap-3">
-                    {/* <input
-                      type="range"
-                      min={0}
-                      max={o.pending_qty_mt}
-                      step={0.001}
-                      value={value}
-                      onChange={(e) =>
-                        handleChange(o.id, e.target.value)
-                      }
-                      className="w-36"
-                    /> */}
-
-                    <input
-                      type="number"
-                      step="0.001"
-                      min="0"
-                      max={o.remaining_qty_mt}
-                      value={value}
-                      onChange={(e) =>
-                        handleChange(o.id, e.target.value)
-                      }
-                      className="w-24 bg-background border border-border rounded-lg px-3 py-2"
-                    />
-
-                    <span className="text-sm text-text-light">
-                      MT
-                    </span>
+                    <p className="text-xs text-text-light mt-1">
+                      {o.product_name} ({o.product_code})
+                    </p>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
 
-        <div className="rounded-xl bg-warning/10 text-warning px-4 py-3 text-sm">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    max={o.remaining_qty_mt}
+                    value={value}
+                    disabled={!isSelected}
+                    onChange={(e) =>
+                      handleChange(o.id, e.target.value)
+                    }
+                    className={`w-24 bg-background border border-border rounded-lg px-3 py-2 ${!isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  />
+
+                  <span className="text-sm text-text-light">
+                    MT
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {remaining < 0 ? (
+        <div className="rounded-xl bg-error/10 text-error px-4 py-3 text-sm">
+          Cannot allocate more than the Total Unallocated ({totalUnallocated.toFixed(3)} MT). Please reduce the allocations.
+        </div>
+      ) : (
+        <div className="rounded-xl bg-info/8 text-info px-4 py-3 text-sm">
           {remaining.toFixed(3)} MT unallocated — will remain in finished goods inventory
         </div>
-
-        {/* <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            variant="primary"
-            className="flex-1"
-            disabled={allocatedSoFar <= 0 || remaining < 0}
-            onClick={() => onConfirm(allocations)}
-          >
-            Confirm allocation ({allocatedSoFar.toFixed(3)} MT)
-          </Button>
-        </div> */}
-      {/* </div>
-    </div> */}
-	</Modal>
+      )}
+    </Modal>
   );
 }

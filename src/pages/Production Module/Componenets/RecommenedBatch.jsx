@@ -350,7 +350,7 @@ const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChang
           )}
 
               </div>
-          <span className="text-xs text-textLight">
+          <span className="text-xs text-text-light font-semibold">
             Order: {order.quantity_mt || "—"} | Remaining: {order.remaining_qty_mt || "—"}
           </span>
 
@@ -417,7 +417,7 @@ const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChang
               disabled={!state.included}
               value={state.qty}
               onChange={(e) => onQtyChange(index, parseFloat(e.target.value))}
-              className="w-16 text-sm font-bold text-text text-center bg-backgroundAlt border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary disabled:opacity-40"
+              className="w-20 text-sm font-bold text-text text-center bg-backgroundAlt border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary disabled:opacity-40"
             />
             <span className="text-xs text-textLight">MT</span>
           </div>

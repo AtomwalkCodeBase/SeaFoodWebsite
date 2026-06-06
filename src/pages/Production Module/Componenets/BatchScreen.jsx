@@ -2,14 +2,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import Layout from "../components/Layout";
-import Card from "../components/Card";
-import Badge from "../components/Badge";
-import { Badge as Badge2 } from "../components/EmptyState";
-import Button from "../components/Button";
-import StatsCard from "../components/StatsCard";
-import AllocateBatchModal from "../components/Modal/AllocateBatchModal";
-import { SectionHeader, EmptyState } from "../components/EmptyState";
+import Layout from "../../../components/Layout";
+import Card from "../../../components/Card";
+import Badge from "../../../components/Badge";
+import { Badge as Badge2 } from "../../../components/EmptyState";
+import Button from "../../../components/Button";
+import StatsCard from "../../../components/StatsCard";
+import AllocateBatchModal from "../../../components/Modal/AllocateBatchModal";
+import { SectionHeader, EmptyState } from "../../../components/EmptyState";
 import {
   AdvanceBatchActivity,
   AutoAllocateBatch,
@@ -17,12 +17,13 @@ import {
   getProcessActivityList,
   GetOrdersList,
   ManualAllocateBatch,
-} from "../services/productServices";
+} from "../../../services/productServices";
 import { BsListOl } from "react-icons/bs";
 import { FaClockRotateLeft } from "react-icons/fa6";
 import { TbCalendarClock } from "react-icons/tb";
 import { LuPackageCheck } from "react-icons/lu";
-import { theme } from "../styles/Theme";
+import { theme } from "../../../styles/Theme";
+import { useNavigate } from "react-router-dom";
 
 const StatsGrid = styled.div`
   display: grid;
@@ -129,7 +130,7 @@ const BatchScreen = () => {
 
 <Card style={{border: `1px solid ${theme.colors.primaryLight}`}}>
 
-      <SectionHeader title="Active Batches" icon="📦" />
+      <SectionHeader title="Active Batches" icon="📦" className="mb-3" />
       <BatchGrid>
         {isLoading ? (
           <EmptyState message="Loading active batches..." />
@@ -164,7 +165,7 @@ const BatchTimeline = ({ batch }) => {
     [];
   const totalSteps = dynamicSteps.length || 1;
   const progressPct = Math.min((completedSteps.length / totalSteps) * 100, 100);
-  const statusVariant = batch.status === "IN_PROGRESS" ? "success" : "warning";
+  const statusVariant = batch.status === "IN_PROGRESS" ? "warning" : batch.status === "COMPLETED" ? "success" : batch.status === "SCHEDULED" ? "notPlanned" : batch.status === "CANCELLED" ? "error" : "info" ;
 
   return (
     <div className="flex items-center gap-4">
@@ -179,7 +180,7 @@ const BatchTimeline = ({ batch }) => {
         <TimelineBar>
           <TimelineFill
             width={progressPct}
-            color={batch.status === "IN_PROGRESS" ? "#10b981" : "#64748b"}
+            color={batch.status === "IN_PROGRESS" ? `${theme.colors.warning}` : batch.status === "COMPLETED" ? `${theme.colors.success}` : batch.status === "SCHEDULED" ? "#666666" : batch.status === "CANCELLED" ? `${theme.colors.error}` : `${theme.colors.info}`}
           />
         </TimelineBar>
         <div className="text-[11px] text-text-light mt-1">
@@ -193,6 +194,7 @@ const BatchTimeline = ({ batch }) => {
 };
 
 const ActiveBatchCard = ({ batch }) => {
+  const navigate = useNavigate()
   const qc = useQueryClient();
   const [isAllocateModalOpen, setIsAllocateModalOpen] = useState(false);
   const currentActivityName = batch.current_activity_name;
@@ -242,6 +244,7 @@ const ActiveBatchCard = ({ batch }) => {
   const displayInput = selectedLog?.input_weight_mt || batch.input_weight_mt || "0";
   const displayExpected = selectedLog?.expected_output_mt || "0";
   const displayActual = selectedLog?.actual_output_mt || "-";
+  const displayWorkerAssigned = selectedLog?.workers_assigned || 0;
   const isLastStep = currentIdx === dynamicSteps.length - 1;
   const canAdvance = batch.status === "SCHEDULED" || (currentIdx >= 0 && batch.status !== "ALLOCATING");
   const nextStepLabel =
@@ -282,10 +285,11 @@ const ActiveBatchCard = ({ batch }) => {
   });
 
   const statusColor = batch.status === "IN_PROGRESS" ? "success" : "warning";
+  // console.log(`batch :${batch.batch_number}`, batch)
 
   return (
     <>
-    <div className="rounded-lg border border-border bg-background p-3 space-y-3 mt-3">
+    <div className="rounded-lg border border-border bg-background p-3 space-y-3">
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <Badge2 label={batch.batch_number} variant="grn" />
         <Badge2 label={batch.species} variant="species" />
@@ -295,6 +299,9 @@ const ActiveBatchCard = ({ batch }) => {
           Actual Output:{" "}
           <strong className="text-secondary">{batch.actual_output_mt || "Not finished yet"} MT</strong>
         </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <Badge2 label={`${batch.product_name} (${batch.product_code})`} variant="pd" />
       </div>
 
       <div className="flex gap-2">
@@ -335,7 +342,7 @@ const ActiveBatchCard = ({ batch }) => {
           )}
         </p>
 
-        <div className="grid grid-cols-3 gap-3 text-xs">
+        <div className="grid grid-cols-4 gap-3 text-xs">
           <div>
             <span className="text-text-light">Input</span>
             <br />
@@ -353,6 +360,11 @@ const ActiveBatchCard = ({ batch }) => {
               {displayActual} MT
             </strong>
           </div>
+          <div>
+            <span className="text-text-light">Worker Assigned</span>
+            <br />
+            <strong className="text-text">{displayWorkerAssigned}</strong>
+          </div>
         </div>
       </div>
 
@@ -363,8 +375,19 @@ const ActiveBatchCard = ({ batch }) => {
             size="sm"
             onClick={() => advanceMutation.mutate()}
             loading={advanceMutation.isPending}
+            disable={advanceMutation.isPending}
           >
             Advance → {nextStepLabel}
+          </Button>
+        )}
+        {/* {(displayWorkerAssigned === 0 && batch.status !== "ALLOCATING") && ( */}
+        {batch.status !== "ALLOCATING" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {navigate('/work-force')}}
+          >
+            Assign Worker
           </Button>
         )}
         {batch.status === "ALLOCATING" && (
@@ -390,6 +413,7 @@ const ActiveBatchCard = ({ batch }) => {
         batch={batch}
         isOpen={isAllocateModalOpen}
         orders={matchingOrders}
+        isSaving={manualAllocateMutation.isPending}
         onClose={() => setIsAllocateModalOpen(false)}
         onConfirm={(allocations) => {
           const items = Object.entries(allocations)

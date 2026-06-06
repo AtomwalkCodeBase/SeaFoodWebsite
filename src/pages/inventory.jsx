@@ -8,24 +8,9 @@ import StatsCard from "../components/StatsCard";
 import Card from "../components/Card";
 import DataTable, { Td } from "../components/Datatable";
 
-import {
-  FaBoxes,
-  FaSnowflake,
-  FaExclamationTriangle,
-  FaMoneyBillWave,
-} from "react-icons/fa";
+import { FaBoxes, FaSnowflake, FaExclamationTriangle, FaMoneyBillWave,} from "react-icons/fa";
 
-
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  ReferenceLine,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine,} from "recharts";
 import { getInventoryProjection, getInventoryStatus } from "../services/productServices";
 import { SectionHeader } from "../components/EmptyState";
 import { useInventoryCategory } from "../hooks/useProductQueries";
@@ -45,20 +30,8 @@ const StatsGrid = styled.div`
   }
 `;
 
-const inventoryColumns = [
-  "GRADE",
-  "SPECIES",
-  "IN STOCK",
-  "COMMITTED",
-  "AVAILABLE",
-  "REQUIRED",
-  "SHORTFALL",
-  "PURCHASE (15% buf)",
-  "EST. COST",
-  "ORDERS",
-];
+const inventoryColumns = [ "GRADE", "SPECIES", "IN STOCK", "COMMITTED", "AVAILABLE", "REQUIRED", "SHORTFALL", "PURCHASE", "EST. COST", "ORDERS",];
 
-// ✅ Utility to handle 0 properly
 const formatValue = (val) =>
   val !== null && val !== undefined ? val : "-";
 
@@ -70,7 +43,7 @@ const Inventory = () => {
     error,
   } = useQuery({
     queryKey: ["inventory"],
-    queryFn: getInventoryStatus,
+    queryFn: () => getInventoryStatus(),
     select: (res) => {
       const payload = res?.data || res;
 

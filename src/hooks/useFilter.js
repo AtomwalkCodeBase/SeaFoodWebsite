@@ -46,6 +46,59 @@ const matchValue = (value, search) => {
     return false;
 };
 
+const parseDateValue = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value !== "string") return null;
+
+    const trimmed = value.trim();
+    const isoDate = new Date(trimmed);
+    if (!Number.isNaN(isoDate.getTime())) {
+        return isoDate;
+    }
+
+    const parts = trimmed.split(/[-/]/).map((part) => part.trim());
+    if (parts.length === 3) {
+        const [first, second, third] = parts;
+
+        const monthNames = {
+            jan: 0,
+            feb: 1,
+            mar: 2,
+            apr: 3,
+            may: 4,
+            jun: 5,
+            jul: 6,
+            aug: 7,
+            sep: 8,
+            oct: 9,
+            nov: 10,
+            dec: 11,
+        };
+
+        const yearFromFirst = /^[0-9]{4}$/.test(first);
+        const yearFromThird = /^[0-9]{4}$/.test(third);
+        const monthName = second.toLowerCase();
+
+        if (yearFromFirst && /^[0-9]{1,2}$/.test(second) && /^[0-9]{1,2}$/.test(third)) {
+            const date = new Date(Number(first), Number(second) - 1, Number(third));
+            return Number.isNaN(date.getTime()) ? null : date;
+        }
+
+        if (yearFromThird && /^[0-9]{1,2}$/.test(first) && /^[0-9]{1,2}$/.test(second)) {
+            const date = new Date(Number(third), Number(second) - 1, Number(first));
+            return Number.isNaN(date.getTime()) ? null : date;
+        }
+
+        if (yearFromThird && monthNames[monthName] != null && /^[0-9]{1,2}$/.test(first)) {
+            const date = new Date(Number(third), monthNames[monthName], Number(first));
+            return Number.isNaN(date.getTime()) ? null : date;
+        }
+    }
+
+    return null;
+};
+
 export const useFilter = ({ data = [], fields = [], search = "", extraFilters = {} }) => {
     return useMemo(() => {
         return data.filter((item) => {
@@ -61,10 +114,14 @@ export const useFilter = ({ data = [], fields = [], search = "", extraFilters = 
 
                 // Date Range Filter
                 if (key === "dateRange" && filterValue?.field) {
-                    const itemDate = new Date(getNestedValue(item, filterValue.field)[0]);
-                    const fromDate = filterValue.from ? new Date(filterValue.from) : null;
-                    const toDate = filterValue.to ? new Date(filterValue.to) : null;
+                    const rawDate = getNestedValue(item, filterValue.field)[0];
+                    const itemDate = parseDateValue(rawDate);
+                    const fromDate = parseDateValue(filterValue.from);
+                    const toDate = parseDateValue(filterValue.to);
 
+                    if ((fromDate || toDate) && (!itemDate || Number.isNaN(itemDate.getTime()))) {
+                        return false;
+                    }
                     if (fromDate && itemDate < fromDate) return false;
                     if (toDate && itemDate > toDate) return false;
                     return true;

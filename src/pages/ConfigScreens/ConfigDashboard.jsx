@@ -1,14 +1,14 @@
 import React, { useState } from "react"
 import styled from "styled-components"
 
-import { INIT_SUPPLIERS } from "./data/suppliers"
-import Card from "../components/Card"
-import Layout from "../components/Layout"
-import YieldConfigScreen from "./YieldConfigScreen"
-import MachineCapacityScreen from "./MachineCapacityScreen"
-import CapacityConfigScreen from "./Capacityconfigscreen "
-import SpeciesGradesPanel from "./SpeciesGradesPanel"
-import Tabs from "../components/Tabs"
+import { INIT_SUPPLIERS } from "../data/suppliers"
+import Card from "../../components/Card"
+import YieldConfigScreen from "./Screens/YieldConfigScreen"
+import MachineCapacityScreen from "./Screens/MachineCapacityScreen"
+import CapacityConfigScreen from "./Screens/Capacityconfigscreen "
+import SpeciesGradesPanel from "./Screens/SpeciesGradesPanel"
+import Tabs from "../../components/Tabs"
+import Layout from "../../components/Layout"
 
 const PageContent = styled.div`
   display: flex;

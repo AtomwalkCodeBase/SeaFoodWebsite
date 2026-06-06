@@ -8,7 +8,6 @@ import { ThemeProvider } from "./context/ThemeContext";
 // Auth & Protected Routes
 import { AuthProvider } from "./context/AuthContext";
 import PurchaseRequisitionScreen from "./pages/PurchaseRequisitionScreen";
-import SupplierDashboard from "./pages/SupplierDashboard";
 import QC_Screen from "./pages/QcScreen";
 import QCManager from "./pages/QCManagerScreen";
 import QCView from "./components/Modal/QCView";
@@ -24,14 +23,10 @@ import UserLogin from "./pages/UserLogin";
 import PrawnProductionPlanner from "./pages/Referance Screen/prawn-production-planning";
 import Orders from "./pages/Referance Screen/orders";
 import ConfigDashboardV3 from "./pages/Referance Screen/config-dashboard-v3";
-import ConfigDashboard from "./pages/ConfigDashboard";
 import OrdersScreen from "./pages/OrdersScreen";
 import PlanGenerator from "./pages/Referance Screen/plan-generator-v3";
 import InventoryScreen from "./pages/InventoryScreen";
 import CapacityPlanning from "./pages/CapacityPlanning";
-import DaliyProductionPlan from "./pages/DaliyProductionPlan";
-import BatchScreen from "./pages/BatchScreen";
-// import UnifiedPlanGenerator from "../unified-plan-generator-v3";
 import DailyProductionPlanInner from "./pages/Dailyproductionplan ";
 import ProductionPlannerV4 from "./pages/Referance Screen/production-planner-v4";
 import Inventory from "./pages/inventory";
@@ -41,9 +36,11 @@ import ProcurementManagerScreen from "./pages/Procurement Module/ProcurementMana
 import WorkForceAllocation from "./pages/Production Module/WorkForceAllocation";
 import ProcurementPlanning from "./pages/Procurement Module/ProcurementPlanning";
 import ProductionPipelineDashboard from "./pages/Production Module/ProductionPipelineDashboard";
-import PostGradingScreen from "./pages/Production Module/PostGradingScreen";
 import WorkforceScreen from "./pages/Production Module/WorkForceAllocation";
 import OrderFulfillmentScreen from "./pages/OrderFulfilmentScreen";
+import DailyProductionPlanning from "./pages/Production Module/DailyProductionPlanning";
+import ConfigDashboard from "./pages/ConfigScreens/ConfigDashboard";
+import SupplierDashboard from "./pages/ConfigScreens/Screens/SupplierDashboard";
 
 
 function App() {
@@ -61,8 +58,6 @@ function App() {
                  <Route path="/order" element={<Orders />} />
                  {/* <Route path="/inventorys" element={<InventoryScreen />} /> */}
                  <Route path="/plan-generator" element={<PlanGenerator />} />
-                 <Route path="/production-plan" element={<DaliyProductionPlan />} />
-                 <Route path="/batch" element={<BatchScreen />} />
                  <Route path="/new" element={<UnifiedPlanGenerator />} />
 
                 <Route
@@ -75,7 +70,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route path="/capacity" element={<CapacityPlanning />} />
+                  <Route path="/production-capacity" element={<CapacityPlanning />} />
                     <Route path="/production-plan2" element={<DailyProductionPlanInner />} />
                  <Route path="/inventory" element={<Inventory />} />
                   <Route path="/orders" element={<OrdersScreen />} />
@@ -92,7 +87,7 @@ function App() {
                   <Route path="/work-force" element={<WorkforceScreen />} />
                   <Route path="/procurement-plan" element={<ProcurementPlanning />} />
                   <Route path="/unsorted-material" element={<ProductionPipelineDashboard />} />
-                  <Route path="/batch-planning" element={<PostGradingScreen />} />
+                  <Route path="/batch-planning" element={<DailyProductionPlanning />} />
                   <Route path="/order-fulfillment" element={<OrderFulfillmentScreen />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>

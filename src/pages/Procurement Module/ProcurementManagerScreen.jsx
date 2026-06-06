@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import Layout from '../../components/Layout'
 import styled from 'styled-components';
 import { theme } from '../../styles/Theme';
-import { useAddGRN, useCustomers, useGetBaseUnitList, useGRNList, usePOItemList, useProduct, useSpecies } from '../../hooks/useProductQueries';
+import { useAddGRN, useCustomers, useGetBaseUnitList, useGrades, useGRNList, usePOItemList, useProduct, useSpecies } from '../../hooks/useProductQueries';
 import StatsCard from '../../components/StatsCard';
 import { FiPackage } from 'react-icons/fi';
 import { MdFilterAltOff, MdOutlineWaterDrop } from 'react-icons/md';
@@ -27,7 +27,7 @@ import { useFilter } from '../../hooks/useFilter';
 import Button from '../../components/Button';
 import { Badge, EmptyState, InfoRow } from '../../components/EmptyState';
 import InputField from '../../components/InputField';
-import DataTable, { Td } from '../../components/Datatable';
+import DataTable, { Td } from '@/components/DataTable';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import { toast } from 'react-toastify';
 import { useFormHandler } from '../../hooks/useFormHandler';
@@ -210,7 +210,7 @@ const filteredGrnList = useFilter({
     // { key: "PLAN", label: "Procurement Plan" },
     { key: "PR", label: "Purchase Request" },
     { key: "PO", label: "Purchase Order" },
-    { key: "GRN", label: "GRN List" },
+    { key: "GRN", label: "Grading Batch List" },
   ]
 
   return (
@@ -441,10 +441,10 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
 
   const filteredPoList = useFilter({
       data: po, fields: [ "po_ref_number", "supplier_ref_number", "supplier_name", "po_items[].po_item.name", "po_items[].po_item.item_number"],
-    search: filters.search, extraFilters: { dateRange: { from: filters.fromDate, to: filters.toDate, field: "po_date",},},
+    search: filters.search, extraFilters: { dateRange: { field: "po_date", from: filters.fromDate, to: filters.toDate},},
   })
 
-  const {paginatedData, totalItems, currentPage, handlePageChange} = usePagination(filteredPoList, 10)
+  const {paginatedData, totalItems, itemsPerPage, currentPage, handlePageChange} = usePagination(filteredPoList, 10)
  
   return (
     <>
@@ -487,18 +487,18 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
     <DataTable
     columns={purchase_column}
     data={paginatedData}
-    emptyMessage=""
     isLoading={isLoading}
+    rowAction={(data) => setExpandedRow((prev) => prev === data.id ? null : data.id )}
     renderRow={(data) => (
       <>
-      <Td className="cursor-pointer" onClick={() =>  setExpandedRow((prev) => prev === data.id ? null : data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td>
+      <Td>{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td>
       <Td>{data.po_ref_number}</Td>
       <Td>{data.supplier_name}</Td>
       <Td>{data.po_items.length}</Td>
       <Td>{data.po_date}</Td>
       <Td>{data.tax_amount}</Td>
       <Td>{formatNumber(data.total)}</Td>
-      <Td>{(activeTab === "PR" && data.po_status !== "D") && <Button onClick={() => isOpenGrnModal(data)}>Create GRN</Button>}</Td>
+      <Td>{activeTab === "PR" && <Button disabled={data.po_status === "D"} variant={data.po_status === "D" ? "outline" : "primary"} size='sm' onClick={(e) => {e.stopPropagation(); isOpenGrnModal(data)}}>{ data.po_status !== "D" ? "Create GRN" : "GRN Created"}</Button>}</Td>
       </>
     )}
     expandedRow={expandedRow}
@@ -558,7 +558,7 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
   )}
 />
 
-<PaginationComponent totalItems={totalItems} currentPage={currentPage} onPageChange={handlePageChange} />
+<PaginationComponent totalItems={totalItems} itemsPerPage = {itemsPerPage} currentPage={currentPage} onPageChange={handlePageChange} />
 </>
   );
 }
@@ -566,7 +566,20 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
 const GRN_CARDS = ( {grn, isLoading }) => {
   const [expandedRow, setExpandedRow] = useState(null);
 
-  const columns = ["","GRN Reference", "ERP Batch", "Location", "Supplier", "Total Received (MT)", "Status"];
+  const { data: gradeList = [], isLoading: gradesLoading } = useGrades();
+  const { data: SpeciesList = [], isLoading: speciesLoading } = useSpecies();
+
+  const getSpeciesGradeLabel = ( speciesList, gradeList, speciesConfigId) => {
+    const foundGrade = gradeList.find((grade) => grade.id === speciesConfigId);
+      if (!foundGrade) return "--";
+
+      const foundSpecies = speciesList.find((species) => species.id === foundGrade.species_config);
+      if (!foundSpecies) return "--";
+
+      return `${foundSpecies.scientific_name} (${foundGrade.grade_code})`;
+  };
+
+  const columns = ["","GRN Reference", "Batch", "Location", "Supplier", "Total Received (MT)", "Status"];
 
   const handleRowClick = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
@@ -574,16 +587,19 @@ const GRN_CARDS = ( {grn, isLoading }) => {
 
   const gradeColumns = ["Grade Code", "Grade Config", "Quantity (MT)", "Percentage of Total", "Unit Price (MT)", "Line Value"];
 
+  const {paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange} = usePagination(grn, 10)
+
   return (
     <>
     <DataTable
       columns={columns}
-      data={grn}
+      data={paginatedData}
       emptyMessage=""
       isLoading={isLoading}
+      rowAction={(data) => handleRowClick(data.id)}
       renderRow={(data) => (
         <>
-        <Td className="cursor-pointer" onClick={() => handleRowClick(data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td>
+        <Td>{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td>
           <Td className="font-medium" >{data.grn_reference || "--"}</Td>
           <Td>{data.erp_batch || "--"}</Td>
           <Td>{data.storage_location || "--"}</Td>
@@ -600,9 +616,11 @@ const GRN_CARDS = ( {grn, isLoading }) => {
       renderExpandedRow={(data) => {
         if (data.status !== "COMPLETED") {
           return (
+            <Card hoverable={false}>
             <div className="p-4 text-center text-text-light">
               Grading not completed yet
             </div>
+            </Card>
           );
         }
 
@@ -610,9 +628,11 @@ const GRN_CARDS = ( {grn, isLoading }) => {
         
         if (gradeLines.length === 0) {
           return (
+            <Card hoverable={false}>
             <div className="p-4 text-center text-text-light">
               No grade lines available
             </div>
+            </Card>
           );
         }
 
@@ -633,7 +653,7 @@ const GRN_CARDS = ( {grn, isLoading }) => {
                 {gradeLines.map((grade, idx) => (
                   <tr key={idx} className="border-b border-border/50">
                     <td className="p-2">{grade.grade_code || "--"}</td>
-                    <td className="p-2">{grade.grade_config || "--"}</td>
+                    <td className="p-2">{getSpeciesGradeLabel(SpeciesList, gradeList, grade.grade_config)}</td>
                     <td className="p-2">{grade.quantity_mt || "--"} MT</td>
                     <td className="p-2">{grade.percentage_of_total || "--"}%</td>
                     <td className="p-2">
@@ -658,7 +678,7 @@ const GRN_CARDS = ( {grn, isLoading }) => {
       emptyMessage="No GRN Found"
       isLoading={false}
     />
-
+<PaginationComponent totalItems={totalItems} itemsPerPage = {itemsPerPage} currentPage={currentPage} onPageChange={handlePageChange}/>
     </>
   );
 };

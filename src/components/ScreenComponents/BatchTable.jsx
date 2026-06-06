@@ -23,7 +23,7 @@ const Table = styled.table`
 export const BatchTable = ({ data, setIsModalOpen, role }) => {
   const navigate = useNavigate();
 
-  console.log("data", data)
+  // console.log("data", data)
   return (
     <Card hoverable={true}>
       <Table>

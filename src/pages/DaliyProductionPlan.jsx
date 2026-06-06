@@ -297,9 +297,7 @@ const RecommendedBatches = ({
 
     try {
 
-      console.log(payload);
-
-      // await ApprovePlanningBatches(payload);
+      await ApprovePlanningBatches(payload);
       toast.success(`Successfully created ${payload.batches.length} production batches!`);
 
     } catch (err) {

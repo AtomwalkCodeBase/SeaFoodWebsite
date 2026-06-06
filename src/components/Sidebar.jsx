@@ -545,7 +545,7 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
       
       { path: "/configuration", name: "Configuration", icon: <FaGear /> },
       { path: "/orders", name: "Orders Management", icon: <BsBoxSeamFill /> },
-      { path: "/capacity", name: "Production Planner", icon: <IoBarChart />},
+      { path: "/production-capacity", name: "Production Planning", icon: <IoBarChart />},
       { path: "/inventory", name: "Inventory", icon: <FaBoxes />},
       // { path: "/production-plan2", name: "Daily Production Plan", icon: <BsFillCalendar2RangeFill />},
       { path: "/procurement-screen", name: "Procurement Dashboard", icon: <FaTruckLoading />},

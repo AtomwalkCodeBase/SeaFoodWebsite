@@ -121,7 +121,7 @@ function BatchCard({ batch }) {
     return PROCESS_STEPS; // fallback
   }, [processActivities]);
   
-  console.log("matchingOrders", matchingOrders)
+  // console.log("matchingOrders", matchingOrders)
   
   useEffect(() => {
     if (batch.status === "SCHEDULED") {

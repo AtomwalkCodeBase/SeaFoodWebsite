@@ -74,7 +74,16 @@ const ProductionPipelineDashboard = () => {
   
   const filteredPoList = useFilter({
     data: combinationData, fields: ["poItem.po_ref_number", "poItem.po_items[].po_item.name", "poItem.supplier_name", "poItem.po_items[].po_item.item_number", "poItem.supplier_ref_number", "poItem.grn_detail.grn_number"],
-    search: filters.search, extraFilters: { "grnItem?.status": filters.status, "poItem.po_items[0].po_item.item_number": filters.item_number, dateRange: { field: "poItem.grn_detail?.grn_date", from: filters.fromDate, to: filters.toDate, }, },
+    search: filters.search,
+    extraFilters: {
+      "grnItem.status": filters.status,
+      "poItem.po_items[].po_item.item_number": filters.item_number,
+      dateRange: {
+        field: "poItem.grn_detail.grn_date",
+        from: filters.fromDate,
+        to: filters.toDate,
+      },
+    },
   })
   
     const {paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange} = usePagination(filteredPoList, 10);
@@ -224,13 +233,13 @@ const ProductionPipelineDashboard = () => {
             { !data?.grnItem && 
             <Button size='sm' onClick={() => setStartGradingData(data?.poItem)}><FaFlask />Start Grading</Button>
             }
+                <Button size='sm' onClick={() => console.log(data)}><FaClipboardCheck />QC View</Button>
              {data?.grnItem?.grade_lines.length === 0 ?
             <Button size='sm' onClick={() => setSegregationData({ grnItem: data?.grnItem, poItem: data?.poItem})}><FaLayerGroup /> Grade Segregation </Button> 
               : <Button size='sm' onClick={() => setSegregationDataView(data.grnItem)}>
                 <FaEye className="mr-1" /> View Grades
               </Button>
             }
-            <Button size='sm' onClick={() => console.log(data)}><FaClipboardCheck />QC View</Button>
 
           
       

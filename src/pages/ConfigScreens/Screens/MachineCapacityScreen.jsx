@@ -1,14 +1,14 @@
 import { RiAlertFill } from "react-icons/ri";
 import { GiFactory } from "react-icons/gi";
-import { AddMachineCapacity, EditMachineCapacity, getMachineCapacity, getProcessActivityList } from "../services/productServices";
+import { AddMachineCapacity, EditMachineCapacity, getMachineCapacity, getProcessActivityList } from "../../../services/productServices";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import ConfirmPopup from "../components/ConfirmPopup";
-import Button from "../components/Button";
-import { SectionHeader } from "../components/EmptyState";
-import InputField from "../components/InputField";
-import Modal from "../components/Modal";
-import { handleApiError } from "../utils";
+import ConfirmPopup from "../../../components/ConfirmPopup";
+import Button from "../../../components/Button";
+import { SectionHeader } from "../../../components/EmptyState";
+import InputField from "../../../components/InputField";
+import Modal from "../../../components/Modal";
+import { handleApiError } from "../../../utils";
 import { FaRegRectangleList } from "react-icons/fa6";
 import { MdOutlineListAlt } from "react-icons/md";
 
@@ -285,7 +285,7 @@ const mappedMachines =  machines.map((m) => {
     rawCap: parseFloat(m.raw_capacity_mt_per_day || m.rawCap || 0),
     count: m.machine_count || m.count,
     downtime: parseFloat(m.downtime_percentage || m.downtime || 0),
-    netCap: parseFloat(m.net_capacity_mt_per_day || m.netCap || 0),
+    netCap: parseFloat(m.net_capacity_mt_per_day || m.netCap || 0).toPrecision(4),
     isBottleneck: false,
     products: relatedActivities.map((a) => a.activity_name),
     equipmentId: m.equipment || null // needed for add

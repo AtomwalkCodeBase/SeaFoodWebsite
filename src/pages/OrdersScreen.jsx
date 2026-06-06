@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 
 import Layout from '../components/Layout';
 import styled from 'styled-components';
@@ -14,8 +14,8 @@ import ConfirmPopup from '../components/ConfirmPopup';
 
 import { ORDERS_CUSTOMER_TIER, ORDERS_PRIORITY_OPTIONS } from '../constants'
 
-import { FaEye, FaIndustry, FaMoneyBillWave, FaPen, FaPlus } from 'react-icons/fa'
-import { BsBoxSeam, BsBoxSeamFill, BsGraphUpArrow } from 'react-icons/bs'
+import { FaCheckCircle, FaEye, FaMoneyBillWave, FaPen, FaPlus } from 'react-icons/fa'
+import { BsBoxSeamFill, BsGraphUpArrow } from 'react-icons/bs'
 import { usePagination } from '../hooks/usePagination'
 import { Bar, BarChart, Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { SectionHeader } from '../components/EmptyState';
@@ -241,7 +241,7 @@ const OrdersScreen = () => {
 
 const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "ALL", product: "ALL", grade: "ALL"});
 
-  const { data: customerList = [], isLoading: customersLoading } = useCustomers({}, isModalOpen);
+  const { data: customerList = [], isLoading: customersLoading } = useCustomers({is_supplier: "N"}, isModalOpen);
   const { data: productList = [], isLoading: productsLoading } = useProduct();
   const { data: gradeList = [], isLoading: gradesLoading } = useGrades();
   const { data: SpeciesList = [], isLoading: speciesLoading } = useSpecies();
@@ -318,19 +318,27 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "A
   const saveDisabled = !isOrderFormValid(form);
 
   const totalDemand = orderList.reduce((sum, order) => sum + parseFloat(order.quantity_mt || 0), 0);
+  const totalRevenue = orderList.reduce((sum, order) => {
+    const qty = parseFloat(order.quantity_mt || 0);
+    const price = parseFloat(order.selling_price_per_mt || 0);
+    return sum + qty * price;
+  }, 0);
+  const revenueDisplay = `₹${formatNumber(totalRevenue.toFixed(2))}`;
 
-  const aggregateData = () => {
-    const map = new Map();
-    orderList.forEach(item => {
-      const name = item.product_name;
-      const qty = parseFloat(item.quantity_mt) || 0;
-      map.set(name, (map.get(name) || 0) + qty);
-    });
+  const data = useMemo(() => {
+  const map = new Map();
+  orderList.forEach(item => {
+    const name = item.product_name;
+    const qty = parseFloat(item.quantity_mt) || 0;
+    map.set(name, (map.get(name) || 0) + qty);
+  });
 
-    return Array.from(map.entries()).map(([product_name, total_mt]) => ({ product_name, total_mt })).sort((a, b) => b.total_mt - a.total_mt);
-  };
+  return Array.from(map.entries())
+    .map(([product_name, total_mt]) => ({ product_name, total_mt }))
+    .sort((a, b) => b.total_mt - a.total_mt);
+}, [orderList]); // Only depends on orderList
 
-  const data = aggregateData();
+  // const data = aggregateData();
 
   const gradesOptions = gradeList.map((gradeItem) => {
     const foundSpecies = SpeciesList.find((species) => species.id === gradeItem.species_config);
@@ -349,13 +357,7 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "A
 
   const selectedProductBaseUnit = productList.find((product) => product.id === Number(form.product))?.base_unit || "MT";
 
-  const metrics = [
-    { label: "ACTIVE ORDERS", value: orderList.length, color: "primary", icon: <BsBoxSeamFill /> },
-    { label: "TOTAL DEMAND", value: `${totalDemand.toFixed(2)} MT`, color: "success", icon: <BsGraphUpArrow /> },
-    { label: "RM REQUIRED", value: "34.78 MT", color: "warning", icon: <FaIndustry /> },
-    { label: "Revenue Pipeline", value: "₹1,97,66,000", color: "info", icon: <FaMoneyBillWave /> },
-  ]
-
+  
   const updatedOrderList = orderList?.map((item) => {
   let order_status = "NOT_STARTED";
 
@@ -371,6 +373,15 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "A
     order_status,
   };
 });
+
+const completedOrders = updatedOrderList.filter((order) => order.order_status === "COMPLETED" )
+
+const metrics = [
+  { label: "ACTIVE ORDERS", value: orderList.length, color: "primary", icon: <BsBoxSeamFill /> },
+  { label: "TOTAL DEMAND", value: `${totalDemand.toFixed(2)} MT`, color: "warning", icon: <BsGraphUpArrow /> },
+  { label: "ORDER COMPLETED", value: completedOrders.length, color: "info", icon: <FaCheckCircle /> },
+  { label: "REVENUE PIPELINE", value: revenueDisplay, color: "success", icon: <FaMoneyBillWave /> },
+]
 
   const orderFilteredData = useFilter({
     data: updatedOrderList, fields: [ "erp_order_reference", "customer_name", "product_name", "destination_country"],
@@ -513,7 +524,7 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "A
                 <Button size='sm' iconOnly={true} title="View" variant='outline' onClick={() => {setSelectedOrder(order) ;setShowOrderDetails(true)} }><FaEye/></Button>
 
                 {canShowEditForOrder(order) && (
-                  <Button type="button" iconOnly={true} size="sm" variant="secondary" onClick={() => openEditOrderModal(order)}>
+                  <Button type="button" iconOnly={true} size="sm" variant="secondary" title="Edit" onClick={() => openEditOrderModal(order)}>
                     <FaPen />
                   </Button>
                 )}

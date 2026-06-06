@@ -33,7 +33,7 @@ const Modal = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
       <div 
         className={`bg-card w-full ${width} rounded-2xl shadow-2xl border border-border p-4 flex flex-col max-h-[95vh]`}
         onClick={(e) => e.stopPropagation()}
@@ -58,7 +58,7 @@ const Modal = ({
 
         {/* Footer */}
         {(showSaveButton || cancelButtonText) && (
-          <div className="mt-4 flex justify-end gap-3 flex-shrink-0">
+          <div className="mt-4 flex justify-end gap-3 shrink-0">
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-xl border border-border text-text font-semibold hover:bg-backgroundAlt transition-colors text-sm"

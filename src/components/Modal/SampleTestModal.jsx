@@ -341,7 +341,7 @@ export const SampleTestModal = ({ isOpen, onClose }) => {
         }
       };
 
-      console.log('Payload being sent:', payload);
+      // console.log('Payload being sent:', payload);
       const response = await postProcessQCallocation(payload);
       // const response = {
       //   status: 200,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useProcurementPlan } from '../../hooks/useProductQueries'
+import { useProcurementPlan, useSpecies } from '../../hooks/useProductQueries'
 import DataTable, { Td } from '../../components/Datatable';
 import Button from '../../components/Button';
 import { FaEye } from 'react-icons/fa';
@@ -50,10 +50,18 @@ const ProcurementPlanning = () => {
   const [search, setSearch] = useState("")
   const [procurmentUrgencyStatus, setprocurmentUrgencyStatus] = useState("ALL");
   const {data: PlanList, isLoading: PlanLoading} = useProcurementPlan();
+    const { data: SpeciesList = [], isLoading: speciesLoading } = useSpecies();
 
   const planningFiletredData = useFilter({data: PlanList,fields: [
     "order_reference","customer","product_name", "supplier_options[].supplier_name"
   ],search,  extraFilters: {procurement_urgency: procurmentUrgencyStatus,}, })
+
+    const getSpeciesGradeLabel = ( speciesList, speciesConfigId) => {
+      const foundSpecies = speciesList.find((species) => species.item_category === speciesConfigId);
+      if (!foundSpecies) return "--";
+
+      return `${foundSpecies.scientific_name}`;
+  };
 
   const {currentPage, paginatedData, totalItems, handlePageChange, itemsPerPage } = usePagination(planningFiletredData, 10)
   return (
@@ -97,7 +105,8 @@ const ProcurementPlanning = () => {
         <Td>{data.order_reference}</Td>
         <Td>{data.customer}</Td>
         <Td>{data.product_name}</Td>
-        <Td>{data.species}({data.grade})</Td>
+        {/* <Td>{data.species}({data.grade})</Td> */}
+        <Td>{`${getSpeciesGradeLabel(SpeciesList, Number(data.species))}(${data.grade})`}</Td>
         <Td>{data.order_qty_mt}</Td>
         <Td>{data.in_progress_mt}</Td>
         <Td>{data.delivery_date}</Td>

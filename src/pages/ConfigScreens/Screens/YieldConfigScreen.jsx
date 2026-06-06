@@ -1,27 +1,30 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {  useQueryClient } from "@tanstack/react-query";
-import { AddYieldConfig, UpdateYieldConfig } from "../services/productServices";
+
+import { getChangedFields, useFormHandler } from "@/hooks/useFormHandler";
+import { useAllYieldConfig, useProcessActivityList, useProduct, useYieldConfig } from "@/hooks/useProductQueries";
+import { AddYieldConfig, UpdateYieldConfig } from '@/services/productServices';
+
 import { toast } from "react-toastify";
-import ConfirmPopup from "../components/ConfirmPopup";
-import Badge from "../components/Badge";
-import Button from "../components/Button";
 import { FaPlus } from "react-icons/fa";
-import { SectionHeader } from "../components/EmptyState";
 import { HiOutlinePencilAlt } from "react-icons/hi";
-import Modal from "../components/Modal";
-import { getChangedFields, useFormHandler } from "../hooks/useFormHandler";
-import InputField from "../components/InputField";
-import { handleApiError } from "../utils";
-import Card from "../components/Card";
-import { theme } from "../styles/Theme";
-import { useAllYieldConfig, useProcessActivityList, useProduct, useYieldConfig } from "../hooks/useProductQueries";
-import DataTable, { Td } from "../components/DataTable";
-import { QUERY_KEYS } from "../constants";
+
+import ConfirmPopup from "@/components/ConfirmPopup";
+import Badge from "../../../components/Badge";
+import Button from "@/components/Button";
+import { SectionHeader } from "@/components/EmptyState";
+import Modal from "@/components/Modal";
+import InputField from "@/components/InputField";
+import { handleApiError } from "@/utils";
+import Card from "@/components/Card";
+import { theme } from "@/styles/Theme";
+import DataTable, { Td } from "@/components/DataTable";
+import { QUERY_KEYS } from "@/constants";
 
 export default function YieldConfigScreen() {
   const queryClient = useQueryClient();
   const [selectedProductId, setSelectedProductId] = useState(null);
-  const [inputMT, setInputMT] = useState(10);
+  const [inputMT, setInputMT] = useState("10");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
@@ -167,7 +170,10 @@ export default function YieldConfigScreen() {
   }
 };
 
-const finalOutput = (inputMT * (yieldData?.total_yield_pct / 100)).toFixed(3);
+const parsedInputMT = parseFloat(inputMT);
+const effectiveInputMT = Number.isFinite(parsedInputMT) ? parsedInputMT : 0;
+
+const finalOutput = (effectiveInputMT * ((yieldData?.total_yield_pct || 0) / 100)).toFixed(3);
 
 const STATS_CARD_DATA = [
   {label: "Total Yield", value: `${yieldData?.total_yield_pct || 0}%` , colorClass: "text-warning"},
@@ -177,7 +183,7 @@ const STATS_CARD_DATA = [
 ]
 
 const steps = mergedYieldData?.steps || [];
-let runningInput = inputMT;
+let runningInput = effectiveInputMT;
 
 const processedSteps = [];
 steps.forEach((step) => {
@@ -194,10 +200,14 @@ steps.forEach((step) => {
   runningInput = outputQty;
 });
 
+const selectedProduct = productsData?.find((product) => product.id === selectedProductId);
+const titleProductCode = yieldData?.product_code || selectedProduct?.product_code || "";
+const titleProductName = yieldData?.product_name || selectedProduct?.product_name || "";
+
 const flow = [
   {
     label: "RAW",
-    val: `${inputMT.toFixed(2)} MT`,
+    val: `${effectiveInputMT.toFixed(2)} MT`,
   },
 
   ...processedSteps.map((step) => ({
@@ -217,7 +227,7 @@ const flow = [
       processedSteps[
         processedSteps.length - 1
       ]?.outputQty?.toFixed(2) ||
-      inputMT.toFixed(2)
+      effectiveInputMT.toFixed(2)
     } MT`,
   },
 ];
@@ -254,7 +264,10 @@ const flow = [
                  value={inputMT}
                  min={1}
                  max={9999}
-                 onChange={(e) => setInputMT(Math.max(1, parseFloat(e.target.value) || 1))}
+                 onChange={(e) => {
+                   const nextValue = e.target.value;
+                   setInputMT(nextValue === "" ? "" : nextValue);
+                 }}
               />
                <span className="text-sm text-textLight font-medium">MT</span>
              </div>
@@ -263,7 +276,7 @@ const flow = [
 
          <Card style={{border: `1px solid ${theme.colors.border}`}} hoverable={false}>
            <div className="flex justify-between items-center border-b border-border mb-2">
-             <SectionHeader icon="🔗" title={`${yieldData?.product_code} — ${yieldData?.product_name}`}  border={false}/>
+             <SectionHeader icon="🔗" title={`${titleProductCode} — ${titleProductName}`} border={false}/>
              {(() => {const yieldActivityIds = new Set(
                 steps?.map(s => String(s.process_activity_id).trim())
               );
@@ -316,7 +329,7 @@ const flow = [
 
          <div className="flex gap-4 flex-wrap">
            <SectionCard className="flex-[2] min-w-[300px] border-l-4 border-l-primary">
-             <SectionHeader icon="📦" title="Material Flow" subtitle={`${inputMT} MT input → ${finalOutput} MT output`}/>
+             <SectionHeader icon="📦" title="Material Flow" subtitle={`${effectiveInputMT} MT input → ${finalOutput} MT output`}/>
              <div className="p-6 flex flex-wrap gap-3 items-center">
                {flow.map((node, i) => (
                  <FlowNode key={i} node={node} isLast={i === flow.length - 1} />

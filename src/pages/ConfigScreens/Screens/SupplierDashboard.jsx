@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components';
 import { FaPlus, FaRegCalendarAlt } from 'react-icons/fa';
 import { IoCalendarNumberOutline } from 'react-icons/io5';
-import PurchaseOrderModal from '../components/Modal/PurchaseOrderModal';
-import Card from '../components/Card';
-import { POCardItem } from '../components/ScreenComponents/POCardItem';
-import { EmptyState } from '../components/EmptyState';
-import Button from '../components/Button';
-import Layout from '../components/Layout';
+import PurchaseOrderModal from '../../../components/Modal/PurchaseOrderModal';
+import Card from '../../../components/Card';
+import { POCardItem } from '../../../components/ScreenComponents/POCardItem';
+import { EmptyState } from '../../../components/EmptyState';
+import Button from '../../../components/Button';
+import Layout from '../../../components/Layout';
 
 const Paragraphdata = styled.p`
   color: ${({ theme }) => theme.colors.textLight};

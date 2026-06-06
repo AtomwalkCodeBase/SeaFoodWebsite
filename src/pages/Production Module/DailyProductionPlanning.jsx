@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Layout from '../../components/Layout'
 import Card from '../../components/Card'
 import DataTable, { Td } from '../../components/Datatable'
@@ -14,7 +14,8 @@ import RecommendedBatch from './Componenets/RecommenedBatch'
 import Button from '../../components/Button'
 import styled from 'styled-components'
 import { FaPlus } from 'react-icons/fa'
-import BatchScreen from '../BatchScreen'
+import BatchScreen from './Componenets/BatchScreen'
+import { theme } from '../../styles/Theme'
 
 const SubtitleSection = styled.div`
   display: flex;
@@ -73,12 +74,14 @@ const getBatchOverrides = (includedSelections = []) =>
   });
 
 
-const PostGradingScreen = () => {
+const DailyProductionPlanning = () => {
     const [ activeTab, setActiveTab ] = useState("plan");
     const [planEnabled,    setPlanEnabled]    = useState(false);
     const [selectedDate,   setSelectedDate]   = useState(() => new Date().toISOString().split("T")[0]);
     const [deferredOrders, setDeferredOrders] = useState(new Set());
     const [batchState,     setBatchState]     = useState([]);
+    const [shouldScrollRecommended, setShouldScrollRecommended] = useState(false);
+    const recommendedBatchRef = useRef(null);
 
 
     const { data: inventoryCategoryList = [], isLoading: inventoryCategoryLoading } = useInventoryCategory();
@@ -128,6 +131,7 @@ const handleGeneratePlan = useCallback(() => {
   const overrides = getBatchOverrides(includedSelections);
 
   setPlanEnabled(true);
+  setShouldScrollRecommended(true);
 
   // If user has already generated once and changed recommended batches,
   // regenerate using POST /planning/engine/generate with batch_overrides.
@@ -158,6 +162,13 @@ useEffect(() => {
   }
 }, [planEnabled, selectedDate, deferredOrders, refetchRecommendedBatches]);
 
+useEffect(() => {
+  if (shouldScrollRecommended && recommendedBatchRef.current) {
+    recommendedBatchRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setShouldScrollRecommended(false);
+  }
+}, [shouldScrollRecommended, recommendedBatches]);
+
 const handleApprove = useCallback(() => {
   const recommendedList = recommendedBatches?.recommended_batches || [];
   const includedSelections = getIncludedSelections(batchState, recommendedList);
@@ -184,6 +195,16 @@ const handleApprove = useCallback(() => {
 
   // Mode 1: fully automatic
   approvePlan({ date: selectedDate });
+
+  // console.log("data1", { date: selectedDate, batch_overrides: overrides })
+  // console.log("data2",{
+  //     date: selectedDate,
+  //     exclude_orders: Array.from(deferredOrders),
+  //   })
+  setTimeout(() => {
+    setActiveTab("batch")
+  }, 1000);
+
 }, [batchState, recommendedBatches, selectedDate, approvePlan, deferredOrders]);
 
       const gradedStockData = (inventoryStatusList?.grades || []).map(
@@ -195,7 +216,7 @@ const handleApprove = useCallback(() => {
       return {
         grade: item.grade_code,
         species: matchedSpecies?.name || "Unknown",
-        quantityMt: item.available_mt,
+        quantityMt: item.in_stock_mt,
         requiredMt: item.required_mt,
         shortfallMt: item.shortfall_mt,
         committedMt: item.committed_mt,
@@ -291,16 +312,18 @@ const handleApprove = useCallback(() => {
         <PaginationComponent totalItems={totalItems} onPageChange={handlePageChange} currentPage={currentPage} />
         </Card>
 
-        {(recommendedBatches || recommendedBatchesLoading) && (
-        <RecommendedBatch
-          data={recommendedBatches || {}}
-          loading={recommendedBatchesLoading || approving}
-          batchState={batchState}
-          setBatchState={setBatchState}
-          onApprove={handleApprove}
-          onDefer={handleDefer}
-          selectedDate={selectedDate}
-        />
+        {(Object.keys(recommendedBatches).length !== 0 || recommendedBatchesLoading) && (
+        <Card title="Recommended Plan" ref={recommendedBatchRef} style= {{border: `1px solid ${theme.colors.primaryLight}`}}>
+          <RecommendedBatch
+            data={recommendedBatches || {}}
+            loading={recommendedBatchesLoading || approving}
+            batchState={batchState}
+            setBatchState={setBatchState}
+            onApprove={handleApprove}
+            onDefer={handleDefer}
+            selectedDate={selectedDate}
+          />
+        </Card>
       )}
       </>
     : <BatchScreen />
@@ -312,7 +335,7 @@ const handleApprove = useCallback(() => {
   )
 }
 
-export default PostGradingScreen
+export default DailyProductionPlanning
 
 function ScoreBar({ score }) {
   const color = score >= 75 ? 'bg-error' : score >= 60 ? 'bg-warning' : 'bg-text-light';

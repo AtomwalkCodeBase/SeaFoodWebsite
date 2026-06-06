@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { AddPlanningConfig, EditPlanningConfig, getPlanningConfig } from "../services/productServices";
+import { useState, useEffect } from "react";
+import { AddPlanningConfig, EditPlanningConfig, getPlanningConfig } from "../../../services/productServices";
 import { toast } from "react-toastify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Button from "../components/Button";
+import Button from "../../../components/Button";
 import { FiEdit2, FiPlus } from "react-icons/fi";
-import { useFormHandler } from "../hooks/useFormHandler";
-import Modal from "../components/Modal";
-import InputField from "../components/InputField";
-import Card from "../components/Card";
+import { useFormHandler } from "../../../hooks/useFormHandler";
+import Modal from "../../../components/Modal";
+import InputField from "../../../components/InputField";
+import Card from "../../../components/Card";
 import { AiOutlineSetting } from "react-icons/ai";
 import { GiTargeting } from "react-icons/gi";
 
@@ -223,7 +223,7 @@ if (error) {
           <div className="flex gap-3 flex-wrap">
             <KpiCard label="Effective Capacity"  value={`${effectiveCap} MT/d`} valueClass="text-success" />
             <KpiCard label="Daily Output (Est.)" value={`${dailyOutput} MT/d`}  valueClass="text-secondary" />
-            <KpiCard label="Annual (300d)"        value={`${annualMT} MT`}       valueClass="text-warning" />
+            <KpiCard label="Annual"        value={`${annualMT} MT`}       valueClass="text-warning" />
             <KpiCard label="Revenue Est."         value={`₹${revenueCr} Cr`}    valueClass="text-primary" />
           </div>
           <div className="flex gap-2">
@@ -242,7 +242,7 @@ if (error) {
           <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             <ReadField label="Machine capacity" value={config.machine_capacity_mt} unit="MT/d" />
             <ReadField label="OEE %" value={config.oee_percentage} unit="%" />
-            <ReadField label="Effective cap." value={effectiveCap} unit="MT/d" />
+            {/* <ReadField label="Effective cap." value={effectiveCap} unit="MT/d" /> */}
             <ReadField label="Shift hours" value={config.shift_hours} unit="hrs" />
             <ReadField label="Shifts/day" value={config.shifts_per_day} />
             <ReadField label="Cold storage" value={config.cold_storage_capacity_mt} unit="MT" />
@@ -326,7 +326,14 @@ if (error) {
   }
 
 const ConfigModal = ({ open, onClose, onSubmit, initial, mode }) => {
-  const { form, handleChange, resetForm } = useFormHandler(initial ?? EMPTY_FORM);
+  const { form, handleChange, resetForm, setForm } = useFormHandler(initial ?? EMPTY_FORM);
+
+  // Sync form with initial data whenever modal opens or initial changes
+  useEffect(() => {
+    if (open && initial) {
+      setForm(initial);
+    }
+  }, [open, initial, setForm]);
 
   const weightSum = (
     +form.priority_weight_urgency +
@@ -342,9 +349,9 @@ const ConfigModal = ({ open, onClose, onSubmit, initial, mode }) => {
             <form className="space-y-6">
             <Section title="Capacity Parameters">
               <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+            {mode !== "edit" &&  <div className="col-span-2">
                 <InputField label="Planning Config Name" name="label" type="text" value={form.label} onChange={handleChange} required={true} />
-              </div>
+              </div>}
 
               {/* <div className="space-y-6"> */}
 

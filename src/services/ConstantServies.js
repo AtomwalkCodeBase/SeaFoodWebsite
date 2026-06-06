@@ -16,7 +16,7 @@ export const resetPasswordURL = `${endpoint}/reset_password/${db_name}/`;
 export const resetPasswordConfirmURL = `${endpoint}/reset_password_confirm/`;
 export const changePasswordURL = `${endpoint}/change_password/`;
 
-export const getCustomerListURL = `${endpoint}/customer_list/${db_name}/`;
+export const getCustomerListURL = `${hrendpoint}/customer_list/${db_name}/`;
 export const getCustomerDetailListURL = `${endpoint}/customer_detail_list/${db_name}/`;
 
 export const profileInfoURL = `${endpoint}/profile_info/${db_name}/`;

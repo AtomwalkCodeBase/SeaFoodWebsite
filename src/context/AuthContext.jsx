@@ -65,10 +65,8 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (userData) => {
-    console.log("Login function called with:", userData);
     try {
       const isMobileNumber = /^\d{10}$/.test(userData.mobile);
-      console.log("Is mobile number:", isMobileNumber);
 
       const payload = isMobileNumber
         ? {
@@ -99,7 +97,6 @@ export const AuthProvider = ({ children }) => {
         setCurrentUser(userData);
         toast.success("Login successful!");
         
-        console.log("Tokens stored, fetching profile...");
         // Fetch profile to determine redirect
         try {
           const profileRes = await getEmployeeInfo();

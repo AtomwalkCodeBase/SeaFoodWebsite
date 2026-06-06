@@ -117,7 +117,7 @@ const QC_Screen = () => {
     const location = useLocation();
     const { state } = location || {};
     
-    console.log(state)
+    // console.log(state)
 
     const handleBack = () => setCurrentStep((s) => Math.max(s - 1, 1));
     const handleStepClick = (step) => setCurrentStep(step);
