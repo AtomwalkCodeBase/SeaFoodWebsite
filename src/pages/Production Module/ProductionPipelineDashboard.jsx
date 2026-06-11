@@ -26,6 +26,7 @@ import { usePagination } from '../../hooks/usePagination'
 import PaginationComponent from '../../components/Pagination'
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
 import GradeSegregationViewModal from './Modal/GradeSegregationViewModal'
+import RMQCModal from '../../components/Modal/QCModal'
 
 const PIPELINE_COLUMNS = [ "Purchase Ref.",  "GRN Number", "Species", "Received(MT)", "Graded(MT)", "Waste(MT)", "Status", "Action"];
 
@@ -48,6 +49,7 @@ const ProductionPipelineDashboard = () => {
   const [startGradingData, setStartGradingData] = useState(null);
   const [segregationData, setSegregationData] = useState(null);
   const [segregationDataView, setSegregationDataView] = useState(null);
+  const [isQcModalOpen, setIsQcModalOpen] = useState(false)
 
   const {data: PoItemList, isLoading: poItemListIsLoading, error: poItemListError} = usePOItemList({po_type: "R"});
   const {data: grnList, isLoading: grnLoading, error: grnError} = useGRNList();
@@ -233,7 +235,7 @@ const ProductionPipelineDashboard = () => {
             { !data?.grnItem && 
             <Button size='sm' onClick={() => setStartGradingData(data?.poItem)}><FaFlask />Start Grading</Button>
             }
-                <Button size='sm' onClick={() => console.log(data)}><FaClipboardCheck />QC View</Button>
+                <Button size='sm' onClick={() => setIsQcModalOpen(true)}><FaClipboardCheck />QC View</Button>
              {data?.grnItem?.grade_lines.length === 0 ?
             <Button size='sm' onClick={() => setSegregationData({ grnItem: data?.grnItem, poItem: data?.poItem})}><FaLayerGroup /> Grade Segregation </Button> 
               : <Button size='sm' onClick={() => setSegregationDataView(data.grnItem)}>
@@ -332,6 +334,57 @@ const ProductionPipelineDashboard = () => {
         isOpen={!!segregationDataView}
         onClose={() => setSegregationDataView(null)}
         grnItem={segregationDataView} />
+
+        <RMQCModal
+  isOpen={isQcModalOpen}
+  onClose={() => setIsQcModalOpen(false)}
+  data={{
+    rm_name: "Black Tiger Shrimp",
+    rm_code: "RM-BT-0042",
+    vessel_no: "VN-2026-009",
+    samples: [
+      {
+        sample_id: "SMP-001",
+        overall_status: "pass",
+        qc_inspector: "Arjun Das",
+        qc_manager: "Priya Nair",
+        start_time: "08:15 AM",
+        end_time: "08:45 AM",
+        parameters: {
+          size:        { value: "Uniform",  status: "pass" },
+          smell:       { value: "Fresh",    status: "pass" },
+          appearance:  { value: "Bright",   status: "pass" },
+          temperature: { value: "2.4°C",    status: "pass" },
+          ice_condition:{ value: "Good",    status: "pass" },
+        },
+        grades: [
+          { grade: "Black Tiger (20/25)", count: 10 },
+          { grade: "Black Tiger (26/30)", count: 5  },
+          { grade: "Black Tiger (15/20)", count: 8  },
+        ],
+      },
+      {
+        sample_id: "SMP-002",
+        overall_status: "fail",
+        qc_inspector: "Meena Roy",
+        qc_manager: "Priya Nair",
+        start_time: "09:10 AM",
+        end_time: "09:35 AM",
+        parameters: {
+          size:        { value: "Mixed",    status: "fail" },
+          smell:       { value: "Mild Off", status: "fail" },
+          appearance:  { value: "Dull",     status: "fail" },
+          temperature: { value: "5.8°C",    status: "fail" },
+          ice_condition:{ value: "Melting", status: "fail" },
+        },
+        grades: [
+          { grade: "Black Tiger (26/30)", count: 12 },
+          { grade: "Black Tiger (30/40)", count: 6  },
+        ],
+      },
+    ],
+  }}
+/>
     </Layout>
   )
 }

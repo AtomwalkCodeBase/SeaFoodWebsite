@@ -29,19 +29,23 @@ import {
   FaClipboardList,
   FaBoxes,
   FaTruckLoading,
+  FaChartLine,
+  FaTruck,
 } from "react-icons/fa"
-import { SiGooglecalendar } from "react-icons/si"
+import { SiGooglecalendar, SiGooglecontaineroptimizedos } from "react-icons/si"
 import { PiListPlusFill } from "react-icons/pi"
 import { ImUserTie } from "react-icons/im";
 import { useAuth } from "../context/AuthContext"
 import { useTheme } from "../context/ThemeContext"
 import { IoBarChart, IoTicket } from "react-icons/io5"
-import { RiDashboardFill, RiNodeTree } from "react-icons/ri"
+import { RiDashboardFill, RiNodeTree, RiShoppingCartLine } from "react-icons/ri"
 import { LuClipboardList } from "react-icons/lu"
-import { BsBoxSeamFill, BsFillCalendar2RangeFill } from "react-icons/bs"
+import { BsBoxSeamFill, BsFillCalendar2RangeFill, BsTruck } from "react-icons/bs"
 import { FaGear } from "react-icons/fa6"
 import { HiUserGroup } from "react-icons/hi"
-import { MdInventory } from "react-icons/md"
+import { MdInventory, MdProductionQuantityLimits } from "react-icons/md"
+import { GiCargoShip, GiForkKnifeSpoon } from "react-icons/gi"
+import { AiFillProduct } from "react-icons/ai"
 const SidebarContainer = styled.div`
   width: ${(props) => {
     const { isOpen, uiPreferences } = props
@@ -499,11 +503,42 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
   // Grouped menu items structure
   const menuGroups =  [
       {
-        name: "Customer Portal",
-        icon: <FaUserCircle />,
+        name: "Sales",
+        icon: <FaChartLine />,
         items: [
-          { path: "/dashboard", name: "Retainer Dashboard", icon: <FaHome /> },
-          // { path: "/finance_user", name: "Approve Dashboard", icon: <FaHome /> },
+          { path: "/orders", name: "Orders Management", icon: <BsBoxSeamFill /> },
+          { path: "/order-fulfillment", name: "Orders Fulfillment", icon: <FaTruck /> },
+        ],
+      },
+      {
+        name: "Procurement",
+        icon: <RiShoppingCartLine />,
+        items: [
+          { path: "/purchase-requisition", name: "Purchase Requisition", icon: <FaClipboardList />},
+          { path: "/procurement-plan", name: "Procurement Plan", icon: <SiGooglecontaineroptimizedos />},
+          { path: "/procurement-screen", name: "Procurement Dashboard", icon: <FaTruckLoading />},
+        ],
+      },
+      {
+        name: "Production",
+        icon: <AiFillProduct />,
+        items: [
+          { path: "/unsorted-material", name: "Intake Dashboard", icon: <MdInventory />},
+          { path: "/batch-planning", name: "Batch Planning", icon: <RiNodeTree />},
+        ],
+      },
+      {
+        name: "Operations",
+        icon: <FaUsers />,
+        items: [
+          { path: "/work-force", name: "Work Force", icon: <HiUserGroup />},
+        ],
+      },
+      {
+        name: "Administration",
+        icon: <FaGear />,
+        items: [
+          { path: "/configuration", name: "Configuration", icon: <FaGear /> },
         ],
       },
     ]
