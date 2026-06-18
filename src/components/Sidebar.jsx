@@ -525,6 +525,7 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
         items: [
           { path: "/unsorted-material", name: "Intake Dashboard", icon: <MdInventory />},
           { path: "/batch-planning", name: "Batch Planning", icon: <RiNodeTree />},
+          { path: "/inventory", name: "Inventory", icon: <FaBoxes />},
         ],
       },
       {
