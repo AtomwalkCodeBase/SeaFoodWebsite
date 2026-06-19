@@ -82,7 +82,13 @@ const IconContainer = styled.div`
     background: ${props.theme.colors.error}22;
     color: ${props.theme.colors.error};
   `}
-
+  
+  ${(props) =>
+    props.color === "allocatingBlue" &&
+    `
+    background: ${props.theme.colors.allocatingBlueLight};
+    color: ${props.theme.colors.allocatingBlue};
+  `}
   ${(props) =>
     props.color === "info" &&
     `

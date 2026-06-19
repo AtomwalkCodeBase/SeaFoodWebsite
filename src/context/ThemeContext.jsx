@@ -14,6 +14,8 @@ const baseThemes = {
       secondaryLight: "#4ECDC4",
       accent: "#7EE8E0",
       accentLight: "#E4F3F8",
+      allocatingBlue: "#0096FF",
+      allocatingBlueLight: "#E6F4FF",
       success: "#00C853",
       warning: "#FFD600",
       error: "#FF3D00",

@@ -250,22 +250,32 @@ export const useGetRecommendedBatch = (enabled = true, params = {}) => {
 };
 
 //CURD API
-export const useCreateOrder = (handleCloseModal) => {
+export const useCreateOrder = (
+  handleCloseModal,
+  onOrderCreated
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: AddNewOrder,
 
-    onSuccess: async () => {
+    onSuccess: async (_, variables) => {
       toast.success("Order added successfully!");
 
-     await Promise.all([
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS],}),
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS_BY_DESTINATION],}),
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.ORDERS],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.ORDERS_BY_DESTINATION],
+        }),
       ]);
+
+      onOrderCreated?.(variables);
 
       handleCloseModal?.();
     },
+
     onError: handleApiError,
   });
 };

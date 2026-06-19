@@ -35,7 +35,7 @@ const Subtitle = styled.p`
 `;
 
 const INVENTORY_COLUMN = ["GRADE", "AVAILABLE (MT)", "REQUIRED (MT)", "SHORTFALL (MT)", "COMMITTED (MT)"]
-const orderColumns = [ 'ORDER ID', 'CUSTOMER', 'PRODUCT', 'Grade', 'Required', 'DAYS LEFT', 'Stock', 'PRIORITY', 'Score'];
+const orderColumns = [ 'ORDER ID', 'CUSTOMER', 'PRODUCT', 'GRADE', 'REQUIRED', 'DAYS LEFT', 'STOCK', 'PRIORITY', 'SCORE','ACTION' ];
 
 const variantMap = new Map([
   ["critical", "error"],
@@ -261,6 +261,7 @@ const handleApprove = useCallback(() => {
         <Card title="Garde wise Inventory">
             <DataTable columns={INVENTORY_COLUMN}
             data={gradedStockData}
+            highlightFirstRow={true}
             renderRow={(data) => (
                 <>
                 <Td>
@@ -279,6 +280,7 @@ const handleApprove = useCallback(() => {
             <DataTable
           columns={orderColumns}
           data={paginatedData}
+          highlightFirstRow={false}
           isLoading={ordersLoading}
           emptyMessage="No orders found"
           renderRow={(item) => {

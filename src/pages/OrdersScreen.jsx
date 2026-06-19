@@ -240,7 +240,12 @@ const OrdersScreen = () => {
   const isEditMode = editingOrderId != null;
 
 const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "ALL", product: "ALL", grade: "ALL"});
-
+const handleOrderCreated = (orderData) => {
+  setFilters(prev => ({
+    ...prev,
+    search: orderData.customer_name,
+  }));
+};
   const { data: customerList = [], isLoading: customersLoading } = useCustomers({is_supplier: "N"}, isModalOpen);
   const { data: productList = [], isLoading: productsLoading } = useProduct();
   const { data: gradeList = [], isLoading: gradesLoading } = useGrades();
@@ -297,7 +302,7 @@ const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "A
     setEditingOrderId(null);
   };
 
-  const createOrderMutation = useCreateOrder(handleCloseModal);
+  const createOrderMutation = useCreateOrder(handleCloseModal, handleOrderCreated);
   const updateOrderMutation = useUpdateOrder(handleCloseModal);
 
   const openAddOrderModal = () => {
@@ -382,9 +387,13 @@ const metrics = [
   { label: "ORDER COMPLETED", value: completedOrders.length, color: "info", icon: <FaCheckCircle /> },
   { label: "REVENUE PIPELINE", value: revenueDisplay, color: "success", icon: <FaMoneyBillWave /> },
 ]
-
+const sortedOrders = useMemo(() => {
+  return [...updatedOrderList].sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  );
+}, [updatedOrderList]);
   const orderFilteredData = useFilter({
-    data: updatedOrderList, fields: [ "erp_order_reference", "customer_name", "product_name", "destination_country"],
+    data: sortedOrders, fields: [ "erp_order_reference", "customer_name", "product_name", "destination_country"],
     search: filters.search,
     extraFilters: {
       priority_override: filters.priority,
@@ -484,14 +493,31 @@ const metrics = [
         <DataTable
           columns={orderColumns}
           data={paginatedData}
+          highlightFirstRow={true}
           isLoading={ordersLoading}
           emptyMessage="No orders found"
-          renderRow={(order) => {
+          renderRow={(order, index) => {
             const order_status = orderStatus(order.order_status)
             return(
             <>
               {/* <Td>{order.erp_order_reference}</Td> */}
-              <Td>{order.customer_name}<br/><Badge2 label={order.erp_order_reference} variant='grn' /></Td>
+              <Td>{order.customer_name}
+              {index === 0 && (
+                <span
+                    style={{
+                      marginLeft: "6px",
+                      padding: "2px 6px",
+                      background: "#3B82F6",
+                      color: "#fff",
+                      borderRadius: "4px",
+                      fontSize: "10px"
+                    }}
+                  >
+                    NEW
+                  </span>
+                )}  
+              <br/>
+              <Badge2 label={order.erp_order_reference} variant='grn' /></Td>
               <Td>{order.product_name}</Td>
               <Td>{getSpeciesGradeLabel(SpeciesList, gradeList, order.grade_config)}</Td>
               <Td>{order.quantity_mt}</Td>
@@ -613,7 +639,7 @@ const metrics = [
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <InputField
-                    label="Invoice Number"
+                    label="Sales Order"
                     name="erp_order_reference"
                     type="text"
                     value={form.erp_order_reference}

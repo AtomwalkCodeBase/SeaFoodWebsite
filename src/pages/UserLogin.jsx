@@ -627,7 +627,7 @@ export default function UserLogin() {
               Login <FiArrowRight />
             </SignInBtn>
 
-            <FormFooter>© 2025 OceanHarvest Systems. All rights reserved.</FormFooter>
+            <FormFooter>© Atomwalk seafood ERP. All rights reserved.</FormFooter>
           </Right>
         </Card>
       </Page>

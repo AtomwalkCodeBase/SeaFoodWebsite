@@ -100,6 +100,7 @@ const ProcurementPlanning = () => {
       <DataTable
       columns={column}
       data={paginatedData}
+      highlightFirstRow={true}
       renderRow={(data) => (
         <>
         <Td>{data.order_reference}</Td>

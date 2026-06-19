@@ -50,6 +50,8 @@ const BatchGrid = styled.div`
 `;
 
 const TimelineBar = styled.div`
+  flex: 1;
+  min-width: 0;
   height: 8px;
   background: #1f2937;
   border-radius: 9999px;
@@ -94,9 +96,9 @@ const BatchScreen = () => {
 
   const STATUS_CARD = [
     { label: "TOTAL BATCHES", value: stats.total, icon: <BsListOl />, color: "primary" },
-    { label: "IN PROGRESS", value: stats.inProgress ,icon: <FaClockRotateLeft />, color: "secondary" },
-    { label: "SCHEDULED", value: stats.scheduled ,icon: <TbCalendarClock /> , color: "accent" },
-    { label: "ALLOCATING", value: stats.allocating, icon: <LuPackageCheck />, color: "success" },
+    { label: "IN PROGRESS", value: stats.inProgress ,icon: <FaClockRotateLeft />, color: "warning" },
+    { label: "SCHEDULED", value: stats.scheduled ,icon: <TbCalendarClock /> , color: "error" },
+    { label: "ALLOCATING", value: stats.allocating, icon: <LuPackageCheck />, color: "allocatingBlue" },
     { label: "COMPLETED", value: stats.completed, icon: <LuPackageCheck />, color: "success" },
   ];
 
@@ -165,30 +167,33 @@ const BatchTimeline = ({ batch }) => {
     [];
   const totalSteps = dynamicSteps.length || 1;
   const progressPct = Math.min((completedSteps.length / totalSteps) * 100, 100);
-  const statusVariant = batch.status === "IN_PROGRESS" ? "warning" : batch.status === "COMPLETED" ? "success" : batch.status === "SCHEDULED" ? "notPlanned" : batch.status === "CANCELLED" ? "error" : "info" ;
+  const statusVariant = batch.status === "IN_PROGRESS" ? "warning" : batch.status === "COMPLETED" ? "success" : batch.status === "SCHEDULED" ? "error" : batch.status === "CANCELLED" ? "error" : "info" ;
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="w-56">
+    <div className="flex items-start gap-4">
+      <div className="w-58 shrink-0">
         <div className="font-mono font-semibold text-primary">{batch.batch_number}</div>
         <div className="text-xs text-text-light">
           {batch.product_code} {batch.grade_code}
         </div>
       </div>
 
-      <div className="flex-1">
-        <TimelineBar>
-          <TimelineFill
-            width={progressPct}
-            color={batch.status === "IN_PROGRESS" ? `${theme.colors.warning}` : batch.status === "COMPLETED" ? `${theme.colors.success}` : batch.status === "SCHEDULED" ? "#666666" : batch.status === "CANCELLED" ? `${theme.colors.error}` : `${theme.colors.info}`}
-          />
-        </TimelineBar>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3">
+          <TimelineBar>
+            <TimelineFill
+              width={progressPct}
+              color={batch.status === "IN_PROGRESS" ? `${theme.colors.warning}` : batch.status === "COMPLETED" ? `${theme.colors.success}` : batch.status === "SCHEDULED" ? "#666666" : batch.status === "CANCELLED" ? `${theme.colors.error}` : `${theme.colors.info}`}
+            />
+          </TimelineBar>
+          <Badge variant={statusVariant} className="shrink-0 whitespace-nowrap">
+            {String(batch.status || "").replace("_", " ")}
+          </Badge>
+        </div>
         <div className="text-[11px] text-text-light mt-1">
           {completedSteps.length}/{totalSteps} steps completed
         </div>
       </div>
-
-      <Badge variant={statusVariant}>{String(batch.status || "").replace("_", " ")}</Badge>
     </div>
   );
 };

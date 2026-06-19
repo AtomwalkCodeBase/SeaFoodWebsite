@@ -487,6 +487,7 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
     <DataTable
     columns={purchase_column}
     data={paginatedData}
+    highlightFirstRow={false}
     isLoading={isLoading}
     rowAction={(data) => setExpandedRow((prev) => prev === data.id ? null : data.id )}
     renderRow={(data) => (
@@ -594,7 +595,7 @@ const GRN_CARDS = ( {grn, isLoading }) => {
     <DataTable
       columns={columns}
       data={paginatedData}
-      emptyMessage=""
+      highlightFirstRow={false}
       isLoading={isLoading}
       rowAction={(data) => handleRowClick(data.id)}
       renderRow={(data) => (
@@ -676,7 +677,6 @@ const GRN_CARDS = ( {grn, isLoading }) => {
         );
       }}
       emptyMessage="No GRN Found"
-      isLoading={false}
     />
 <PaginationComponent totalItems={totalItems} itemsPerPage = {itemsPerPage} currentPage={currentPage} onPageChange={handlePageChange}/>
     </>
