@@ -9,11 +9,11 @@ import {
   FaCalendarAlt,
   FaCalendarCheck,
   FaFileAlt,
-  FaMoneyBillWave,
+  FaTachometerAlt,
   FaBars,
   FaTimes,
   FaSignOutAlt,
-  FaTicketAlt,
+  FaRunning ,
   FaUserCircle,
   FaComments,
   FaGift,
@@ -31,6 +31,7 @@ import {
   FaTruckLoading,
   FaChartLine,
   FaTruck,
+  FaUser,
 } from "react-icons/fa"
 import { SiGooglecalendar, SiGooglecontaineroptimizedos } from "react-icons/si"
 import { PiListPlusFill } from "react-icons/pi"
@@ -517,6 +518,9 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
           { path: "/purchase-requisition", name: "Purchase Requisition", icon: <FaClipboardList />},
           { path: "/procurement-plan", name: "Procurement Plan", icon: <SiGooglecontaineroptimizedos />},
           { path: "/procurement-screen", name: "Procurement Dashboard", icon: <FaTruckLoading />},
+          { path: "/supplier", name: "Supplier", icon: <FaUser />},
+        
+          
         ],
       },
       {
@@ -540,6 +544,9 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
         icon: <FaGear />,
         items: [
           { path: "/configuration", name: "Configuration", icon: <FaGear /> },
+          { path: "/dashboard", name: "Dashboard", icon: <FaTachometerAlt /> },
+          { path: "/current-active", name: "CurrentActive", icon: <FaRunning  /> },
+
         ],
       },
     ]

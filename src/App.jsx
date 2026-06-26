@@ -41,6 +41,9 @@ import OrderFulfillmentScreen from "./pages/OrderFulfilmentScreen";
 import DailyProductionPlanning from "./pages/Production Module/DailyProductionPlanning";
 import ConfigDashboard from "./pages/ConfigScreens/ConfigDashboard";
 import SupplierDashboard from "./pages/ConfigScreens/Screens/SupplierDashboard";
+import Supplier from "./pages/Supplier";
+import Dashboard from "./pages/Dashboard";
+import CurrentActive from "./pages/CurrentActive";
 
 
 function App() {
@@ -90,6 +93,9 @@ function App() {
                   <Route path="/batch-planning" element={<DailyProductionPlanning />} />
                   <Route path="/order-fulfillment" element={<OrderFulfillmentScreen />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/supplier" element={<Supplier />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/current-active" element={<CurrentActive />} />
                 </Route>
 
                 {/* Catch All */}

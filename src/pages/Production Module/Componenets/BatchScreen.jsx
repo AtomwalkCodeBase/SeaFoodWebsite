@@ -67,7 +67,7 @@ const TimelineFill = styled.div`
 
 const DEFAULT_STEPS = ["Cleaning", "Cooking", "Glazing", "Packing"];
 
-const BatchScreen = () => {
+const BatchScreen = ({ hideActionButtons = false }) => {
   const { data: batchList = [], isLoading } = useQuery({
     queryKey: ["batches"],
     queryFn: () => getBatchList(),
@@ -76,9 +76,7 @@ const BatchScreen = () => {
   });
   const activeSubBatches = useMemo(
     () =>
-      batchList.filter(
-        (batch) => batch.batch_type === "SUB_BATCH" && batch.status !== "COMPLETED"
-      ),
+      batchList.filter((batch) =>batch.status !== "COMPLETED"),
     [batchList]
   );
 
@@ -139,7 +137,7 @@ const BatchScreen = () => {
         ) : activeSubBatches.length === 0 ? (
           <EmptyState message="No active batches found." />
         ) : (
-          activeSubBatches.map((batch) => <ActiveBatchCard key={batch.id} batch={batch} />)
+          activeSubBatches.map((batch) => <ActiveBatchCard key={batch.id} batch={batch} hideActionButtons={hideActionButtons} />)
         )}
       </BatchGrid>
 </Card>
@@ -198,7 +196,7 @@ const BatchTimeline = ({ batch }) => {
   );
 };
 
-const ActiveBatchCard = ({ batch }) => {
+const ActiveBatchCard = ({ batch, hideActionButtons }) => {
   const navigate = useNavigate()
   const qc = useQueryClient();
   const [isAllocateModalOpen, setIsAllocateModalOpen] = useState(false);
@@ -372,45 +370,54 @@ const ActiveBatchCard = ({ batch }) => {
           </div>
         </div>
       </div>
-
+    
       <div className="flex gap-2 flex-wrap">
-        {canAdvance && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => advanceMutation.mutate()}
-            loading={advanceMutation.isPending}
-            disable={advanceMutation.isPending}
-          >
-            Advance → {nextStepLabel}
-          </Button>
-        )}
-        {/* {(displayWorkerAssigned === 0 && batch.status !== "ALLOCATING") && ( */}
-        {batch.status !== "ALLOCATING" && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {navigate('/work-force')}}
-          >
-            Assign Worker
-          </Button>
-        )}
-        {batch.status === "ALLOCATING" && (
-          <>
-            <Button
-              variant="success"
-              size="sm"
-              onClick={() => autoAllocateMutation.mutate()}
-              loading={autoAllocateMutation.isPending}
-            >
-              Auto-allocate to order
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => setIsAllocateModalOpen(true)}>
-              Manual allocate
-            </Button>
-          </>
-        )}
-      </div>
+  {!hideActionButtons && canAdvance && (
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={() => advanceMutation.mutate()}
+      loading={advanceMutation.isPending}
+      disable={advanceMutation.isPending}
+    >
+      Advance → {nextStepLabel}
+    </Button>
+  )}
+
+  {!hideActionButtons && batch.status !== "ALLOCATING" && (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => navigate("/work-force")}
+    >
+      Assign Worker
+    </Button>
+  )}
+
+  {batch.status === "ALLOCATING" && (
+    <>
+      {!hideActionButtons && batch.status !== "ALLOCATING" && (
+      <Button
+        variant="success"
+        size="sm"
+        onClick={() => autoAllocateMutation.mutate()}
+        loading={autoAllocateMutation.isPending}
+      >
+        Auto-allocate to order
+      </Button>
+      )}
+        {!hideActionButtons && batch.status !== "ALLOCATING" && (
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => setIsAllocateModalOpen(true)}
+      >
+        Manual allocate
+      </Button>
+      )}
+    </>
+  )}
+</div>
     </div>
 
     {isAllocateModalOpen && (

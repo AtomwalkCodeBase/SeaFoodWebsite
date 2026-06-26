@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder } from "../services/productServices";
+import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder,getDashboardSummary,getActiveAlerts,getSupplierprofile } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -27,7 +27,34 @@ export const useCustomers = (params,enabled = true) => {
 	errorMessage: `${ErrorText} customer list`,
   });
 };
+export const useDashboardSummary = (enabled = true) => {
+  return useApiQuery({
+    queryKey: ["DASHBOARD_SUMMARY"],
+    queryFn: () => getDashboardSummary(),
+    select: (res) => res.data,
+    enabled,
+    errorMessage: `${ErrorText} dashboard summary`,
+  });
+};
 
+export const useActiveAlerts = (enabled = true) => {
+  return useApiQuery({
+    queryKey: ["ACTIVE_ALERTS"],
+    queryFn: () => getActiveAlerts(),
+    select: (res) => res.data,
+    enabled,
+    errorMessage: `${ErrorText} active alerts`,
+  });
+};
+export const useSupplierProfile = (enabled = true, id = null) => {
+  return useApiQuery({
+    queryKey: ["SUPPLIER_PROFILE", id],
+    queryFn: () => getSupplierprofile(null, id),
+    select: (res) => res.data,
+    enabled,
+    errorMessage: `${ErrorText} supplier profile`,
+  });
+};
 export const useProduct = (enabled = true) => {
   return useApiQuery({
     queryKey: [QUERY_KEYS.PRODUCTS],
