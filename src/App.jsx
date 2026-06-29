@@ -42,8 +42,8 @@ import DailyProductionPlanning from "./pages/Production Module/DailyProductionPl
 import ConfigDashboard from "./pages/ConfigScreens/ConfigDashboard";
 import SupplierDashboard from "./pages/ConfigScreens/Screens/SupplierDashboard";
 import Supplier from "./pages/Supplier";
-import Dashboard from "./pages/Dashboard";
-import CurrentActive from "./pages/CurrentActive";
+import Dashboard from "./pages/ConfigScreens/Dashboard";
+import CurrentActive from "./pages/ConfigScreens/CurrentActive";
 
 
 function App() {
@@ -95,6 +95,7 @@ function App() {
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/supplier" element={<Supplier />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/operations-monitor" element={<OrderFulfillmentScreen />} />
                   <Route path="/current-active" element={<CurrentActive />} />
                 </Route>
 

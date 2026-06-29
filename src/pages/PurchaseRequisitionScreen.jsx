@@ -165,8 +165,8 @@ const PurchaseRequisitionScreen = () => {
   const FetchPoItem = async () => {
     try {
       const response = await getPoItem();
-      setPoItemList(response.data);
-      // console.log(response.data); 
+      const filteredPRList = response?.data?.filter((data) => data.po_type === "R") || [];
+      setPoItemList(filteredPRList);
     } catch (error) {
       console.error(error)
     }

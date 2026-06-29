@@ -235,13 +235,18 @@ const ProductionPipelineDashboard = () => {
             { !data?.grnItem && 
             <Button size='sm' onClick={() => setStartGradingData(data?.poItem)}><FaFlask />Start Grading</Button>
             }
-                <Button size='sm' onClick={() => setIsQcModalOpen(true)}><FaClipboardCheck />QC View</Button>
-             {data?.grnItem?.grade_lines.length === 0 ?
-            <Button size='sm' onClick={() => setSegregationData({ grnItem: data?.grnItem, poItem: data?.poItem})}><FaLayerGroup /> Grade Segregation </Button> 
-              : <Button size='sm' onClick={() => setSegregationDataView(data.grnItem)}>
+               {status.label !== "Not assigned" && <Button size='sm' onClick={() => setIsQcModalOpen(true)}><FaClipboardCheck />QC View</Button>}
+            {status.label !== "Not assigned" && (
+            data?.grnItem?.grade_lines.length === 0 ? (
+              <Button size='sm' onClick={() => setSegregationData({ grnItem: data?.grnItem, poItem: data?.poItem })}>
+                <FaLayerGroup /> Grade Segregation
+              </Button>
+            ) : (
+              <Button size='sm' onClick={() => setSegregationDataView(data.grnItem)}>
                 <FaEye className="mr-1" /> View Grades
               </Button>
-            }
+            )
+          )}
 
           
       

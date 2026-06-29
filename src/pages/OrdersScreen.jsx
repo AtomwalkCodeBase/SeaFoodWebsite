@@ -27,6 +27,7 @@ import OrderDeatilsViewModal from '../components/Modal/OrderDeatilsViewModal';
 import { useFilter } from '../hooks/useFilter';
 import { MdFilterAltOff } from 'react-icons/md';
 import { formatNumber } from '../utils';
+import { isToday } from 'date-fns';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -406,6 +407,8 @@ const sortedOrders = useMemo(() => {
 
   const { paginatedData, currentPage, itemsPerPage, totalItems, handlePageChange, } = usePagination(orderFilteredData, 10)
 
+  const shouldHighlightFirstRow = paginatedData.length > 0 && isToday(paginatedData[0].created_at);
+
   const canShowEditForOrder = (order) => Number(order?.days_until_delivery) >= MIN_DAYS_FOR_ORDER_EDIT;
 
   return (
@@ -493,16 +496,17 @@ const sortedOrders = useMemo(() => {
         <DataTable
           columns={orderColumns}
           data={paginatedData}
-          highlightFirstRow={true}
+          highlightFirstRow={shouldHighlightFirstRow}
           isLoading={ordersLoading}
           emptyMessage="No orders found"
           renderRow={(order, index) => {
             const order_status = orderStatus(order.order_status)
+            const shouldHighlightFirstRow = order && isToday(order.created_at);
             return(
             <>
               {/* <Td>{order.erp_order_reference}</Td> */}
               <Td>{order.customer_name}
-              {index === 0 && (
+              {(index === 0 && shouldHighlightFirstRow) && (
                 <span
                     style={{
                       marginLeft: "6px",

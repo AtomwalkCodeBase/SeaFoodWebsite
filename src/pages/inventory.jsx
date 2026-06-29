@@ -127,13 +127,13 @@ const Inventory = () => {
     },
     {
       label: "COLD STORAGE",
-      value: `${inventoryData?.summary?.cold_storage_capacity_mt} MT`,
+      value: `${inventoryData?.summary?.cold_storage_capacity_mt || 0} MT`,
       color: "info",
       icon: <FaSnowflake />,
     },
     {
       label: "GRADES SHORT",
-      value: `${inventoryData?.summary?.total_shortfall_grades}`,
+      value: `${inventoryData?.summary?.total_shortfall_grades || 0}`,
       color: "error",
       icon: <FaExclamationTriangle />,
     },
@@ -145,15 +145,15 @@ const Inventory = () => {
     },
   ];
 
-  if (error) {
-    return (
-      <Layout title="Inventory Status">
-        <div className="text-red-500 p-4">
-          Failed to load inventory
-        </div>
-      </Layout>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <Layout title="Inventory Status">
+  //       <div className="text-red-500 p-4">
+  //         Failed to load inventory
+  //       </div>
+  //     </Layout>
+  //   );
+  // }
   
   const getSpeciesName = (speciesId) => {
     const data = inventoryCategoryList?.find((data) => data.id === Number(speciesId));

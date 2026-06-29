@@ -334,13 +334,14 @@ const Header = ({ sidebarWidth = "250px", onMobileMenuClick }) => {
   const handleLogoutConfirm = () => {
     setIsOpen(true)
   }
+
   return (
     <HeaderContainer sidebarWidth={sidebarWidth}>
       <div style={{ display: "flex", alignItems: "center" }}>
         {/* <MobileMenuButton onClick={onMobileMenuClick}>
           <FaBars />
         </MobileMenuButton> */}
-        <img src={profile.image} alt="Company Logo" style={{ width: "50px", height: "50px", borderRadius: "10px", marginRight: "10px", border: "0.2px solid #000" }} />
+        <img src={profile?.image} alt="Company Logo" style={{ width: "50px", height: "50px", borderRadius: "10px", marginRight: "10px", border: "0.2px solid #000" }} />
         {/* <SearchBar expanded={searchExpanded}>
           <FaSearch onClick={handleSearchClick} style={{ cursor: "pointer", color: `${theme.colors.textLight}` }} />
           <SearchInput

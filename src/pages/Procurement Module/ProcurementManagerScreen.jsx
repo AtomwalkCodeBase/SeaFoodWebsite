@@ -37,6 +37,8 @@ import ConfirmPopup from '../../components/ConfirmPopup';
 import { usePagination } from '../../hooks/usePagination';
 import PaginationComponent from '../../components/Pagination';
 import { formatNumber, formatToDDMMYYYY } from '../../utils';
+import { isToday } from 'date-fns';
+import { pushToTally } from '../hello';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -106,7 +108,6 @@ const ProcurementManagerScreen = () => {
   const baseUnitOption = baseUnitList?.filter((unit) => unit.unit_type === "W").map((data) => {
     return { id: data.id, value: data.id, label: data.name}
   } )
-
 
   const tabFilteredData = useFilter({
   data: POItemList,
@@ -445,6 +446,8 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
   })
 
   const {paginatedData, totalItems, itemsPerPage, currentPage, handlePageChange} = usePagination(filteredPoList, 10)
+
+  const shouldHighlightFirstRow = paginatedData.length > 0 && isToday(paginatedData[0].po_date);
  
   return (
     <>
@@ -487,7 +490,7 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
     <DataTable
     columns={purchase_column}
     data={paginatedData}
-    highlightFirstRow={false}
+    highlightFirstRow={shouldHighlightFirstRow}
     isLoading={isLoading}
     rowAction={(data) => setExpandedRow((prev) => prev === data.id ? null : data.id )}
     renderRow={(data) => (
@@ -555,6 +558,11 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
           ))}
         </tbody>
       </table>
+     {activeTab !== "PR" && <Button
+    onClick={() => pushToTally(data)}
+>
+    Push To Tally
+</Button>}
     </div>
   )}
 />

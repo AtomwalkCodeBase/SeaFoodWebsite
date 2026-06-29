@@ -49,7 +49,7 @@ export const useActiveAlerts = (enabled = true) => {
 export const useSupplierProfile = (enabled = true, id = null) => {
   return useApiQuery({
     queryKey: ["SUPPLIER_PROFILE", id],
-    queryFn: () => getSupplierprofile(null, id),
+    queryFn: () => getSupplierprofile(id),
     select: (res) => res.data,
     enabled,
     errorMessage: `${ErrorText} supplier profile`,

@@ -14,8 +14,8 @@ import RecommendedBatch from './Componenets/RecommenedBatch'
 import Button from '../../components/Button'
 import styled from 'styled-components'
 import { FaPlus } from 'react-icons/fa'
-import BatchScreen from './Componenets/BatchScreen'
 import { theme } from '../../styles/Theme'
+import BatchScreen from './BatchScreen'
 
 const SubtitleSection = styled.div`
   display: flex;
@@ -241,6 +241,7 @@ const handleApprove = useCallback(() => {
         <div>
           <Subtitle>Generate batches, monitor production activity, and track utilization.</Subtitle>
         </div>
+        {activeTab === "plan" && 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <input
             type="date"
@@ -248,13 +249,13 @@ const handleApprove = useCallback(() => {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="rounded-lg border border-border bg-inputBg px-3 py-2 text-sm text-text outline-none focus:border-primary"
           />
-          <Button onClick={handleGeneratePlan}>
+          <Button onClick={handleGeneratePlan} size='sm'>
             <FaPlus /> Generate Plan
           </Button>
-        </div>
+        </div>}
       </SubtitleSection>
 
-      <Card hoverable={false}>
+      <Card hoverable={false} className="mt-3">
         <Tabs tabs={TABS} activeTab={activeTab} setActiveTab={setActiveTab} />
 {activeTab === "plan" ?
 <>

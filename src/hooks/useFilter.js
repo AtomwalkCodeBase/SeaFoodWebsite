@@ -127,6 +127,15 @@ export const useFilter = ({ data = [], fields = [], search = "", extraFilters = 
                     return true;
                 }
 
+                if (key === "status" && filterValue === "NOT_ALLOCATED") {
+                    const values = getNestedValue(item, key);
+                    return values.some((val) => {
+                        if (val == null) return true;
+                        const normalized = String(val).toUpperCase();
+                        return !["ALLOCATING", "ALLOCATED"].includes(normalized);
+                    });
+                }
+
                 // Nested value filter (e.g., "grnItem.status")
                 const values = getNestedValue(item, key);
                 return values.some((val) => {
