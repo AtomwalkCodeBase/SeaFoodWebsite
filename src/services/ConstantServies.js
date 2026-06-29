@@ -27,6 +27,7 @@ export const setuserpin = `${endpoint}/set_user_pin/${db_name}/`;
 export const getCompany = `${endpoint}/get_applicable_site/`;
 export const forgetPin = `${newhrendpoint}/emp_forget_pin/`;
 export const customerslogin = `${hrendpoint}/customer_user_login/`;
+export const getEquipment = `${endpoint}/get_facility_list/${db_name}/`;
 //seaFood api
 export const getPoItemList = `${hrendpoint}/get_po_list/${db_name}/`;
 export const getInventoryItemList = `${hrendpoint}/inventory_item_list/${db_name}/`;

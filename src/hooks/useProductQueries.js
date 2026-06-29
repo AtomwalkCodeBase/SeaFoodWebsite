@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder,getDashboardSummary,getActiveAlerts,getSupplierprofile } from "../services/productServices";
+import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder,getDashboardSummary,getActiveAlerts,getSupplierprofile, getEquipmentList } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -59,6 +59,16 @@ export const useProduct = (enabled = true) => {
   return useApiQuery({
     queryKey: [QUERY_KEYS.PRODUCTS],
     queryFn: () => getProductList(),
+    select: (res) => res.data,
+    enabled,
+	onError: `${ErrorText} product list`,
+  });
+};
+
+export const useEquipmentList = (enabled = true) => {
+  return useApiQuery({
+    queryKey: [QUERY_KEYS.EQUIPMENT_LIST],
+    queryFn: () => getEquipmentList(),
     select: (res) => res.data,
     enabled,
 	onError: `${ErrorText} product list`,

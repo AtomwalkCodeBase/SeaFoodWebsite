@@ -1,4 +1,4 @@
-import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl, WorkForceCoverageUrl, WorkForceAssignUrl, WorkForceReleaseUrl, WorkForceAllocationUrl, CreateGRNUrl, GetBaseUnitListUrl, RecordGradesUrl, CreateBatchUrl, WorkForceAvailableUrl, ActiveAlertsUrl,DashboardSummaryUrl,Supplierprofile } from "../services/ConstantServies";
+import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl, WorkForceCoverageUrl, WorkForceAssignUrl, WorkForceReleaseUrl, WorkForceAllocationUrl, CreateGRNUrl, GetBaseUnitListUrl, RecordGradesUrl, CreateBatchUrl, WorkForceAvailableUrl, ActiveAlertsUrl,DashboardSummaryUrl,Supplierprofile, getEquipment } from "../services/ConstantServies";
 import { authAxios, authAxiosFilePost, authAxiosget, authAxiosPatch, authAxiosPost, authAxiosPut } from "./HttpMethod";
 
 export function getDashboardSummary(data) {
@@ -77,6 +77,9 @@ export function postProcessQCallocation(res) {
 }
 export function getProductList(data) {
   return authAxios(getProductListUrl, data);
+}
+export function getEquipmentList(data) {
+  return authAxios(getEquipment, data);
 }
 export function getProcessActivityList(data) {
   return authAxios(getProcessActivityListUrl, data);

@@ -274,7 +274,18 @@ const AddSpeciesModal = ({ showForm, setShowForm,mode,  initial, queryClient, })
     export_certifications: "",
   }
 
-  const { form, handleChange, resetForm } = useFormHandler(initial || NEW_SPECIES_EMPTY_FORM);
+  console.log("initial", initial)
+
+  const initialForm = initial
+    ? {
+        ...initial,
+        export_certifications: Array.isArray(initial.export_certifications)
+          ? initial.export_certifications.join(", ")
+          : initial.export_certifications || "",
+      }
+    : NEW_SPECIES_EMPTY_FORM;
+
+  const { form, handleChange, resetForm } = useFormHandler(initialForm);
 
 const handleSpeciesSubmit = async () => {
   const payload = {
@@ -290,10 +301,13 @@ const handleSpeciesSubmit = async () => {
         form.default_processing_cost_per_mt
       ),
 
-    export_certifications:
-      form.export_certifications
-        ?.split(",")
-        ?.map((s) => s.trim()) || [],
+    export_certifications: Array.isArray(form.export_certifications)
+      ? form.export_certifications
+      : (form.export_certifications || "")
+          .toString()
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
   };
 
   try {

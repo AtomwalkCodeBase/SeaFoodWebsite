@@ -1,11 +1,11 @@
 import { RiAlertFill } from "react-icons/ri";
 import { GiFactory } from "react-icons/gi";
-import { AddMachineCapacity, EditMachineCapacity, getMachineCapacity, getProcessActivityList } from "../../../services/productServices";
+import { AddMachineCapacity, EditMachineCapacity, getEquipmentList, getMachineCapacity, getProcessActivityList } from "../../../services/productServices";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmPopup from "../../../components/ConfirmPopup";
 import Button from "../../../components/Button";
-import { SectionHeader } from "../../../components/EmptyState";
+import { EmptyState, SectionHeader } from "../../../components/EmptyState";
 import InputField from "../../../components/InputField";
 import Modal from "../../../components/Modal";
 import { handleApiError } from "../../../utils";
@@ -107,7 +107,7 @@ const MachineRow = ({ machine, isOdd, setIsAddModalOpen, handleEditMachine }) =>
             <span className="font-bold text-success">{machine.netCap} MT</span>
         </TD>
         {/* <TD><VsBestBar pct={machine.vsBest} /></TD> */}
-    <TD>
+    {/* <TD>
       <div className="flex flex-wrap gap-1.5">
         {machine.products.length === 0 ? (
           <span className="text-textLight text-xs">No usage</span>
@@ -119,7 +119,7 @@ const MachineRow = ({ machine, isOdd, setIsAddModalOpen, handleEditMachine }) =>
           ))
         )}
       </div>
-    </TD>
+    </TD> */}
     <TD>
     <Button
    onClick={() => handleEditMachine({...machine, mode: "edit"})}
@@ -135,12 +135,13 @@ const MachineRow = ({ machine, isOdd, setIsAddModalOpen, handleEditMachine }) =>
 export default function MachineCapacityScreen() {
     const [machines, setMachines] = useState([]);
     const [activities, setActivities] = useState([]);
-const initialFormData = {
-  equipment: "",
-  raw_capacity_mt_per_day: "",
-  machine_count: "",
-  downtime_percentage: ""
-};
+    const initialFormData = {
+      equipment: "",
+      display_name: "",
+      raw_capacity_mt_per_day: "",
+      machine_count: "",
+      downtime_percentage: "",
+    };
 
 
 const [formData, setFormData] = useState(initialFormData);
@@ -160,6 +161,7 @@ const getMachines = async () => {
   try {
     const res = await getMachineCapacity(); // your API
     setMachines(res.data || []);
+    console.log("machines", res.data)
   } catch {
     toast.error("Failed to load machines");
   }
@@ -167,25 +169,33 @@ const getMachines = async () => {
 
 const getActivities = async () => {
   try {
-    const res = await getProcessActivityList({ product_id: 1 });
+    const res = await getEquipmentList();
     setActivities(res.data || []);
+    console.log("data",JSON.stringify(res.data[0]))
   } catch {
     toast.error("Failed to load activities");
   }
 };
+
+const unConfiguredMachines = activities.filter(
+  (equipment) =>
+    !machines.some(
+      (machine) => machine.equipment === equipment.id
+    )
+);
 
 const handleAddMachine = (machine) => {
   setIsEditMode(false);
 
   setFormData({
     equipment: machine.equipmentId,
+    display_name: "",
     raw_capacity_mt_per_day: "",
     machine_count: "",
     downtime_percentage: ""
   });
 
-  setSelectedMachine(null);
-
+  setSelectedMachine(machine);
   setIsAddModalOpen(true);
 };
 
@@ -247,6 +257,7 @@ const handleSave = async () => {
     } else {
       const payload = {
         equipment: formData.equipment,
+        display_name:formData.display_name.trim() || selectedMachine.name,
         raw_capacity_mt_per_day: Number(formData.raw_capacity_mt_per_day),
         machine_count: Number(formData.machine_count),
         downtime_percentage: Number(formData.downtime_percentage),
@@ -306,7 +317,8 @@ const mappedMachines =  machines.map((m) => {
     xl:grid-cols-4
     2xl:grid-cols-5">
                     {mappedMachines.length === 0 ? (
-                    <div className="text-text-light">No machines available</div>
+                    // <div className="text-text-light">No machines available</div>
+                      <EmptyState message="No machines available" />
                     ) : (
                     mappedMachines.map((m) => (
                         <CapacityCard key={m.id} machine={m} />
@@ -314,8 +326,27 @@ const mappedMachines =  machines.map((m) => {
                     )}
                 </div>
 
+                {unConfiguredMachines.length > 0 && (
+  <div className="flex flex-wrap gap-2 mb-4">
+    {unConfiguredMachines.map((machine) => (
+      <Button
+        key={machine.id}
+        variant="outline"
+        onClick={() =>
+          handleAddMachine({
+            equipmentId: machine.id,
+            name: machine.name,
+          })
+        }
+      >
+        + Create {machine.name} Setup
+      </Button>
+    ))}
+  </div>
+)}
+
                 {/* ── Machine Capacity Config Table ── */}
-                <div className="rounded-2xl border border-border bg-card shadow-md overflow-hidden">
+               {mappedMachines.length !== 0 && <div className="rounded-2xl border border-border bg-card shadow-md overflow-hidden">
 
                     {/* Section Header */}
                     <div className="p-2 border-b border-border">
@@ -349,7 +380,7 @@ const mappedMachines =  machines.map((m) => {
                                     <TH>Downtime</TH>
                                     <TH>Net Capacity</TH>
                                     {/* <TH className="min-w-[130px]">Vs Best</TH> */}
-                                    <TH>Used by Products</TH>
+                                    {/* <TH>Used by Products</TH> */}
                                     <TH>Action</TH>
                                 </tr>
                             </thead>
@@ -361,7 +392,7 @@ const mappedMachines =  machines.map((m) => {
                         </table>
                     </div>
                 </div>
-
+}
             </div>
         </div>
 
@@ -376,8 +407,19 @@ const mappedMachines =  machines.map((m) => {
 
 
         {isAddModalOpen && (
-  <Modal isOpen={isAddModalOpen} title={`${isEditMode ? "Edit" : "Add" } Machine Capacity (${isEditMode && selectedMachine.name})`} onClose={() => {setIsAddModalOpen(false); }} onSave={() => setIsConfirmOpen(true)} saveButtonText={isEditMode? "Edit" : "Add"} >
+  <Modal isOpen={isAddModalOpen} title={`${isEditMode ? "Edit" : "Add" } Machine Capacity ${isEditMode && `(${selectedMachine?.name})`}`} onClose={() => {setIsAddModalOpen(false); }} onSave={() => setIsConfirmOpen(true)} saveButtonText={isEditMode? "Edit" : "Add"} >
 
+<InputField
+  label="Machine Name"
+  value={formData.display_name}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      display_name: e.target.value,
+    })
+  }
+  placeholder={`Default: ${selectedMachine?.name}`}
+/>
       <InputField label="Raw Capacity" value={formData.raw_capacity_mt_per_day} onChange={(e) => setFormData({ ...formData, raw_capacity_mt_per_day: e.target.value })} required={true} placeholder="Enter raw capacity" />
       <InputField label="Machine Count" value={formData.machine_count} onChange={(e) => setFormData({ ...formData, machine_count: e.target.value })} required={true} placeholder="Enter machine count" />
       <InputField label="Downtime %" value={formData.downtime_percentage} onChange={(e) => setFormData({ ...formData, downtime_percentage: e.target.value })} required={true} placeholder="Enter downtime %" />

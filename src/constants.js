@@ -57,6 +57,7 @@ export const QUERY_KEYS = {
   GET_BASE_UNIT: 'get-base-unit',
   GENERATE_BATCH: 'generate-recommended-batch',
   ORDER_FULFILLMENT: 'order-fulfillment',
+  EQUIPMENT_LIST: 'equipment_list'
 
 }
 

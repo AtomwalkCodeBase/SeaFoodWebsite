@@ -296,7 +296,7 @@ const flow = [
            </div>
 
            <DataTable
-           columns={["#", "Activity", "Phase", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"]}
+           columns={["#", "Activity", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"]}
            data={processedSteps}
            emptyMessage="No yield steps configured for this product."
            isLoading={yieldLoading}
@@ -306,7 +306,7 @@ const flow = [
             <>
             <Td>{step.sequence || 0}</Td>
             <Td>{step.activity_name || "--"}</Td>
-            <Td><Badge variant={step.phase === "POST_GRADE" ? "success" : "forward"}>{step.phase || "--"}</Badge></Td>
+            {/* <Td><Badge variant={step.phase === "POST_GRADE" ? "success" : "forward"}>{step.phase || "--"}</Badge></Td> */}
             <Td className={`${step.yield_pct.toFixed(1) < 90 ? "text-error" : step.yield_pct.toFixed(1) > 100 ? "text-success" : "text-warning"} font-semibold`}>{step.yield_pct.toFixed(1) || 0}%</Td>
             <Td>{step.inputQty.toFixed(3) || 0}</Td>
             <Td>{step.outputQty.toFixed(3) || 0}</Td>
@@ -390,14 +390,14 @@ const flow = [
                 onChange={handleChange}
               />
 
-              <InputField
+              {/* <InputField
                 label="Is Pre-Grading"
                 name="is_pre_grading"
                 type="checkbox"
                 value={form.is_pre_grading}
                 onChange={handleChange}
                 required
-              />
+              /> */}
 
               <InputField
                 label="Worker Efficiency (kg/hr)"
