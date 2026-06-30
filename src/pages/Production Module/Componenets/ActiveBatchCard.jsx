@@ -190,24 +190,25 @@ const ActiveBatchCard = ({ batch, hideActionButtons }) => {
 
   {batch.status === "ALLOCATING" && (
     <>
-      {!hideActionButtons && batch.status !== "ALLOCATING" && (
-      <Button
-        variant="success"
-        size="sm"
-        onClick={() => autoAllocateMutation.mutate()}
-        loading={autoAllocateMutation.isPending}
-      >
-        Auto-allocate to order
-      </Button>
+      {!hideActionButtons && (
+        <Button
+          variant="success"
+          size="sm"
+          onClick={() => autoAllocateMutation.mutate()}
+          loading={autoAllocateMutation.isPending}
+        >
+          Auto-allocate to order
+        </Button>
       )}
-        {!hideActionButtons && batch.status !== "ALLOCATING" && (
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => setIsAllocateModalOpen(true)}
-      >
-        Manual allocate
-      </Button>
+
+      {!hideActionButtons && (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setIsAllocateModalOpen(true)}
+        >
+          Manual allocate
+        </Button>
       )}
     </>
   )}

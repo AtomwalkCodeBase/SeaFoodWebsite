@@ -9,15 +9,12 @@ import Card from '../../components/Card'
 import { Badge as BadgeUI, EmptyState, SectionHeader } from '../../components/EmptyState'
 import { useCreateGradingSession, useGetBaseUnitList, useGetEmployeeList, useGradeSegregation, useGRNList, usePOItemList, useSpecies } from '../../hooks/useProductQueries'
 import { RiDraftFill } from 'react-icons/ri'
-import { theme } from '../../styles/Theme'
 import Button from '../../components/Button'
 import Modal from '../../components/Modal'
 import { useFormHandler } from '../../hooks/useFormHandler'
 import InputField from '../../components/InputField'
-import { toast } from 'react-toastify'
 import { LuUserRound } from 'react-icons/lu'
 import { FaBoxOpen, FaClipboardCheck, FaEye, FaFlask, FaLayerGroup, FaMapMarkerAlt, FaStore, FaUser } from 'react-icons/fa'
-import { formatDate } from '../../utils'
 import { TbArrowAutofitContentFilled } from 'react-icons/tb'
 import DataTable, { Td } from '../../components/Datatable'
 import Badge from '../../components/Badge'
@@ -90,7 +87,7 @@ const ProductionPipelineDashboard = () => {
   
     const {paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange} = usePagination(filteredPoList, 10);
 
-    // console.log("filteredPoList", JSON.stringify(filteredPoList))
+    // console.log("filteredPoList", filteredPoList)
 
     const inProgressQc = filteredPoList.filter((item) => item?.grnItem?.status === "IN_PROGRESS").length;
     const draftPO = filteredPoList.filter((item) => item?.poItem?.ref_po?.po_status === "D").length;
@@ -593,9 +590,9 @@ setGradeRows((prev) =>
       JSON.stringify(grade_data_list)
     );
 
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
+    // for (let pair of formData.entries()) {
+    //   console.log(pair[0], pair[1]);
+    // }
 
     createGradeSegregation.mutate(formData);
   };

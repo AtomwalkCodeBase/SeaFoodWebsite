@@ -52,9 +52,15 @@ const parseDateValue = (value) => {
     if (typeof value !== "string") return null;
 
     const trimmed = value.trim();
-    const isoDate = new Date(trimmed);
-    if (!Number.isNaN(isoDate.getTime())) {
-        return isoDate;
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+        const [year, month, day] = trimmed.split("-").map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+        return parsed;
     }
 
     const parts = trimmed.split(/[-/]/).map((part) => part.trim());

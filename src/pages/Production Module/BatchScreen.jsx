@@ -90,14 +90,18 @@ const BatchScreen = ({ hideActionButtons = false }) => {
     let targetDate = baseDate;
     if (datePreset === "YESTERDAY") {
       targetDate = subDays(baseDate, 1);
+
     } else if (datePreset === "TOMORROW") {
       targetDate = addDays(baseDate, 1);
     }
 
+    console.log("targetDate", targetDate)
+    
     const value = format(targetDate, "yyyy-MM-dd");
+    console.log("value", value)
     return {
       dateRange: {
-        field: "created_at",
+        field: "scheduled_date",
         from: value,
         to: value,
       },
@@ -197,6 +201,8 @@ const BatchScreen = ({ hideActionButtons = false }) => {
     { value: "SCHEDULED", label: "Scheduled" },
     // { value: "GRADING", label: "Not Started" },
   ];
+
+  console.log("datePreset", datePreset)
 
   return (
     <div>
