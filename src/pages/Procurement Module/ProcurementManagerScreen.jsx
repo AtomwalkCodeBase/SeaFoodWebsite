@@ -558,11 +558,6 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
           ))}
         </tbody>
       </table>
-     {activeTab !== "PR" && <Button
-    onClick={() => pushToTally(data)}
->
-    Push To Tally
-</Button>}
     </div>
   )}
 />

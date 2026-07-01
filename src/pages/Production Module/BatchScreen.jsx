@@ -57,7 +57,7 @@ const BatchScreen = ({ hideActionButtons = false }) => {
   const { data: batchList = [], isLoading } = useQuery({
     queryKey: [QUERY_KEYS.BATCHES],
     queryFn: () => getBatchList(),
-    select: (res) => res.data,
+    select: (res) => res.data.filter((data) => data.batch_number !== "BAT-20260629-001" && data.batch_number !== "BAT-20260629-002"),
     onError: () => toast.error("Failed to load batches"),
   });
 
@@ -95,7 +95,7 @@ const BatchScreen = ({ hideActionButtons = false }) => {
       targetDate = addDays(baseDate, 1);
     }
 
-    console.log("targetDate", targetDate)
+    // console.log("targetDate", targetDate)
     
     const value = format(targetDate, "yyyy-MM-dd");
     console.log("value", value)

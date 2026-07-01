@@ -71,9 +71,6 @@ export default function YieldConfigScreen() {
   };
 }, [yieldData, yieldAllData]);
 
-// console.log("mergedYieldData", mergedYieldData)
-
-
   useEffect(() => {
   if (productsData?.length > 0 && !selectedProductId) {
     setSelectedProductId(productsData[0].id);
@@ -282,9 +279,7 @@ const flow = [
               );
 
               const hasMissingActivities = activitiesData?.some(act => {
-                const actId1 = String(act.id || "").trim();
-                const actId2 = String(act.activity_id || "").trim();
-                return !yieldActivityIds.has(actId1) && !yieldActivityIds.has(actId2);
+                return !yieldActivityIds.has(String(act.id).trim());
               });
 
               return hasMissingActivities  && (
