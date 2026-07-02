@@ -284,9 +284,9 @@ const handleOrderCreated = (orderData) => {
     };
     delete payload.customer_id;
 
-    console.log("Creating Order Payload:", payload);
+    // console.log("Creating Order Payload:", payload);
 
-    // createOrderMutation.mutate(payload);
+    createOrderMutation.mutate(payload);
   };
 
   const handleUpdateOrder = () => {
