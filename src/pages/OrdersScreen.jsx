@@ -218,8 +218,9 @@ const EMPTY_FORM = {
   product: "",
   grade_config: "",
   quantity_mt: "",
+  customer_id: "",
   customer_name: "",
-  customer_tier: "",
+  customer_tier: "TIER_3",
   destination_country: "",
   destination_port: "",
   selling_price_per_mt: "",
@@ -256,21 +257,36 @@ const handleOrderCreated = (orderData) => {
 
   const  { form, setForm, handleChange, resetForm }  = useFormHandler(EMPTY_FORM);
 
+  const handleCustomerNameChange = (e) => {
+    const customerId = Number(e.target.value);
+
+    const customer = customerList.find(c => c.id === customerId);
+
+    setForm(prev => ({
+      ...prev,
+      customer_id: customerId,
+      customer_name: customer?.name || "",
+      destination_country: customer?.country || "",
+    }));
+  };
+
   const handleAddOrder = () => {
     // console.log(form)
+    const { customer_id, ...rest } = form;
     const payload = {
-      ...form,
-
+      ...rest,
+      customer_name: customerList.find(c => c.id === Number(customer_id))?.name || "",
       quantity_mt: Number(form.quantity_mt || 0),
       selling_price_per_mt: Number(form.selling_price_per_mt || 0),
       cold_chain_buffer_days: Number(form.cold_chain_buffer_days || 0),
 
       product: Number(form.product),
     };
+    delete payload.customer_id;
 
-    // console.log("Creating Order Payload:", payload);
+    console.log("Creating Order Payload:", payload);
 
-    createOrderMutation.mutate(payload);
+    // createOrderMutation.mutate(payload);
   };
 
   const handleUpdateOrder = () => {
@@ -655,11 +671,11 @@ const sortedOrders = useMemo(() => {
 
                 <InputField
                   label="Customer Name"
-                  name="customer_name"
+                  name="customer_id"
                   type="select"
-                  value={form.customer_name}
-                  onChange={handleChange}
-                  options={customerList.map((c) => ({ value: c.name, label: c.name }))}
+                  value={form.customer_id}
+                  onChange={handleCustomerNameChange}
+                  options={customerList.map((c) => ({ value: c.id, label: c.name }))}
                   required={true}
                   disabled={isEditMode}
                 />

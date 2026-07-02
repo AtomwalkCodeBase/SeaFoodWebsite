@@ -493,10 +493,25 @@ const  POCard = ({ po, isLoading, activeTab, isOpenGrnModal }) => {
     highlightFirstRow={shouldHighlightFirstRow}
     isLoading={isLoading}
     rowAction={(data) => setExpandedRow((prev) => prev === data.id ? null : data.id )}
-    renderRow={(data) => (
+    renderRow={(data, index) => (
       <>
       <Td>{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td>
-      <Td>{data.po_ref_number}</Td>
+      <Td>{data.po_ref_number}
+         {(index === 0 && shouldHighlightFirstRow) && (
+                <span
+                    style={{
+                      marginLeft: "6px",
+                      padding: "2px 6px",
+                      background: "#3B82F6",
+                      color: "#fff",
+                      borderRadius: "4px",
+                      fontSize: "10px"
+                    }}
+                  >
+                    NEW
+                  </span>
+                )}  
+      </Td>
       <Td>{data.supplier_name}</Td>
       <Td>{data.po_items.length}</Td>
       <Td>{data.po_date}</Td>

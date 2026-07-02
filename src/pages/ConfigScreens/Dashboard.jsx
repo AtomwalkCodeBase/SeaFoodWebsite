@@ -151,6 +151,7 @@ const SummaryCards = ({ orders, production, alertSummary }) => {
       value: orders.total_active ?? 0,
       color: "primary",
       icon: <IoCubeOutline />,
+      onClick: () => navigate("/order-fulfillment"),
     },
     {
       label: "Demand (MT)",
