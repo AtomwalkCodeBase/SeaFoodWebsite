@@ -38,7 +38,6 @@ import { usePagination } from '../../hooks/usePagination';
 import PaginationComponent from '../../components/Pagination';
 import { formatNumber, formatToDDMMYYYY } from '../../utils';
 import { isToday } from 'date-fns';
-import { pushToTally } from '../hello';
 
 const StatsGrid = styled.div`
   display: grid;
