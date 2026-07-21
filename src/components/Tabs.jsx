@@ -24,16 +24,16 @@ const Tab = styled.button`
   }
 `
 
-const Tabs = ({tabs, activeTab, setActiveTab}) => {
+const Tabs = ({ tabs, activeTab, setActiveTab }) => {
   return (
-        <TabContainer>
-          {tabs.map(t => (
-            <Tab key={t.key} active={activeTab === t.key} onClick={() => setActiveTab(t.key)}>
-              {/* {t.icon && t.icon}  */}
-              {t.label}
-            </Tab>
-          ))}
-        </TabContainer>
+    <TabContainer>
+      {tabs.map(t => (
+        <Tab key={t.key} active={activeTab === t.key} onClick={() => setActiveTab(t.key)}>
+          {t.icon && t.icon}
+          {t.label}
+        </Tab>
+      ))}
+    </TabContainer>
   )
 }
 

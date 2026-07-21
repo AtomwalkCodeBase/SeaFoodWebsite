@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder,getDashboardSummary,getActiveAlerts,getSupplierprofile, getEquipmentList } from "../services/productServices";
+import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder, getDashboardSummary, getActiveAlerts, getSupplierprofile, getEquipmentList, getPeelingCenters, AddPeelingCenter, getProcessPilling, AddProcessPilling } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -8,23 +8,23 @@ import { useEffect } from "react";
 const ErrorText = "Failed to load"
 
 export const useApiQuery = ({ queryKey, queryFn, select, enabled = true, errorMessage, }) => {
-	const query = useQuery({ queryKey, queryFn, select, enabled, });
-	useEffect(() => {
-		if (query.error) {
-			handleApiError(query.error, errorMessage);
-		}
-	}, [query.error]);
-	return query;
+  const query = useQuery({ queryKey, queryFn, select, enabled, });
+  useEffect(() => {
+    if (query.error) {
+      handleApiError(query.error, errorMessage);
+    }
+  }, [query.error]);
+  return query;
 };
 
 //GET API
-export const useCustomers = (params,enabled = true) => {
+export const useCustomers = (params, enabled = true) => {
   return useApiQuery({
     queryKey: [QUERY_KEYS.CUSTOMER, params],
     queryFn: () => getCustomerListView(params),
     select: (res) => res.data,
     enabled,
-	errorMessage: `${ErrorText} customer list`,
+    errorMessage: `${ErrorText} customer list`,
   });
 };
 export const useDashboardSummary = (enabled = true) => {
@@ -36,7 +36,15 @@ export const useDashboardSummary = (enabled = true) => {
     errorMessage: `${ErrorText} dashboard summary`,
   });
 };
-
+export const usePeelingCenters = (enabled = true) => {
+  return useApiQuery({
+    queryKey: ["PEELING_CENTERS"],
+    queryFn: () => getPeelingCenters(),
+    select: (res) => res.data,
+    enabled,
+    errorMessage: `${ErrorText} peeling centers`,
+  });
+};
 export const useActiveAlerts = (enabled = true) => {
   return useApiQuery({
     queryKey: ["ACTIVE_ALERTS"],
@@ -61,9 +69,18 @@ export const useProduct = (enabled = true) => {
     queryFn: () => getProductList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} product list`,
+    onError: `${ErrorText} product list`,
   });
 };
+// export const useProcessPillingList = (enabled = true) => {
+//   return useApiQuery({
+//     queryKey: ["PROCESS_PILLING"],
+//     queryFn: () => getProcessPilling(),
+//     select: (res) => res.data,
+//     enabled,
+//     errorMessage: `${ErrorText} process pilling list`,
+//   });
+// };
 
 export const useEquipmentList = (enabled = true) => {
   return useApiQuery({
@@ -71,7 +88,7 @@ export const useEquipmentList = (enabled = true) => {
     queryFn: () => getEquipmentList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} product list`,
+    onError: `${ErrorText} product list`,
   });
 };
 
@@ -81,7 +98,7 @@ export const useGrades = (enabled = true) => {
     queryFn: () => getGrades(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} grades`,
+    onError: `${ErrorText} grades`,
   });
 };
 
@@ -91,7 +108,7 @@ export const useSpecies = (enabled = true, id = null) => {
     queryFn: () => getSpecies(null, id),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} species`,
+    onError: `${ErrorText} species`,
   });
 };
 
@@ -101,7 +118,7 @@ export const useOrders = (enabled = true) => {
     queryFn: () => GetOrdersList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} orders`,
+    onError: `${ErrorText} orders`,
   });
 };
 
@@ -111,7 +128,7 @@ export const useOrdersByDestination = (enabled = true) => {
     queryFn: () => GetOrdersByDestinationList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} orders by destination`,
+    onError: `${ErrorText} orders by destination`,
   });
 };
 
@@ -121,7 +138,7 @@ export const useOrdersByPriority = (enabled = true) => {
     queryFn: () => GetOrdersPriorityQueueList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} orders by destination`,
+    onError: `${ErrorText} orders by destination`,
   });
 };
 
@@ -131,7 +148,7 @@ export const useInventoryCategory = (enabled = true) => {
     queryFn: () => GetItemCategory(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} inventory category`,
+    onError: `${ErrorText} inventory category`,
   });
 };
 
@@ -141,7 +158,7 @@ export const useInventoryStatus = (enabled = true) => {
     queryFn: () => getInventoryStatus(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} inventory status`,
+    onError: `${ErrorText} inventory status`,
   });
 };
 
@@ -151,7 +168,7 @@ export const usePOItemList = (params, enabled = true) => {
     queryFn: () => getPoItem(params),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Purchase Request List`,
+    onError: `${ErrorText} Purchase Request List`,
   });
 };
 
@@ -161,7 +178,7 @@ export const useGRNList = (enabled = true) => {
     queryFn: () => getGradingSessionsList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} GRN List`,
+    onError: `${ErrorText} GRN List`,
   });
 };
 
@@ -171,17 +188,17 @@ export const useProcurementPlan = (enabled = true) => {
     queryFn: () => getProcurementPlan(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Procurement Plan`,
+    onError: `${ErrorText} Procurement Plan`,
   });
 };
 
 export const useProcessActivityList = (enabled = true, id = null) => {
   return useApiQuery({
     queryKey: [QUERY_KEYS.PROCESS_ACTIVITY, id],
-    queryFn: () => getProcessActivityList({product_id: id}),
+    queryFn: () => getProcessActivityList({ product_id: id }),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Activity List`,
+    onError: `${ErrorText} Activity List`,
   });
 };
 
@@ -191,27 +208,27 @@ export const useYieldConfig = (enabled = true, id) => {
     queryFn: () => getYieldConfig(null, id),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Yield List`,
+    onError: `${ErrorText} Yield List`,
   });
 };
 
-export const useAllYieldConfig = (enabled = true, ) => {
+export const useAllYieldConfig = (enabled = true,) => {
   return useApiQuery({
     queryKey: [QUERY_KEYS.YIELD_CONFIG],
     queryFn: () => getYieldConfig(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Yield List`,
+    onError: `${ErrorText} Yield List`,
   });
 };
 
-export const useGetEmployeeList = (enabled = true, ) => {
+export const useGetEmployeeList = (enabled = true,) => {
   return useApiQuery({
     queryKey: [QUERY_KEYS.EMPLOYEE_LIST],
     queryFn: () => getemployeeList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Employee List`,
+    onError: `${ErrorText} Employee List`,
   });
 };
 
@@ -221,7 +238,7 @@ export const useGetWorkCoverage = (enabled = true, params) => {
     queryFn: () => getWorkForceCoverage(params),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Workforce coverage data `,
+    onError: `${ErrorText} Workforce coverage data `,
   });
 };
 
@@ -231,7 +248,7 @@ export const useGetWorkAvailable = (enabled = true, params = {}) => {
     queryFn: () => getWorkForceAvailable(params),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Workforce coverage data `,
+    onError: `${ErrorText} Workforce coverage data `,
   });
 };
 
@@ -241,7 +258,7 @@ export const useGetBaseUnitList = (enabled = true) => {
     queryFn: () => GetBaseUnitList(),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Base unit `,
+    onError: `${ErrorText} Base unit `,
   });
 };
 
@@ -263,9 +280,9 @@ export const useGetRecommendedBatch = (enabled = true, params = {}) => {
     ? excludedOrdersRaw
     : typeof excludedOrdersRaw === "string"
       ? excludedOrdersRaw
-          .split(",")
-          .map((v) => v.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean)
       : [];
 
   // Avoid axios array query serialization (exclude[]=...).
@@ -282,7 +299,7 @@ export const useGetRecommendedBatch = (enabled = true, params = {}) => {
     queryFn: () => GetPlanningReport(normalizedParams),
     select: (res) => res.data,
     enabled,
-	onError: `${ErrorText} Recommended batches `,
+    onError: `${ErrorText} Recommended batches `,
   });
 };
 
@@ -326,9 +343,9 @@ export const useUpdateOrder = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("Order updated successfully!");
 
-     await Promise.all([
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS],}),
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS_BY_DESTINATION],}),
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ORDERS], }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ORDERS_BY_DESTINATION], }),
       ]);
 
       handleCloseModal?.();
@@ -383,8 +400,8 @@ export const useAddGRN = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("GRN add successfully!");
       await Promise.all([
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.PO_ITEM_LIST],}),
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST],}),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PO_ITEM_LIST], }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GRN_LIST], }),
       ]);
       handleCloseModal?.();
     },
@@ -401,9 +418,9 @@ export const useCreateGradingSession = (handleCloseModal) => {
     onSuccess: async () => {
       toast.success("Grading started successfully");
 
-     await Promise.all([
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.PO_ITEM_LIST],}),
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST],}),
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PO_ITEM_LIST], }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GRN_LIST], }),
       ]);
 
       handleCloseModal?.();
@@ -417,13 +434,13 @@ export const useGradeSegregation = (handleCloseModal) => {
 
   return useMutation({
     mutationFn: RecordGrades,
-    
+
     onSuccess: async () => {
       toast.success("Grade wise segregation successfully. Inventory is Updated.");
 
-     await Promise.all([
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.PO_ITEM_LIST],}),
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GRN_LIST],}),
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PO_ITEM_LIST], }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GRN_LIST], }),
       ]);
 
       handleCloseModal?.();
@@ -437,13 +454,13 @@ export const useGenerateBatchPlan = (handleCloseModal) => {
 
   return useMutation({
     mutationFn: GenerateBatchPlan,
-    
+
     onSuccess: async () => {
       toast.success("Plan generated . Go to the Batch Tabs");
 
-     await Promise.all([
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.INVENTORY_STATUS],}),
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.ORDERS_BY_PRIORITY],}),
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVENTORY_STATUS], }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ORDERS_BY_PRIORITY], }),
       ]);
 
       handleCloseModal?.();
@@ -457,13 +474,13 @@ export const useAssignWorker = (handleCloseModal) => {
 
   return useMutation({
     mutationFn: AssignWorkForce,
-    
+
     onSuccess: async () => {
       toast.success("Employee assign to the Batch activity");
 
-     await Promise.all([
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.WORKFORCE_COVERAGE],}),
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE],}),
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKFORCE_COVERAGE], }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE], }),
       ]);
 
       handleCloseModal?.();
@@ -477,17 +494,77 @@ export const useReleaseWorker = (handleCloseModal) => {
 
   return useMutation({
     mutationFn: ReleaseWorkForce,
-    
+
     onSuccess: async () => {
       toast.success("Employee release from the Batch activity");
 
-     await Promise.all([
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.WORKFORCE_COVERAGE],}),
-        queryClient.invalidateQueries({queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE],}),
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKFORCE_COVERAGE], }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKFORCE_AVAILABLE], }),
       ]);
 
       handleCloseModal?.();
     },
     onError: handleApiError,
+  });
+};
+export const useAddProcessPilling = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: AddProcessPilling,
+
+    onSuccess: async () => {
+      toast.success("Peeling center added successfully!");
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["PROCESS_PILLING"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.PO_ITEM_LIST],
+        }),
+      ]);
+
+      // handleCloseModal?.();
+    },
+
+    onError: handleApiError,
+  });
+};
+
+export const useAddPeelingCenter = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: AddPeelingCenter,
+
+    onSuccess: async () => {
+      toast.success("Peeling center added successfully!");
+
+      await queryClient.invalidateQueries({
+        queryKey: ["PEELING_CENTER"],
+      });
+
+      handleCloseModal?.();
+    },
+
+    onError: handleApiError,
+  });
+};
+export const useProcessPillingList = (poRequestId) => {
+  return useApiQuery({
+    queryKey: ["PROCESS_PILLING", poRequestId],
+    enabled: !!poRequestId,
+    queryFn: () => getProcessPilling(),
+    select: (res) => {
+      console.log("API Response:", res);
+      console.log("API Data:", res.data);
+
+      const list = Array.isArray(res.data) ? res.data : [];
+
+      return list.filter(item => item.po_request === poRequestId);
+    },
+    errorMessage: `${ErrorText} process pilling list`,
   });
 };

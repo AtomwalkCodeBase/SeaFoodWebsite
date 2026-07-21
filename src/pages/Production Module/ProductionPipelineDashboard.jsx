@@ -16,7 +16,7 @@ import InputField from '../../components/InputField'
 import { LuUserRound } from 'react-icons/lu'
 import { FaBoxOpen, FaClipboardCheck, FaEye, FaFlask, FaLayerGroup, FaMapMarkerAlt, FaStore, FaUser } from 'react-icons/fa'
 import { TbArrowAutofitContentFilled } from 'react-icons/tb'
-import DataTable, { Td } from '../../components/Datatable'
+import DataTable, { Td } from '../../components/DataTable'
 import Badge from '../../components/Badge'
 import { useFilter } from '../../hooks/useFilter'
 import { usePagination } from '../../hooks/usePagination'
@@ -25,52 +25,52 @@ import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
 import GradeSegregationViewModal from './Modal/GradeSegregationViewModal'
 import RMQCModal from '../../components/Modal/QCModal'
 
-const PIPELINE_COLUMNS = [ "Purchase Ref.",  "GRN Number", "Species", "Received(MT)", "Graded(MT)", "Waste(MT)", "Status", "Action"];
+const PIPELINE_COLUMNS = ["Purchase Ref.", "GRN Number", "Species", "Received(MT)", "Graded(MT)", "Waste(MT)", "Status", "Action"];
 
 const getStatusDisplay = (grnItem) => {
   if (!grnItem) return { label: "Not assigned", variant: "error" };
-  
+
   const statusMap = {
     IN_PROGRESS: { label: "In progress", variant: "info" },
     COMPLETED: { label: "Completed", variant: "success" },
     CANCELLED: { label: "Cancelled", variant: "error" }
   };
-  
+
   return statusMap[grnItem.status] || { label: "Unknown", variant: "warning" };
 };
 const today = new Date().toISOString().split("T")[0];
 
 const ProductionPipelineDashboard = () => {
-  const [filters, setFilters] = useState({ search: "", status: "", item_number: "", qcManager: "", fromDate: today, toDate: today});
+  const [filters, setFilters] = useState({ search: "", status: "", item_number: "", qcManager: "", fromDate: today, toDate: today });
   const [expandedRow, setExpandedRow] = useState(null);
   const [startGradingData, setStartGradingData] = useState(null);
   const [segregationData, setSegregationData] = useState(null);
   const [segregationDataView, setSegregationDataView] = useState(null);
   const [isQcModalOpen, setIsQcModalOpen] = useState(false)
 
-  const {data: PoItemList, isLoading: poItemListIsLoading, error: poItemListError} = usePOItemList({po_type: "R"});
-  const {data: grnList, isLoading: grnLoading, error: grnError} = useGRNList();
-  
+  const { data: PoItemList, isLoading: poItemListIsLoading, error: poItemListError } = usePOItemList({ po_type: "R" });
+  const { data: grnList, isLoading: grnLoading, error: grnError } = useGRNList();
+
   const filteredPoData = PoItemList?.filter((data) => data.po_status === "D");
 
   const combinationData = (filteredPoData?.reduce((result, poItem) => {
-      const matchingGrn = grnList?.find(
-          (grn) => poItem.grn_detail?.grn_number === grn?.grn_reference
-      );
+    const matchingGrn = grnList?.find(
+      (grn) => poItem.grn_detail?.grn_number === grn?.grn_reference
+    );
 
     result.push({
-          poItem,
-          grnItem: matchingGrn || null,
-        });
+      poItem,
+      grnItem: matchingGrn || null,
+    });
 
-        return result;
+    return result;
   }, []) || []).sort((a, b) => {
-      const aCompleted = a.grnItem?.status === "COMPLETED";
-      const bCompleted = b.grnItem?.status === "COMPLETED";
-      if (aCompleted === bCompleted) return 0;
-      return aCompleted ? 1 : -1;
+    const aCompleted = a.grnItem?.status === "COMPLETED";
+    const bCompleted = b.grnItem?.status === "COMPLETED";
+    if (aCompleted === bCompleted) return 0;
+    return aCompleted ? 1 : -1;
   });
-  
+
   const filteredPoList = useFilter({
     data: combinationData, fields: ["poItem.po_ref_number", "poItem.po_items[].po_item.name", "poItem.supplier_name", "poItem.po_items[].po_item.item_number", "poItem.supplier_ref_number", "poItem.grn_detail.grn_number"],
     search: filters.search,
@@ -84,21 +84,21 @@ const ProductionPipelineDashboard = () => {
       },
     },
   })
-  
-    const {paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange} = usePagination(filteredPoList, 10);
 
-    // console.log("filteredPoList", filteredPoList)
+  const { paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange } = usePagination(filteredPoList, 10);
 
-    const inProgressQc = filteredPoList.filter((item) => item?.grnItem?.status === "IN_PROGRESS").length;
-    const draftPO = filteredPoList.filter((item) => item?.poItem?.ref_po?.po_status === "D").length;
-   
+  // console.log("filteredPoList", filteredPoList)
+
+  const inProgressQc = filteredPoList.filter((item) => item?.grnItem?.status === "IN_PROGRESS").length;
+  const draftPO = filteredPoList.filter((item) => item?.poItem?.ref_po?.po_status === "D").length;
+
 
   const STATS_CARD = [
-    {label: "Total GRN", icon: <GrNotes />, value: filteredPoList.length, color: "primary"},
+    { label: "Total GRN", icon: <GrNotes />, value: filteredPoList.length, color: "primary" },
     // {label: "Active QC",icon: <BsBookmarkCheckFill />, value: "2", color: "secondary"},
-    {label: "In Progress QC",icon: <FaRegHourglassHalf />, value: inProgressQc, color: "accent"},
-    {label: "Draft PO", icon: <RiDraftFill />, value: draftPO, color: "success"}
-  ] 
+    { label: "In Progress QC", icon: <FaRegHourglassHalf />, value: inProgressQc, color: "accent" },
+    { label: "Draft PO", icon: <RiDraftFill />, value: draftPO, color: "success" }
+  ]
 
   return (
     <Layout title="Production Pipeline">
@@ -108,11 +108,11 @@ const ProductionPipelineDashboard = () => {
         ))}
       </div>
 
-      <Card style={{marginTop: "1.5rem"}}>
+      <Card style={{ marginTop: "1.5rem" }}>
         <SectionHeader title="Unsorted Grade List" />
-<div className="w-full pb-4 pt-4">
-  <div
-    className="
+        <div className="w-full pb-4 pt-4">
+          <div
+            className="
       grid 
       grid-cols-1 
       sm:grid-cols-2 
@@ -120,203 +120,204 @@ const ProductionPipelineDashboard = () => {
       gap-4 
       items-end
     "
-  >
+          >
 
-    {/* Search */}
-    <div className="lg:col-span-4">
-      <InputField
-        label=""
-        type="text"
-        value={filters.search}
-        onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            search: e.target.value,
-          }))
-        }
-        placeholder="Search by purchase ref, supplier, product..."
-      />
-    </div>
+            {/* Search */}
+            <div className="lg:col-span-4">
+              <InputField
+                label=""
+                type="text"
+                value={filters.search}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    search: e.target.value,
+                  }))
+                }
+                placeholder="Search by purchase ref, supplier, product..."
+              />
+            </div>
 
-    {/* Status */}
-    <div className="lg:col-span-2">
-      <InputField
-        label="Status"
-        type="select"
-        value={filters.status}
-        onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            status: e.target.value,
-          }))
-        }
-        options={[
-          { label: "All", value: "ALL" },
-          { label: "In Progress", value: "IN_PROGRESS" },
-          { label: "Completed", value: "COMPLETED" },
-          { label: "Cancelled", value: "CANCELLED" },
-        ]}
-      />
-    </div>
+            {/* Status */}
+            <div className="lg:col-span-2">
+              <InputField
+                label="Status"
+                type="select"
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    status: e.target.value,
+                  }))
+                }
+                options={[
+                  { label: "All", value: "ALL" },
+                  { label: "In Progress", value: "IN_PROGRESS" },
+                  { label: "Completed", value: "COMPLETED" },
+                  { label: "Cancelled", value: "CANCELLED" },
+                ]}
+              />
+            </div>
 
-    {/* From Date */}
-    <div className="lg:col-span-2">
-      <InputField
-        label="From Date"
-        type="date"
-        value={filters.fromDate}
-        onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            fromDate: e.target.value,
-          }))
-        }
-      />
-    </div>
+            {/* From Date */}
+            <div className="lg:col-span-2">
+              <InputField
+                label="From Date"
+                type="date"
+                value={filters.fromDate}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    fromDate: e.target.value,
+                  }))
+                }
+              />
+            </div>
 
-    {/* To Date */}
-    <div className="lg:col-span-2">
-      <InputField
-        label="To Date"
-        type="date"
-        value={filters.toDate}
-        onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            toDate: e.target.value,
-          }))
-        }
-      />
-    </div>
+            {/* To Date */}
+            <div className="lg:col-span-2">
+              <InputField
+                label="To Date"
+                type="date"
+                value={filters.toDate}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    toDate: e.target.value,
+                  }))
+                }
+              />
+            </div>
 
-    {/* Clear Button */}
-    <div className="lg:col-span-2">
-      <Button
-        onClick={() =>
-          setFilters({
-            search: "",
-            status: "ALL",
-            item_number: "",
-            qcManager: "",
-            fromDate: today,
-            toDate: today,
-          })
-        }
-        className="w-full h-10"
-      >
-        Clear
-      </Button>
-    </div>
-  </div>
-</div>
+            {/* Clear Button */}
+            <div className="lg:col-span-2">
+              <Button
+                onClick={() =>
+                  setFilters({
+                    search: "",
+                    status: "ALL",
+                    item_number: "",
+                    qcManager: "",
+                    fromDate: today,
+                    toDate: today,
+                  })
+                }
+                className="w-full h-10"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        </div>
 
         <DataTable
-        columns={PIPELINE_COLUMNS}
-        data={paginatedData}
-        renderRow={(data) => {
-          const status = getStatusDisplay(data?.grnItem);
-          return(
-          <>
-          {/* <Td className="cursor-pointer" onClick={() =>  setExpandedRow((prev) => prev === data.id ? null : data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td> */}
-          <Td>{data?.poItem?.po_ref_number}</Td>
-          <Td>{data?.poItem?.grn_detail?.grn_number}</Td>
-          <Td>{data?.poItem?.po_items[0].po_item.name}</Td>
-          <Td>{data?.poItem?.po_items[0].quantity} MT</Td>
-          <Td>{data?.grnItem?.total_graded_mt || 0} MT</Td>
-          <Td>{data?.grnItem?.waste_mt || 0} MT</Td>
-          {/* <Td>{data?.poItem?.supplier_name}</Td> */}
-          {/* <Td>{data?.poItem?.grn_detail.grn_date}</Td> */}
-          {/* <Td>{data?.grnItem?.qc_inspector || "Not Assigned"}</Td> */}
-          <Td><Badge variant={status.variant}>{status.label}</Badge></Td>
-          <Td className='flex gap-3'>
-            { !data?.grnItem && 
-            <Button size='sm' onClick={() => setStartGradingData(data?.poItem)}><FaFlask />Start Grading</Button>
-            }
-               {status.label !== "Not assigned" && <Button size='sm' onClick={() => setIsQcModalOpen(true)}><FaClipboardCheck />QC View</Button>}
-            {status.label !== "Not assigned" && (
-            data?.grnItem?.grade_lines.length === 0 ? (
-              <Button size='sm' onClick={() => setSegregationData({ grnItem: data?.grnItem, poItem: data?.poItem })}>
-                <FaLayerGroup /> Grade Segregation
-              </Button>
-            ) : (
-              <Button size='sm' onClick={() => setSegregationDataView(data.grnItem)}>
-                <FaEye className="mr-1" /> View Grades
-              </Button>
-            )
-          )}
+          columns={PIPELINE_COLUMNS}
+          data={paginatedData}
+          renderRow={(data) => {
+            const status = getStatusDisplay(data?.grnItem);
+            return (
+              <>
+                {/* <Td className="cursor-pointer" onClick={() =>  setExpandedRow((prev) => prev === data.id ? null : data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td> */}
+                <Td>{data?.poItem?.po_ref_number}</Td>
+                <Td>{data?.poItem?.grn_detail?.grn_number}</Td>
+                <Td>{data?.poItem?.po_items[0].po_item.name}</Td>
+                <Td>{data?.poItem?.po_items[0].quantity} MT</Td>
+                <Td>{data?.grnItem?.total_graded_mt || 0} MT</Td>
+                <Td>{data?.grnItem?.waste_mt || 0} MT</Td>
+                {/* <Td>{data?.poItem?.supplier_name}</Td> */}
+                {/* <Td>{data?.poItem?.grn_detail.grn_date}</Td> */}
+                {/* <Td>{data?.grnItem?.qc_inspector || "Not Assigned"}</Td> */}
+                <Td><Badge variant={status.variant}>{status.label}</Badge></Td>
+                <Td className='flex gap-3'>
+                  {!data?.grnItem &&
+                    <Button size='sm' onClick={() => setStartGradingData(data?.poItem)}><FaFlask />Start Grading</Button>
+                  }
+                  {status.label !== "Not assigned" && <Button size='sm' onClick={() => setIsQcModalOpen(true)}><FaClipboardCheck />QC View</Button>}
+                  {status.label !== "Not assigned" && (
+                    data?.grnItem?.grade_lines.length === 0 ? (
+                      <Button size='sm' onClick={() => setSegregationData({ grnItem: data?.grnItem, poItem: data?.poItem })}>
+                        <FaLayerGroup /> Grade Segregation
+                      </Button>
+                    ) : (
+                      <Button size='sm' onClick={() => setSegregationDataView(data.grnItem)}>
+                        <FaEye className="mr-1" /> View Grades
+                      </Button>
+                    )
+                  )}
 
-          
-      
-            {/* {!data?.grnItem && 
+
+
+                  {/* {!data?.grnItem && 
             <Button size='sm' onClick={() => setStartGradingData(data.poItem)}}>Start Grading</Button> }
             {data?.grnItem?.grade_lines.length === 0 &&
             <Button size='sm' onClick={() => setSegregationData({ grnItem: data.grnItem, poItem: data.poItem})}> Grade Segregation </Button> 
           } */}
 
-            {/* <Button size='sm' onClick={() => setStartGradingData(data.poItem)}>Start Grading</Button>  */}
-          {/* <Button size='sm' onClick={() => setSegregationData({ grnItem: data.grnItem, poItem: data.poItem})}> Grade Segregation </Button>  */}
-            {/* <Button size='sm' onClick={() => console.log(data)}>QC View</Button> */}
-          </Td>
-          </>
-        )}}
+                  {/* <Button size='sm' onClick={() => setStartGradingData(data.poItem)}>Start Grading</Button>  */}
+                  {/* <Button size='sm' onClick={() => setSegregationData({ grnItem: data.grnItem, poItem: data.poItem})}> Grade Segregation </Button>  */}
+                  {/* <Button size='sm' onClick={() => console.log(data)}>QC View</Button> */}
+                </Td>
+              </>
+            )
+          }}
 
-        expandedRow={expandedRow}
-        renderExpandedRow={(data) => (
-          <div className="p-4 bg-card rounded-lg border border-border">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    {["Batch Number", "Name", "Item Number", "Quantity"].map((header) => (
-                      <th key={header} className="py-3 px-2 font-semibold whitespace-nowrap">
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {data?.poItem?.ref_po?.po_items.length === 0 ? 
-                   <tr className="border-b border-border/50 hover:bg-muted/40 transition-colors">
-                      <td className="py-3 px-2 whitespace-nowrap"> No grading found</td>
+          expandedRow={expandedRow}
+          renderExpandedRow={(data) => (
+            <div className="p-4 bg-card rounded-lg border border-border">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left">
+                      {["Batch Number", "Name", "Item Number", "Quantity"].map((header) => (
+                        <th key={header} className="py-3 px-2 font-semibold whitespace-nowrap">
+                          {header}
+                        </th>
+                      ))}
                     </tr>
-                  :
-                  data?.poItem?.ref_po?.po_items?.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-border/50 hover:bg-muted/40 transition-colors"
-                    >
-                      {/* Batch Number */}
-                      <td className="py-3 px-2 whitespace-nowrap">
-                        {data?.grnItem?.erp_batch || "-"}
-                      </td>
+                  </thead>
 
-                      {/* Name */}
-                      <td className="py-3 px-2 whitespace-nowrap">
-                        {item?.po_item?.name || "-"}
-                      </td>
+                  <tbody>
+                    {data?.poItem?.ref_po?.po_items.length === 0 ?
+                      <tr className="border-b border-border/50 hover:bg-muted/40 transition-colors">
+                        <td className="py-3 px-2 whitespace-nowrap"> No grading found</td>
+                      </tr>
+                      :
+                      data?.poItem?.ref_po?.po_items?.map((item) => (
+                        <tr
+                          key={item.id}
+                          className="border-b border-border/50 hover:bg-muted/40 transition-colors"
+                        >
+                          {/* Batch Number */}
+                          <td className="py-3 px-2 whitespace-nowrap">
+                            {data?.grnItem?.erp_batch || "-"}
+                          </td>
 
-                      {/* Item Number */}
-                      <td className="py-3 px-2 whitespace-nowrap">
-                        {item?.po_item?.item_number || "-"}
-                      </td>
+                          {/* Name */}
+                          <td className="py-3 px-2 whitespace-nowrap">
+                            {item?.po_item?.name || "-"}
+                          </td>
 
-                      {/* Quantity */}
-                      <td className="py-3 px-2 whitespace-nowrap">
-                        {item?.quantity || 0} MT
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          {/* Item Number */}
+                          <td className="py-3 px-2 whitespace-nowrap">
+                            {item?.po_item?.item_number || "-"}
+                          </td>
+
+                          {/* Quantity */}
+                          <td className="py-3 px-2 whitespace-nowrap">
+                            {item?.quantity || 0} MT
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        )}
-        
-        
+          )}
+
+
         />
 
-        <PaginationComponent totalItems={totalItems} itemsPerPage={itemsPerPage} currentPage={currentPage} onPageChange={handlePageChange}/>
+        <PaginationComponent totalItems={totalItems} itemsPerPage={itemsPerPage} currentPage={currentPage} onPageChange={handlePageChange} />
 
       </Card>
 
@@ -332,61 +333,61 @@ const ProductionPipelineDashboard = () => {
         segregationData={segregationData}
       />
 
-      <GradeSegregationViewModal  
+      <GradeSegregationViewModal
         isOpen={!!segregationDataView}
         onClose={() => setSegregationDataView(null)}
         grnItem={segregationDataView} />
 
-        <RMQCModal
-  isOpen={isQcModalOpen}
-  onClose={() => setIsQcModalOpen(false)}
-  data={{
-    rm_name: "Black Tiger Shrimp",
-    rm_code: "RM-BT-0042",
-    vessel_no: "VN-2026-009",
-    samples: [
-      {
-        sample_id: "SMP-001",
-        overall_status: "pass",
-        qc_inspector: "Arjun Das",
-        qc_manager: "Priya Nair",
-        start_time: "08:15 AM",
-        end_time: "08:45 AM",
-        parameters: {
-          size:        { value: "Uniform",  status: "pass" },
-          smell:       { value: "Fresh",    status: "pass" },
-          appearance:  { value: "Bright",   status: "pass" },
-          temperature: { value: "2.4°C",    status: "pass" },
-          ice_condition:{ value: "Good",    status: "pass" },
-        },
-        grades: [
-          { grade: "Black Tiger (20/25)", count: 10 },
-          { grade: "Black Tiger (26/30)", count: 5  },
-          { grade: "Black Tiger (15/20)", count: 8  },
-        ],
-      },
-      {
-        sample_id: "SMP-002",
-        overall_status: "fail",
-        qc_inspector: "Meena Roy",
-        qc_manager: "Priya Nair",
-        start_time: "09:10 AM",
-        end_time: "09:35 AM",
-        parameters: {
-          size:        { value: "Mixed",    status: "fail" },
-          smell:       { value: "Mild Off", status: "fail" },
-          appearance:  { value: "Dull",     status: "fail" },
-          temperature: { value: "5.8°C",    status: "fail" },
-          ice_condition:{ value: "Melting", status: "fail" },
-        },
-        grades: [
-          { grade: "Black Tiger (26/30)", count: 12 },
-          { grade: "Black Tiger (30/40)", count: 6  },
-        ],
-      },
-    ],
-  }}
-/>
+      <RMQCModal
+        isOpen={isQcModalOpen}
+        onClose={() => setIsQcModalOpen(false)}
+        data={{
+          rm_name: "Black Tiger Shrimp",
+          rm_code: "RM-BT-0042",
+          vessel_no: "VN-2026-009",
+          samples: [
+            {
+              sample_id: "SMP-001",
+              overall_status: "pass",
+              qc_inspector: "Arjun Das",
+              qc_manager: "Priya Nair",
+              start_time: "08:15 AM",
+              end_time: "08:45 AM",
+              parameters: {
+                size: { value: "Uniform", status: "pass" },
+                smell: { value: "Fresh", status: "pass" },
+                appearance: { value: "Bright", status: "pass" },
+                temperature: { value: "2.4°C", status: "pass" },
+                ice_condition: { value: "Good", status: "pass" },
+              },
+              grades: [
+                { grade: "Black Tiger (20/25)", count: 10 },
+                { grade: "Black Tiger (26/30)", count: 5 },
+                { grade: "Black Tiger (15/20)", count: 8 },
+              ],
+            },
+            {
+              sample_id: "SMP-002",
+              overall_status: "fail",
+              qc_inspector: "Meena Roy",
+              qc_manager: "Priya Nair",
+              start_time: "09:10 AM",
+              end_time: "09:35 AM",
+              parameters: {
+                size: { value: "Mixed", status: "fail" },
+                smell: { value: "Mild Off", status: "fail" },
+                appearance: { value: "Dull", status: "fail" },
+                temperature: { value: "5.8°C", status: "fail" },
+                ice_condition: { value: "Melting", status: "fail" },
+              },
+              grades: [
+                { grade: "Black Tiger (26/30)", count: 12 },
+                { grade: "Black Tiger (30/40)", count: 6 },
+              ],
+            },
+          ],
+        }}
+      />
     </Layout>
   )
 }
@@ -411,28 +412,28 @@ const StartGradingModal = ({ isOpen, onClose, grnData }) => {
     qc_notes: ""
   }
 
-  const {form,setForm, handleChange, resetForm} = useFormHandler(EMPTY_FORM);
-  const {data: speciesList = [], isLoading: speciesLoading  } = useSpecies(isOpen);
-  const {data: employeeList = [], isLoading: employeeListLoading  } = useGetEmployeeList(isOpen);
+  const { form, setForm, handleChange, resetForm } = useFormHandler(EMPTY_FORM);
+  const { data: speciesList = [], isLoading: speciesLoading } = useSpecies(isOpen);
+  const { data: employeeList = [], isLoading: employeeListLoading } = useGetEmployeeList(isOpen);
   const managerList = employeeList?.filter((employee) => employee.is_manager === true);
 
   useEffect(() => {
-      if (isOpen && grnData) {
-        setForm({
-          item_number: grnData?.po_items?.[0]?.po_item?.item_number || "",
-          grn_reference: grnData?.grn_detail?.grn_number || "",
-          erp_batch: `BATCH-${grnData?.po_ref_number}`,
-          storage_location: grnData?.location || "",
-          supplier_id: grnData?.supplier_id || "",
-          supplier_name: grnData?.supplier_name || "",
-          species_config: "",
-          total_received_mt: Number(grnData?.po_items?.[0]?.quantity) || "",
-          qc_inspector: "",
-          temperature_on_arrival: "",
-          qc_notes: "",
-        });
-      }
-    }, [isOpen, grnData, setForm]);
+    if (isOpen && grnData) {
+      setForm({
+        item_number: grnData?.po_items?.[0]?.po_item?.item_number || "",
+        grn_reference: grnData?.grn_detail?.grn_number || "",
+        erp_batch: `BATCH-${grnData?.po_ref_number}`,
+        storage_location: grnData?.location || "",
+        supplier_id: grnData?.supplier_id || "",
+        supplier_name: grnData?.supplier_name || "",
+        species_config: "",
+        total_received_mt: Number(grnData?.po_items?.[0]?.quantity) || "",
+        qc_inspector: "",
+        temperature_on_arrival: "",
+        qc_notes: "",
+      });
+    }
+  }, [isOpen, grnData, setForm]);
 
   const createGradingMutation = useCreateGradingSession(onClose);
 
@@ -440,74 +441,74 @@ const StartGradingModal = ({ isOpen, onClose, grnData }) => {
     createGradingMutation.mutate(form);
   };
 
-  return(
+  return (
 
-     <Modal title= "Start Grading" saveButtonText='Create Grading Session' width='max-w-xl'isOpen={isOpen} onClose={onClose} onSave={handleSubmit} showSaveButton={true}>
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              {/* <div className="col-span-2"> */}
-                <InputField
-                  label="GRN reference number"
-                  name="grn_reference"
-                  type="text"
-                  value={form.grn_reference}
-                  onChange={handleChange}
-                  disabled={true}
-                />
+    <Modal title="Start Grading" saveButtonText='Create Grading Session' width='max-w-xl' isOpen={isOpen} onClose={onClose} onSave={handleSubmit} showSaveButton={true}>
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          {/* <div className="col-span-2"> */}
+          <InputField
+            label="GRN reference number"
+            name="grn_reference"
+            type="text"
+            value={form.grn_reference}
+            onChange={handleChange}
+            disabled={true}
+          />
 
-                <InputField
-                  label="Batch Number"
-                  name="erp_batch"
-                  type="text"
-                  value={form.erp_batch}
-                  onChange={handleChange}
-                  disabled={true}
-                />
-                
-                <InputField
-                  label="Species"
-                  name="species_config"
-                  type="select"
-                  value={form.species_config}
-                  onChange={handleChange}
-                  options={speciesList?.map(item => ({ id: item.id, value: item.id, label: `${item.scientific_name}`}))}
-                  required
-              />
+          <InputField
+            label="Batch Number"
+            name="erp_batch"
+            type="text"
+            value={form.erp_batch}
+            onChange={handleChange}
+            disabled={true}
+          />
 
-
-              {/* </div> */}
-
-              <InputField
-                label="Enter grading Quantity(MT)"
-                name="total_received_mt"
-                type="number"
-                value={form.total_received_mt}
-                onChange={handleChange}
-                />
-
-              <InputField
-                label="QC Manager"
-                name="qc_inspector"
-                type="select"
-                value={form.qc_inspector}
-                options={managerList?.map(item => ({ id: item.id, value: item.name, label: item.name}))}
-                onChange={handleChange}
-                required
-              />
+          <InputField
+            label="Species"
+            name="species_config"
+            type="select"
+            value={form.species_config}
+            onChange={handleChange}
+            options={speciesList?.map(item => ({ id: item.id, value: item.id, label: `${item.scientific_name}` }))}
+            required
+          />
 
 
-              <div className='col-span-2'>
+          {/* </div> */}
 
-                <InputField
-                  label="Storage Location"
-                  name="storage_location"
-                  type="text"
-                  value={form.storage_location}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+          <InputField
+            label="Enter grading Quantity(MT)"
+            name="total_received_mt"
+            type="number"
+            value={form.total_received_mt}
+            onChange={handleChange}
+          />
+
+          <InputField
+            label="QC Manager"
+            name="qc_inspector"
+            type="text"
+            value={form.qc_inspector}
+            options={managerList?.map(item => ({ id: item.id, value: item.name, label: item.name }))}
+            onChange={handleChange}
+            required
+          />
+
+
+          <div className='col-span-2'>
+
+            <InputField
+              label="Storage Location"
+              name="storage_location"
+              type="text"
+              value={form.storage_location}
+              onChange={handleChange}
+            />
+          </div>
         </div>
+      </div>
     </Modal>
   )
 }
@@ -525,10 +526,16 @@ const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
   const poData = segregationData?.poItem;
   // console.log()
 
-  const EMPTY_GRADE_ROW = { grade_config_id: "", quantity_mt: "", unit_of_quantity: ""};
-  const [gradeRows, setGradeRows] = useState([EMPTY_GRADE_ROW ]);
-  const [wasteMt, setWasteMt] = useState(0);
+  const EMPTY_GRADE_ROW = { grade_config_id: "", quantity_mt: "", unit_of_quantity: "" };
+  const [gradeRows, setGradeRows] = useState([EMPTY_GRADE_ROW]);
+  // const [wasteMt, setWasteMt] = useState(0);
   const [notes, setNotes] = useState("");
+  // Auto calculate waste
+  const totalReceived = Number(qcData?.total_received_mt || 0);
+  const totalGraded = gradeRows.reduce(
+    (sum, row) => sum + (Number(row.quantity_mt) || 0),
+    0);
+  const wasteMt = Math.max(0, totalReceived - totalGraded);
 
   const { data: speciesList, isLoading: speciesLoading } = useSpecies(isOpen, qcData?.species_config);
   const { data: baseUnitList = [], isLoading: baseUnitLoading } = useGetBaseUnitList();
@@ -536,38 +543,38 @@ const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
 
   const gradeOptions = speciesArray.flatMap(
     (species) => (species?.grades || []).map((grade) => ({
-        id: grade.id,
-        value: grade.id,
-        label: `${species.scientific_name} (${grade.grade_code})`,
-      }))
+      id: grade.id,
+      value: grade.id,
+      label: `${species.scientific_name} (${grade.grade_code})`,
+    }))
   );
 
   const handleInputChange = (index, e) => {
     const { name, value, type } = event.target;
-setGradeRows((prev) =>
-    prev.map((row, i) =>
-      i === index
-        ? {
+    setGradeRows((prev) =>
+      prev.map((row, i) =>
+        i === index
+          ? {
             ...row,
             [name]:
               type === "number"
-                ? value === "" 
+                ? value === ""
                   ? ""                    // Allow empty when user clears the field
                   : Number(value) || 0    // Convert only when there's actual input
                 : value,
           }
-        : row
-    )
-  );
-};
+          : row
+      )
+    );
+  };
 
-  const handleAddRow = () => setGradeRows((prev) => [ ...prev, EMPTY_GRADE_ROW]);
+  const handleAddRow = () => setGradeRows((prev) => [...prev, EMPTY_GRADE_ROW]);
   const handleRemoveRow = (index) => setGradeRows((prev) => prev.filter((_, i) => i !== index));
-  
+
   const createGradeSegregation = useGradeSegregation(onClose);
 
   const handleSubmit = async () => {
-   const grade_data_list = gradeRows.map(row => ({
+    const grade_data_list = gradeRows.map(row => ({
       grade_config_id: row.grade_config_id,
       unit_of_quantity: Number(row.unit_of_quantity),
       quantity_mt: Number(row.quantity_mt) || 0,
@@ -600,7 +607,7 @@ setGradeRows((prev) =>
   useEffect(() => {
     if (!isOpen) {
       setGradeRows([EMPTY_GRADE_ROW]);
-      setWasteMt(0);
+      // setWasteMt(0);
       setNotes("");
     }
   }, [isOpen]);
@@ -608,46 +615,46 @@ setGradeRows((prev) =>
 
 
   return (
-      <Modal title='Grade Segregation' width='max-w-6xl' isOpen={isOpen} onClose={onClose} saveButtonText='Save Segregation' onSave={handleSubmit}>
-        <div className="space-y-6">
-          <div className="space-y-4">
-            {gradeRows.map((row, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-12 gap-4 items-end border border-border rounded-xl p-4"
-              >
-                <div className="col-span-4">
-                  <InputField
-                    label="Grade Code"
-                    name="grade_config_id"
-                    type="select"
-                    value={row.grade_config_id}
-                    onChange={(e) => handleInputChange(index, e)}
-                    options={gradeOptions}
-                  />
-                </div>
+    <Modal title='Grade Segregation' width='max-w-6xl' isOpen={isOpen} onClose={onClose} saveButtonText='Save Segregation' onSave={handleSubmit}>
+      <div className="space-y-6">
+        <div className="space-y-4">
+          {gradeRows.map((row, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-12 gap-4 items-end border border-border rounded-xl p-4"
+            >
+              <div className="col-span-4">
+                <InputField
+                  label="Grade Code"
+                  name="grade_config_id"
+                  type="select"
+                  value={row.grade_config_id}
+                  onChange={(e) => handleInputChange(index, e)}
+                  options={gradeOptions}
+                />
+              </div>
 
-                <div className="col-span-3">
-                  <InputField
-                    label="Quantity (MT)"
-                    name="quantity_mt"
-                    type="number"
-                    value={row.quantity_mt}
-                    onChange={(e) =>handleInputChange(index, e)}
-                  />
-                </div>
-                <div className="col-span-3">
-                  <InputField
-                    label="Unit"
-                    name="unit_of_quantity"
-                    type="select"
-                    value={row.unit_of_quantity}
-                    options={baseUnitList?.filter((data)=> data.unit_type === "W")?.map(item => ({ id: item.id, value: item.id, label: item.name}))}
-                    onChange={(e) =>handleInputChange(index, e)}
-                  />
-                </div>
+              <div className="col-span-3">
+                <InputField
+                  label="Quantity (MT)"
+                  name="quantity_mt"
+                  type="number"
+                  value={row.quantity_mt}
+                  onChange={(e) => handleInputChange(index, e)}
+                />
+              </div>
+              <div className="col-span-3">
+                <InputField
+                  label="Unit"
+                  name="unit_of_quantity"
+                  type="select"
+                  value={row.unit_of_quantity}
+                  options={baseUnitList?.filter((data) => data.unit_type === "W")?.map(item => ({ id: item.id, value: item.id, label: item.name }))}
+                  onChange={(e) => handleInputChange(index, e)}
+                />
+              </div>
 
-                {/* <div className="col-span-3">
+              {/* <div className="col-span-3">
                   <InputField
                     label="Bin Location ID"
                     name="bin_location_id"
@@ -659,50 +666,51 @@ setGradeRows((prev) =>
                   />
                 </div> */}
 
-                <div className="col-span-2 flex gap-2">
-                  {/* Add Button */}
-                  {index === gradeRows.length - 1 && (
-                    <Button
-                      variant="primary"
-                      onClick={handleAddRow}
-                      size='sm'
-                    >
-                      Add
-                    </Button>
-                  )}
+              <div className="col-span-2 flex gap-2">
+                {/* Add Button */}
+                {index === gradeRows.length - 1 && (
+                  <Button
+                    variant="primary"
+                    onClick={handleAddRow}
+                    size='sm'
+                  >
+                    Add
+                  </Button>
+                )}
 
-                  {/* Remove Button */}
-                  {gradeRows.length > 1 && (
-                    <Button
-                      size="sm"
-                      variant="outlines"
-                      onClick={() => handleRemoveRow(index)}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
+                {/* Remove Button */}
+                {gradeRows.length > 1 && (
+                  <Button
+                    size="sm"
+                    variant="outlines"
+                    onClick={() => handleRemoveRow(index)}
+                  >
+                    Remove
+                  </Button>
+                )}
               </div>
-            ))}
-             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-              <InputField
-                label="Waste (MT)"
-                type="number"
-                value={wasteMt}
-                onChange={(e) => setWasteMt(e.target.value)}
-              />
-              <InputField
-                label="Notes"
-                type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Enter notes..."
-              />
             </div>
-
+          ))}
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+            <InputField
+              label="Waste (MT)"
+              type="number"
+              value={wasteMt}
+              // onChange={(e) => setWasteMt(e.target.value)}
+              disabled
+            />
+            <InputField
+              label="Notes"
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Enter notes..."
+            />
           </div>
-        </div>
 
-      </Modal>
+        </div>
+      </div>
+
+    </Modal>
   )
 }

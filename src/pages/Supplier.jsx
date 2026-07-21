@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import Card from "../components/Card";
 import InputField from "../components/InputField";
-import DataTable, { Td } from "../components/Datatable";
+import DataTable, { Td } from "../components/DataTable";
 import PaginationComponent from "../components/Pagination";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -65,7 +65,7 @@ const ModalSection = ({ title, children }) => (
 // ─── Modal: loads per-supplier data + resolves grade & species ─────────────────
 
 const SupplierDetailModal = ({ supplierId, supplierName, isOpen, onClose }) => {
-  const { data: profileList = [], isLoading } = useSupplierProfile({id: supplierId});
+  const { data: profileList = [], isLoading } = useSupplierProfile({ id: supplierId });
   const { data: gradeList = [] } = useGrades();
   const { data: speciesList = [] } = useSpecies();
 

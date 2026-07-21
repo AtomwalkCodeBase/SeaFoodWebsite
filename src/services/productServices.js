@@ -1,4 +1,4 @@
-import {  setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl, WorkForceCoverageUrl, WorkForceAssignUrl, WorkForceReleaseUrl, WorkForceAllocationUrl, CreateGRNUrl, GetBaseUnitListUrl, RecordGradesUrl, CreateBatchUrl, WorkForceAvailableUrl, ActiveAlertsUrl,DashboardSummaryUrl,Supplierprofile, getEquipment } from "../services/ConstantServies";
+import { setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl, WorkForceCoverageUrl, WorkForceAssignUrl, WorkForceReleaseUrl, WorkForceAllocationUrl, CreateGRNUrl, GetBaseUnitListUrl, RecordGradesUrl, CreateBatchUrl, WorkForceAvailableUrl, ActiveAlertsUrl, DashboardSummaryUrl, Supplierprofile, getEquipment, PeelingCenterUrl, PROCESSPILLING } from "../services/ConstantServies";
 import { authAxios, authAxiosFilePost, authAxiosget, authAxiosPatch, authAxiosPost, authAxiosPut } from "./HttpMethod";
 
 export function getDashboardSummary(data) {
@@ -8,9 +8,12 @@ export function getDashboardSummary(data) {
 export function getActiveAlerts(data) {
   return authAxios(ActiveAlertsUrl, data);
 }
-export function getSupplierprofile(data, id) {
-  const url = id ? `${Supplierprofile}by-supplier/${id}/` : Supplierprofile;
-  return authAxios(url, data);
+export function getSupplierprofile(id) {
+  const url = id
+    ? `${Supplierprofile}by-supplier/${id}/`
+    : Supplierprofile;
+
+  return authAxios(url);
 }
 export function getemployeeList() {
   return authAxios(profileDtlURL)
@@ -62,7 +65,7 @@ export function getPoItem(data) {
   return authAxios(getPoItemList, data);
 }
 export function getPoQC(data) {
-  return authAxios(getPOqcList,data);
+  return authAxios(getPOqcList, data);
 }
 export function getInventoryItem(data) {
   return authAxios(getInventoryItemList, data);
@@ -98,28 +101,28 @@ export function getMachineCapacity(data) {
 }
 
 export async function AddMachineCapacity(data) {
-      const response = await authAxiosPost(getMachineCapacityUrl, data);
-    return response;
+  const response = await authAxiosPost(getMachineCapacityUrl, data);
+  return response;
 }
 
 export async function EditMachineCapacity(data) {
-      const { id, ...rest } = data;
-    const response = await authAxiosPatch(`${getMachineCapacityUrl}${id}/`, rest);
-    return response;
+  const { id, ...rest } = data;
+  const response = await authAxiosPatch(`${getMachineCapacityUrl}${id}/`, rest);
+  return response;
 }
 
 export async function UpdateYieldConfig(data) {
-    const { id, ...rest } = data;
-    const response = await authAxiosPatch(`${getYieldConfigUrl}${id}/`, rest);
-    return response;
+  const { id, ...rest } = data;
+  const response = await authAxiosPatch(`${getYieldConfigUrl}${id}/`, rest);
+  return response;
 }
 
 export async function AddYieldConfig(data) {
-    const response = await authAxiosPost(getYieldConfigUrl, data);
-    // if (response.status === 200) {
-    //   console.log("Pin updated successfully")
-    // }
-    return response;
+  const response = await authAxiosPost(getYieldConfigUrl, data);
+  // if (response.status === 200) {
+  //   console.log("Pin updated successfully")
+  // }
+  return response;
 }
 
 export function getPlanningConfig(data) {
@@ -127,14 +130,14 @@ export function getPlanningConfig(data) {
 }
 
 export async function AddPlanningConfig(data) {
-    const response = await authAxiosPost(PlanningConfigUrl, data);
-    return response;
+  const response = await authAxiosPost(PlanningConfigUrl, data);
+  return response;
 
 }
 
 export async function EditPlanningConfig(data, id) {
-    const response = await authAxiosPatch(`${PlanningConfigUrl}${id}/`, data);
-    return response;
+  const response = await authAxiosPatch(`${PlanningConfigUrl}${id}/`, data);
+  return response;
 
 }
 
@@ -148,12 +151,12 @@ export function getSpecies(data, id) {
 }
 
 export async function AddSpecies(data) {
-    const response = await authAxiosPost(SpeciesUrl, data);
-    return response;
+  const response = await authAxiosPost(SpeciesUrl, data);
+  return response;
 }
 
 export async function UpdateSpecies(data, id) {
-  const response = await authAxiosPatch( `${SpeciesUrl}${id}/`, data);
+  const response = await authAxiosPatch(`${SpeciesUrl}${id}/`, data);
   return response;
 }
 
@@ -162,12 +165,12 @@ export function getGrades(data) {
 }
 
 export async function AddGrades(data) {
-    const response = await authAxiosPost(GradesUrl, data);
-    return response;
+  const response = await authAxiosPost(GradesUrl, data);
+  return response;
 }
 export async function UpdateGrades(data, id) {
-    const response = await authAxiosPatch(`${GradesUrl}${id}/`, data);
-    return response;
+  const response = await authAxiosPatch(`${GradesUrl}${id}/`, data);
+  return response;
 }
 
 export function GetItemCategory(data) {
@@ -190,25 +193,25 @@ export function GetOrdersByDestinationList(data) {
 }
 
 export async function AddNewOrder(data) {
-    const response = await authAxiosPost(OrdersUrl, data);
-    return response;
+  const response = await authAxiosPost(OrdersUrl, data);
+  return response;
 }
 
 export async function UpdateOrder(data, id) {
-    const response = await authAxiosPatch(`${OrdersUrl}${id}/`, data);
-    return response;
+  const response = await authAxiosPatch(`${OrdersUrl}${id}/`, data);
+  return response;
 }
 
-  export function GetCapacityPlanning(days) {
-      let data = { "days": days};
-    return authAxios(CapacityPlanningUrl, data);
-  }
+export function GetCapacityPlanning(days) {
+  let data = { "days": days };
+  return authAxios(CapacityPlanningUrl, data);
+}
 
 export function GetPlanningReport(params = {}) {
   return authAxios(PlanningReportUrl, params);
 }
 
-  export function getInventoryStatus(data) {
+export function getInventoryStatus(data) {
   return authAxios(InventoryStatusUrl, data);
 }
 export function getInventoryProjection(days) {
@@ -221,8 +224,8 @@ export function getBatchList(data) {
 }
 
 export async function CreateParentBatch(data) {
-    const response = await authAxiosPost(BatchesUrl, data);
-    return response;
+  const response = await authAxiosPost(BatchesUrl, data);
+  return response;
 }
 
 export function getGradingSessionsList(data) {
@@ -230,37 +233,37 @@ export function getGradingSessionsList(data) {
 }
 
 export async function createGRN(data) {
-    const response = await authAxiosPost(CreateGRNUrl, data);
-    return response;
+  const response = await authAxiosPost(CreateGRNUrl, data);
+  return response;
 }
 
 export async function AdvanceBatchActivity(id, data = {}) {
-    const response = await authAxiosPost(`${BatchesUrl}${id}/advance-activity/`, data);
-    return response;
+  const response = await authAxiosPost(`${BatchesUrl}${id}/advance-activity/`, data);
+  return response;
 }
 
 export async function RecordGrades(data) {
-    const response = await authAxiosFilePost(RecordGradesUrl, data);
-    return response;
+  const response = await authAxiosFilePost(RecordGradesUrl, data);
+  return response;
 }
 
 export async function CreateSubBatches(batchId, data) {
-    const response = await authAxiosPost(`${BatchesUrl}${batchId}/create-sub-batches/`, data);
-    return response;
+  const response = await authAxiosPost(`${BatchesUrl}${batchId}/create-sub-batches/`, data);
+  return response;
 }
 
 export async function GenerateBatchPlan(data) {
-    const response = await authAxiosPost(CreateBatchUrl, data);
-    return response;
+  const response = await authAxiosPost(CreateBatchUrl, data);
+  return response;
 }
 
 export async function AutoAllocateBatch(batchId, data = {}) {
-    const response = await authAxiosPost(`${BatchesUrl}${batchId}/auto-allocate/`, data);
-    return response;
+  const response = await authAxiosPost(`${BatchesUrl}${batchId}/auto-allocate/`, data);
+  return response;
 }
 export async function ManualAllocateBatch(batchId, data = {}) {
-    const response = await authAxiosPost(`${BatchesUrl}${batchId}/allocate/`, data);
-    return response;
+  const response = await authAxiosPost(`${BatchesUrl}${batchId}/allocate/`, data);
+  return response;
 }
 
 export function getProcurementPlan(data) {
@@ -272,15 +275,15 @@ export function getWorkForceCoverage(data) {
 }
 
 export async function AssignWorkForce(data) {
-    const { id, ...rest } = data;
-    const response = await authAxiosPost(`${WorkForceAssignUrl}${id}/`, rest);
-    return response;
+  const { id, ...rest } = data;
+  const response = await authAxiosPost(`${WorkForceAssignUrl}${id}/`, rest);
+  return response;
 }
 
 export async function ReleaseWorkForce(data = {}) {
-    const { allocation_id, ...rest } = data;
-    const response = await authAxiosPost(`${WorkForceReleaseUrl}${allocation_id}/`, rest);
-    return response;
+  const { allocation_id, ...rest } = data;
+  const response = await authAxiosPost(`${WorkForceReleaseUrl}${allocation_id}/`, rest);
+  return response;
 }
 
 export function getWorkForceAvailable(params) {
@@ -297,6 +300,30 @@ export function GetBaseUnitList() {
 }
 
 export async function createGradingSession(data) {
-    const response = await authAxiosPost(GradingSessionsUrl, data);
-    return response;
+  const response = await authAxiosPost(`${GradingSessionsUrl}`, data);
+  return response;
+}
+export function getPeelingCenters(data) {
+  return authAxios(PeelingCenterUrl, data);
+}
+
+export async function AddPeelingCenter(data) {
+  return authAxiosPost(PeelingCenterUrl, data);
+}
+
+export async function UpdatePeelingCenter(data, id) {
+  return authAxiosPatch(`${PeelingCenterUrl}${id}/`, data);
+}
+export function getProcessPilling(data) {
+  return authAxios(PROCESSPILLING, data);
+}
+
+export async function AddProcessPilling(data) {
+  const response = await authAxiosFilePost(PROCESSPILLING, data);
+  return response;
+}
+
+export async function UpdateProcessPilling(data, id) {
+  const response = await authAxiosPatch(`${PROCESSPILLING}${id}/`, data);
+  return response;
 }

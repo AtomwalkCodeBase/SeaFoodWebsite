@@ -4,9 +4,9 @@ import Layout from '../components/Layout';
 import styled from 'styled-components';
 import StatsCard from '../components/StatsCard';
 import Card from '../components/Card';
-import DataTable, { Td } from '../components/Datatable';
+import DataTable, { Td } from '../components/DataTable';
 import Badge from '../components/Badge';
-import {Badge as Badge2 }from '../components/EmptyState';
+import { Badge as Badge2 } from '../components/EmptyState';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
 import Modal from '../components/Modal';
@@ -83,13 +83,13 @@ function getBadgeVariant(status) {
 }
 
 const orderStatus = (order_status) => {
-    if (!order_status) return { label: "Not assigned", variant: "error" };
+  if (!order_status) return { label: "Not assigned", variant: "error" };
 
   const statusMap = {
-    PARTIAL : {label: "Partial", variant: "info"},
-    COMPLETED : {label: "Completed", variant: "success"},
-    NOT_STARTED : {label: "Not Started", variant: "error"},
-    }
+    PARTIAL: { label: "Partial", variant: "info" },
+    COMPLETED: { label: "Completed", variant: "success" },
+    NOT_STARTED: { label: "Not Started", variant: "error" },
+  }
 
   return statusMap[order_status] || { label: "Unknown", variant: "warning" }
 }
@@ -241,21 +241,21 @@ const OrdersScreen = () => {
 
   const isEditMode = editingOrderId != null;
 
-const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "ALL", product: "ALL", grade: "ALL"});
-const handleOrderCreated = (orderData) => {
-  setFilters(prev => ({
-    ...prev,
-    search: orderData.customer_name,
-  }));
-};
-  const { data: customerList = [], isLoading: customersLoading } = useCustomers({is_supplier: "N"}, isModalOpen);
+  const [filters, setFilters] = useState({ search: "", priority: "ALL", status: "ALL", product: "ALL", grade: "ALL" });
+  const handleOrderCreated = (orderData) => {
+    setFilters(prev => ({
+      ...prev,
+      search: orderData.customer_name,
+    }));
+  };
+  const { data: customerList = [], isLoading: customersLoading } = useCustomers({ is_supplier: "N" }, isModalOpen);
   const { data: productList = [], isLoading: productsLoading } = useProduct();
   const { data: gradeList = [], isLoading: gradesLoading } = useGrades();
   const { data: SpeciesList = [], isLoading: speciesLoading } = useSpecies();
   const { data: orderList = [], isLoading: ordersLoading } = useOrders();
   const { data: ordersByDestinationList = [], isLoading: ordersByDestinationLoading } = useOrdersByDestination();
 
-  const  { form, setForm, handleChange, resetForm }  = useFormHandler(EMPTY_FORM);
+  const { form, setForm, handleChange, resetForm } = useFormHandler(EMPTY_FORM);
 
   const handleCustomerNameChange = (e) => {
     const customerId = Number(e.target.value);
@@ -348,69 +348,69 @@ const handleOrderCreated = (orderData) => {
   const revenueDisplay = `₹${formatNumber(totalRevenue.toFixed(2))}`;
 
   const data = useMemo(() => {
-  const map = new Map();
-  orderList.forEach(item => {
-    const name = item.product_name;
-    const qty = parseFloat(item.quantity_mt) || 0;
-    map.set(name, (map.get(name) || 0) + qty);
-  });
+    const map = new Map();
+    orderList.forEach(item => {
+      const name = item.product_name;
+      const qty = parseFloat(item.quantity_mt) || 0;
+      map.set(name, (map.get(name) || 0) + qty);
+    });
 
-  return Array.from(map.entries())
-    .map(([product_name, total_mt]) => ({ product_name, total_mt }))
-    .sort((a, b) => b.total_mt - a.total_mt);
-}, [orderList]); // Only depends on orderList
+    return Array.from(map.entries())
+      .map(([product_name, total_mt]) => ({ product_name, total_mt }))
+      .sort((a, b) => b.total_mt - a.total_mt);
+  }, [orderList]); // Only depends on orderList
 
   // const data = aggregateData();
 
   const gradesOptions = gradeList.map((gradeItem) => {
     const foundSpecies = SpeciesList.find((species) => species.id === gradeItem.species_config);
-    return foundSpecies ? { id: gradeItem.id, value: gradeItem.id, label: `${foundSpecies.scientific_name} (${gradeItem.grade_code})`,} : null;
+    return foundSpecies ? { id: gradeItem.id, value: gradeItem.id, label: `${foundSpecies.scientific_name} (${gradeItem.grade_code})`, } : null;
   }).filter(Boolean);
 
-  const getSpeciesGradeLabel = ( speciesList, gradeList, speciesConfigId) => {
+  const getSpeciesGradeLabel = (speciesList, gradeList, speciesConfigId) => {
     const foundGrade = gradeList.find((grade) => grade.id === speciesConfigId);
-      if (!foundGrade) return "--";
+    if (!foundGrade) return "--";
 
-      const foundSpecies = speciesList.find((species) => species.id === foundGrade.species_config);
-      if (!foundSpecies) return "--";
+    const foundSpecies = speciesList.find((species) => species.id === foundGrade.species_config);
+    if (!foundSpecies) return "--";
 
-      return `${foundSpecies.scientific_name} (${foundGrade.grade_code})`;
+    return `${foundSpecies.scientific_name} (${foundGrade.grade_code})`;
   };
 
   const selectedProductBaseUnit = productList.find((product) => product.id === Number(form.product))?.base_unit || "MT";
 
-  
+
   const updatedOrderList = orderList?.map((item) => {
-  let order_status = "NOT_STARTED";
+    let order_status = "NOT_STARTED";
 
-  if (item.fulfillment_pct >= 100 || item.remaining_qty_mt === 0) {
-    order_status = "COMPLETED";
-  } 
-  else if (item.fulfilled_qty_mt > 0 && item.remaining_qty_mt > 0) {
-    order_status = "PARTIAL";
-  }
+    if (item.fulfillment_pct >= 100 || item.remaining_qty_mt === 0) {
+      order_status = "COMPLETED";
+    }
+    else if (item.fulfilled_qty_mt > 0 && item.remaining_qty_mt > 0) {
+      order_status = "PARTIAL";
+    }
 
-  return {
-    ...item,
-    order_status,
-  };
-});
+    return {
+      ...item,
+      order_status,
+    };
+  });
 
-const completedOrders = updatedOrderList.filter((order) => order.order_status === "COMPLETED" )
+  const completedOrders = updatedOrderList.filter((order) => order.order_status === "COMPLETED")
 
-const metrics = [
-  { label: "ACTIVE ORDERS", value: orderList.length, color: "primary", icon: <BsBoxSeamFill /> },
-  { label: "TOTAL DEMAND", value: `${totalDemand.toFixed(2)} MT`, color: "warning", icon: <BsGraphUpArrow /> },
-  { label: "ORDER COMPLETED", value: completedOrders.length, color: "info", icon: <FaCheckCircle /> },
-  { label: "REVENUE PIPELINE", value: revenueDisplay, color: "success", icon: <FaMoneyBillWave /> },
-]
-const sortedOrders = useMemo(() => {
-  return [...updatedOrderList].sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-  );
-}, [updatedOrderList]);
+  const metrics = [
+    { label: "ACTIVE ORDERS", value: orderList.length, color: "primary", icon: <BsBoxSeamFill /> },
+    { label: "TOTAL DEMAND", value: `${totalDemand.toFixed(2)} MT`, color: "warning", icon: <BsGraphUpArrow /> },
+    { label: "ORDER COMPLETED", value: completedOrders.length, color: "info", icon: <FaCheckCircle /> },
+    { label: "REVENUE PIPELINE", value: revenueDisplay, color: "success", icon: <FaMoneyBillWave /> },
+  ]
+  const sortedOrders = useMemo(() => {
+    return [...updatedOrderList].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+  }, [updatedOrderList]);
   const orderFilteredData = useFilter({
-    data: sortedOrders, fields: [ "erp_order_reference", "customer_name", "product_name", "destination_country"],
+    data: sortedOrders, fields: ["erp_order_reference", "customer_name", "product_name", "destination_country"],
     search: filters.search,
     extraFilters: {
       priority_override: filters.priority,
@@ -419,7 +419,7 @@ const sortedOrders = useMemo(() => {
       order_status: filters.status,
     },
   });
-  
+
 
   const { paginatedData, currentPage, itemsPerPage, totalItems, handlePageChange, } = usePagination(orderFilteredData, 10)
 
@@ -444,71 +444,71 @@ const sortedOrders = useMemo(() => {
         ))}
       </StatsGrid>
 
-      <Card style={{ marginTop: "1.5rem" }} title="Order List" headerAction={      <Button onClick={() => setFilters({ search: "", priority: "ALL", product: "ALL", grade: "ALL", status: "ALL"})}> <MdFilterAltOff />Clear</Button>}>
+      <Card style={{ marginTop: "1.5rem" }} title="Order List" headerAction={<Button onClick={() => setFilters({ search: "", priority: "ALL", product: "ALL", grade: "ALL", status: "ALL" })}> <MdFilterAltOff />Clear</Button>}>
         {/* <div className='flex justify-between items-center mb-4'> 
         <SectionHeader title="Order List" border={false} />
           <Button onClick={openAddOrderModal}><FaPlus />Add New Orders</Button>
         </div> */}
         <div className='grid grid-cols-6 gap-3 items-end mb-4'>
-      <div className='col-span-2 md:col-span-2'>
-        <InputField
-          label=""
-          type="text"
-          value={filters.search}
-          onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value,}))}
-          placeholder='Search by order ref, customer, product... '
-        />
-      </div>
+          <div className='col-span-2 md:col-span-2'>
+            <InputField
+              label=""
+              type="text"
+              value={filters.search}
+              onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, }))}
+              placeholder='Search by order ref, customer, product... '
+            />
+          </div>
 
-      <div className='col-span-1'>
-        <InputField
-          label="Priority"
-          type="select"
-          value={filters.priority}
-          onChange={(e) => setFilters((prev) => ({ ...prev, priority: e.target.value }))}
-          options={[
-            { label: "All", value: "ALL" },
-            { label: "Critical", value: "CRITICAL" },
-            { label: "Urgent", value: "URGENT" },
-            { label: "Standard", value: "STANDARD" },
-            { label: "Overdue", value: "OVERDUE" },
-          ]}
-        />
-      </div>
-      <div className='col-span-1'>
-        <InputField
-          label="Order Status"
-          type="select"
-          value={filters.status}
-          onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
-          options={[
-            { label: "All", value: "ALL" },
-            { label: "Completed", value: "COMPLETED" },
-            { label: "Partial Complete", value: "PARTIAL" },
-            { label: "Not Started", value: "NOT_STARTED" },
-          ]}
-        />
-      </div>
+          <div className='col-span-1'>
+            <InputField
+              label="Priority"
+              type="select"
+              value={filters.priority}
+              onChange={(e) => setFilters((prev) => ({ ...prev, priority: e.target.value }))}
+              options={[
+                { label: "All", value: "ALL" },
+                { label: "Critical", value: "CRITICAL" },
+                { label: "Urgent", value: "URGENT" },
+                { label: "Standard", value: "STANDARD" },
+                { label: "Overdue", value: "OVERDUE" },
+              ]}
+            />
+          </div>
+          <div className='col-span-1'>
+            <InputField
+              label="Order Status"
+              type="select"
+              value={filters.status}
+              onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
+              options={[
+                { label: "All", value: "ALL" },
+                { label: "Completed", value: "COMPLETED" },
+                { label: "Partial Complete", value: "PARTIAL" },
+                { label: "Not Started", value: "NOT_STARTED" },
+              ]}
+            />
+          </div>
 
-      <div className='col-span-1'>
-        <InputField
-          label="Product"
-          type="select"
-          value={filters.product}
-          onChange={(e) =>setFilters((prev) => ({...prev, product: e.target.value }))}
-          options={[{ label: "All", value: "ALL" },...productList.map(item => ({ id: item.id, value: item.id, label: item.product_name }))]}
-        />
-      </div>
-      <div className='col-span-1'>
-        <InputField
-          label="Grade"
-          type="select"
-          value={filters.grade}
-          onChange={(e) => setFilters((prev) => ({ ...prev, grade: e.target.value, }))}
-          options={[{ label: "All", value: "ALL" },...gradesOptions]}
-        />
-      </div>
-    </div>
+          <div className='col-span-1'>
+            <InputField
+              label="Product"
+              type="select"
+              value={filters.product}
+              onChange={(e) => setFilters((prev) => ({ ...prev, product: e.target.value }))}
+              options={[{ label: "All", value: "ALL" }, ...productList.map(item => ({ id: item.id, value: item.id, label: item.product_name }))]}
+            />
+          </div>
+          <div className='col-span-1'>
+            <InputField
+              label="Grade"
+              type="select"
+              value={filters.grade}
+              onChange={(e) => setFilters((prev) => ({ ...prev, grade: e.target.value, }))}
+              options={[{ label: "All", value: "ALL" }, ...gradesOptions]}
+            />
+          </div>
+        </div>
         <DataTable
           columns={orderColumns}
           data={paginatedData}
@@ -518,38 +518,38 @@ const sortedOrders = useMemo(() => {
           renderRow={(order, index) => {
             const order_status = orderStatus(order.order_status)
             const shouldHighlightFirstRow = order && isToday(order.created_at);
-            return(
-            <>
-              {/* <Td>{order.erp_order_reference}</Td> */}
-              <Td>{order.customer_name}
-              {(index === 0 && shouldHighlightFirstRow) && (
-                <span
-                    style={{
-                      marginLeft: "6px",
-                      padding: "2px 6px",
-                      background: "#3B82F6",
-                      color: "#fff",
-                      borderRadius: "4px",
-                      fontSize: "10px"
-                    }}
-                  >
-                    NEW
-                  </span>
-                )}  
-              <br/>
-              <Badge2 label={order.erp_order_reference} variant='grn' /></Td>
-              <Td>{order.product_name}</Td>
-              <Td>{getSpeciesGradeLabel(SpeciesList, gradeList, order.grade_config)}</Td>
-              <Td>{order.quantity_mt}</Td>
-              <Td>{formatNumber(order.margin_per_mt)}</Td>
-              <Td>{order.delivery_date}</Td>
-              <Td><Badge variant={order_status.variant}>{order_status.label}</Badge></Td>
-              {/* <Td>{calculateDaysLeft(order.delivery_date)}</Td> */}
-            {/* <Td className={`${order.days_until_delivery <= 7 ? "text-error" : order.days_until_delivery <= 10 ? 'text-warning' : 'text-success'} font-semibold`}> */}
-            <Td className={`${order.days_until_delivery <= 7 ? "text-error" : order.days_until_delivery <= 10 ? 'text-warning' : 'text-success'} font-semibold`}>
-              {order.days_until_delivery}d
-            </Td>
-              {/* <Td>
+            return (
+              <>
+                {/* <Td>{order.erp_order_reference}</Td> */}
+                <Td>{order.customer_name}
+                  {(index === 0 && shouldHighlightFirstRow) && (
+                    <span
+                      style={{
+                        marginLeft: "6px",
+                        padding: "2px 6px",
+                        background: "#3B82F6",
+                        color: "#fff",
+                        borderRadius: "4px",
+                        fontSize: "10px"
+                      }}
+                    >
+                      NEW
+                    </span>
+                  )}
+                  <br />
+                  <Badge2 label={order.erp_order_reference} variant='grn' /></Td>
+                <Td>{order.product_name}</Td>
+                <Td>{getSpeciesGradeLabel(SpeciesList, gradeList, order.grade_config)}</Td>
+                <Td>{order.quantity_mt}</Td>
+                <Td>{formatNumber(order.margin_per_mt)}</Td>
+                <Td>{order.delivery_date}</Td>
+                <Td><Badge variant={order_status.variant}>{order_status.label}</Badge></Td>
+                {/* <Td>{calculateDaysLeft(order.delivery_date)}</Td> */}
+                {/* <Td className={`${order.days_until_delivery <= 7 ? "text-error" : order.days_until_delivery <= 10 ? 'text-warning' : 'text-success'} font-semibold`}> */}
+                <Td className={`${order.days_until_delivery <= 7 ? "text-error" : order.days_until_delivery <= 10 ? 'text-warning' : 'text-success'} font-semibold`}>
+                  {order.days_until_delivery}d
+                </Td>
+                {/* <Td>
                 {order?.score ?
                   <>
                     <ScoreBarWrap>
@@ -562,85 +562,86 @@ const sortedOrders = useMemo(() => {
                   </> : "--"
                 }
               </Td> */}
-              <Td>
-                <Badge variant={getBadgeVariant(order.priority_override) || "primary"}>{order.priority_override || "--"}</Badge>
-              </Td>
-              <Td>
-                <div className='flex gap-3'>
-                <Button size='sm' iconOnly={true} title="View" variant='outline' onClick={() => {setSelectedOrder(order) ;setShowOrderDetails(true)} }><FaEye/></Button>
+                <Td>
+                  <Badge variant={getBadgeVariant(order.priority_override) || "primary"}>{order.priority_override || "--"}</Badge>
+                </Td>
+                <Td>
+                  <div className='flex gap-3'>
+                    <Button size='sm' iconOnly={true} title="View" variant='outline' onClick={() => { setSelectedOrder(order); setShowOrderDetails(true) }}><FaEye /></Button>
 
-                {canShowEditForOrder(order) && (
-                  <Button type="button" iconOnly={true} size="sm" variant="secondary" title="Edit" onClick={() => openEditOrderModal(order)}>
-                    <FaPen />
-                  </Button>
-                )}
-                </div>
-              </Td>
-              {/* <Td>
+                    {canShowEditForOrder(order) && (
+                      <Button type="button" iconOnly={true} size="sm" variant="secondary" title="Edit" onClick={() => openEditOrderModal(order)}>
+                        <FaPen />
+                      </Button>
+                    )}
+                  </div>
+                </Td>
+                {/* <Td>
                 <Badge variant={statusToBadgeVariant[order.status] || "primary"}>{order.status || "--"}</Badge>
               </Td> */}
-            </>
-          )}}
+              </>
+            )
+          }}
         />
         <PaginationComponent
-          totalItems = {totalItems}
-          itemsPerPage = {itemsPerPage}
-          currentPage = {currentPage}
-          onPageChange ={handlePageChange}
-          showPageSize = {true}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          showPageSize={true}
         />
 
-        {showOrderDetails && <OrderDeatilsViewModal isOpen={showOrderDetails} onClose={() => {setShowOrderDetails(false); setSelectedOrder(null)}} order={selectedOrder}/> }
+        {showOrderDetails && <OrderDeatilsViewModal isOpen={showOrderDetails} onClose={() => { setShowOrderDetails(false); setSelectedOrder(null) }} order={selectedOrder} />}
 
       </Card>
 
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-  <Card>
-    <SectionHeader title="Demand by destination" icon="🌍" />
-    <ResponsiveContainer width="100%" height={280}>
-      <PieChart>
-        <Pie
-          data={ordersByDestinationList}
-          dataKey="total_mt"
-          nameKey="destination_country"
-          cx="50%"
-          cy="50%"
-          outerRadius={100}
-          label={(entry) => `${entry.destination_country}: ${entry.total_mt} MT`}
-          fontSize={11}
-        >
-          {ordersByDestinationList.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={DEMAND_BY_DESTINATION_COLORS[index % DEMAND_BY_DESTINATION_COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => `${value} MT`} />
-        <Legend wrapperStyle={{ fontSize: '11px' }} />
-      </PieChart>
-    </ResponsiveContainer>
-  </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <SectionHeader title="Demand by destination" icon="🌍" />
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie
+                data={ordersByDestinationList}
+                dataKey="total_mt"
+                nameKey="destination_country"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label={(entry) => `${entry.destination_country}: ${entry.total_mt} MT`}
+                fontSize={11}
+              >
+                {ordersByDestinationList.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={DEMAND_BY_DESTINATION_COLORS[index % DEMAND_BY_DESTINATION_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => `${value} MT`} />
+              <Legend wrapperStyle={{ fontSize: '11px' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </Card>
 
-  <Card>
-    <SectionHeader title="Demand by product" icon="📦" />
-    <ResponsiveContainer width="100%" height={280}>
-      <BarChart layout="vertical" data={data}>
-        <XAxis type="number" tick={{ fontSize: 11 }} />
-        <YAxis type="category" dataKey="product_name" width={90} tick={{ fontSize: 11 }} />
-        <Tooltip formatter={(value) => [`${value} MT`, 'Total in mt']} />
-        <Bar dataKey="total_mt" barSize={20}>
-          <LabelList 
-            dataKey="total_mt" 
-            position="right" 
-            formatter={(value) => `${value} MT`} 
-            style={{ fill: '#333', fontSize: 10, fontWeight: 'bold' }}
-          />
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={DEMAND_BY_PRODUCT_COLORS[index % DEMAND_BY_PRODUCT_COLORS.length]} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-  </Card>
-</div>
+        <Card>
+          <SectionHeader title="Demand by product" icon="📦" />
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart layout="vertical" data={data}>
+              <XAxis type="number" tick={{ fontSize: 11 }} />
+              <YAxis type="category" dataKey="product_name" width={90} tick={{ fontSize: 11 }} />
+              <Tooltip formatter={(value) => [`${value} MT`, 'Total in mt']} />
+              <Bar dataKey="total_mt" barSize={20}>
+                <LabelList
+                  dataKey="total_mt"
+                  position="right"
+                  formatter={(value) => `${value} MT`}
+                  style={{ fill: '#333', fontSize: 10, fontWeight: 'bold' }}
+                />
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={DEMAND_BY_PRODUCT_COLORS[index % DEMAND_BY_PRODUCT_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
       {isModalOpen && (
         <Modal
           isOpen={isModalOpen}
@@ -652,7 +653,7 @@ const sortedOrders = useMemo(() => {
           showSaveButton={true}
           saveButtonText={isEditMode ? "Edit" : "Add Order"}
           cancelButtonText="Cancel"
-          // saveDisabled={saveDisabled}
+        // saveDisabled={saveDisabled}
         >
           <div className="space-y-6">
             <Section title="Order Details">
@@ -690,7 +691,7 @@ const sortedOrders = useMemo(() => {
                     value: item.value,
                     label: item.label,
                   }))}
-                  required ={true}
+                  required={true}
                 />
 
                 <InputField

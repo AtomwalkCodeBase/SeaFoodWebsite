@@ -7,6 +7,7 @@ import YieldConfigScreen from "./Screens/YieldConfigScreen"
 import MachineCapacityScreen from "./Screens/MachineCapacityScreen"
 import CapacityConfigScreen from "./Screens/Capacityconfigscreen "
 import SpeciesGradesPanel from "./Screens/SpeciesGradesPanel"
+import PeelingCenterScreen from "./Screens/PeelingCenterScreen"
 import Tabs from "../../components/Tabs"
 import Layout from "../../components/Layout"
 
@@ -89,7 +90,7 @@ const SpeciesButton = styled.button`
   border-radius: 8px;
   border: 1px solid
     ${({ active, theme }) =>
-      active ? theme.colors.primary : theme.colors.border};
+    active ? theme.colors.primary : theme.colors.border};
   background: ${({ active, theme }) =>
     active ? theme.colors.primaryLight : theme.colors.backgroundAlt};
   cursor: pointer;
@@ -121,6 +122,7 @@ const TABS = [
   { key: "species", label: "🦐 Species & grades" },
   { key: "yield", label: "🔗 Yield Setup" },
   { key: "machines", label: "🏭 Machines" },
+  { key: "peelingCenter", label: "🧺 Peeling Center" },
   // { key: "suppliers", label: "🚚 Suppliers" },
 ]
 
@@ -134,8 +136,8 @@ export default function ConfigDashboard() {
           <Subtitle>Manage production setup, species, grades, yields, and machines.</Subtitle>
         </div>
       </SubtitleSection>
-        <Card hoverable={false} className="mt-3">
-          <Tabs tabs={TABS} activeTab={tab} setActiveTab={setTab} />
+      <Card hoverable={false} className="mt-3">
+        <Tabs tabs={TABS} activeTab={tab} setActiveTab={setTab} />
         {tab === "config" && (
           <CapacityConfigScreen />
         )}
@@ -151,7 +153,9 @@ export default function ConfigDashboard() {
         {tab === "machines" && (
           <MachineCapacityScreen />
         )}
-
+        {tab === "peelingCenter" && (
+          <PeelingCenterScreen />
+        )}
         {/* {tab === "suppliers" && (
           <Card title="Supplier Data" variant="secondary">
             <SimpleTable>
@@ -178,7 +182,7 @@ export default function ConfigDashboard() {
             </SimpleTable>
           </Card>
         )} */}
-            </Card>
+      </Card>
     </Layout>
   )
 }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { useProcurementPlan, useSpecies } from '../../hooks/useProductQueries'
-import DataTable, { Td } from '../../components/Datatable';
+import DataTable, { Td } from '../../components/DataTable';
 import Button from '../../components/Button';
+import Tabs from '../../components/Tabs';
 import { FaEye } from 'react-icons/fa';
 import Modal from '../../components/Modal';
 import {
@@ -21,6 +22,8 @@ import {
   FiX,
   FiDollarSign,
   FiTruck,
+  FiList,
+  FiGrid,
 } from "react-icons/fi";
 import Badge from '../../components/Badge';
 import PaginationComponent from '../../components/Pagination';
@@ -29,8 +32,9 @@ import { useFilter } from '../../hooks/useFilter';
 import InputField from '../../components/InputField';
 import Layout from '../../components/Layout';
 import Card from '../../components/Card';
+import GradeWiseSummary from './GradeWiseSummary';
 
-const column = ["ORDER REF.", "CUSTOMER", "PRODUCT", "SPECIES", "QYT(MT)", "IN PROG.(MT)", "DELIVERY DATE", "DAYS LEFT", "PROCUR. URGENCY","SUPP. COUNT", "ACTION"]
+const column = ["ORDER REF.", "CUSTOMER", "PRODUCT", "SPECIES", "QYT(MT)", "IN PROG.(MT)", "DELIVERY DATE", "DAYS LEFT", "PROCUR. URGENCY", "SUPP. COUNT", "ACTION"]
 
 const getUrgencyVariant = (urgency) => {
   const variantMap = {
@@ -40,7 +44,7 @@ const getUrgencyVariant = (urgency) => {
     "STANDARD": "info",
     "COVERED": "success"
   };
-  
+
   return variantMap[urgency] || "info";
 };
 
@@ -49,90 +53,139 @@ const ProcurementPlanning = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [search, setSearch] = useState("")
   const [procurmentUrgencyStatus, setprocurmentUrgencyStatus] = useState("ALL");
-  const {data: PlanList, isLoading: PlanLoading} = useProcurementPlan();
-    const { data: SpeciesList = [], isLoading: speciesLoading } = useSpecies();
+  const [viewMode, setViewMode] = useState("order"); // "order" | "grade"
+  const { data: PlanList, isLoading: PlanLoading } = useProcurementPlan();
+  const { data: SpeciesList = [], isLoading: speciesLoading } = useSpecies();
+  const planningTabs = [
+    {
+      key: "order",
+      label: "Order Wise",
+      icon: <FiList />,
+    },
+    {
+      key: "grade",
+      label: "Grade Wise",
+      icon: <FiGrid />,
+    },
+  ];
+  const planningFiletredData = useFilter({
+    data: PlanList, fields: [
+      "order_reference", "customer", "product_name", "supplier_options[].supplier_name"
+    ], search, extraFilters: { procurement_urgency: procurmentUrgencyStatus, },
+  })
 
-  const planningFiletredData = useFilter({data: PlanList,fields: [
-    "order_reference","customer","product_name", "supplier_options[].supplier_name"
-  ],search,  extraFilters: {procurement_urgency: procurmentUrgencyStatus,}, })
-
-    const getSpeciesGradeLabel = ( speciesList, speciesConfigId) => {
-      const foundSpecies = speciesList.find((species) => species.item_category === speciesConfigId);
-      if (!foundSpecies) return "--";
-
-      return `${foundSpecies.scientific_name}`;
+  const getSpeciesGradeLabel = (speciesList, speciesConfigId) => {
+    const foundSpecies = speciesList.find((species) => species.item_category === speciesConfigId);
+    if (!foundSpecies) return "--";
+    return `${foundSpecies.scientific_name}`;
   };
 
-  const {currentPage, paginatedData, totalItems, handlePageChange, itemsPerPage } = usePagination(planningFiletredData, 10)
+  const { currentPage, paginatedData, totalItems, handlePageChange, itemsPerPage } = usePagination(planningFiletredData, 10)
   return (
     <Layout title="Procurement Planning">
       <Card>
-    <div className='grid grid-cols-4 items-end gap-3 mb-3'>
-      <div className='col-span-2'>
-        <InputField
-          label=""
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder='Search by order ref, customer, product... '
-        />
-      </div>
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="grid grid-cols-4 items-end gap-3 flex-1">
+            <div className="col-span-2">
+              <InputField
+                label=""
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by order ref, customer, product..."
+              />
+            </div>
 
-      <div className='col-span-1'>
-        <InputField
-          label="Status"
-          type="select"
-          value={procurmentUrgencyStatus}
-          onChange={(e) => setprocurmentUrgencyStatus(e.target.value)}
-          options={[
-            { label: "All", value: "ALL" },
-            { label: "Covered", value: "COVERED" },
-            { label: "Critical", value: "CRITICAL" },
-            { label: "Urgent", value: "URGENT" },
-            { label: "Standard", value: "STANDARD" },
-            { label: "Overdue", value: "OVERDUE" },
-          ]}
-        />
-      </div>
-    </div>
-      
+            <div className="col-span-1">
+              <InputField
+                label="Status"
+                type="select"
+                value={procurmentUrgencyStatus}
+                onChange={(e) => setprocurmentUrgencyStatus(e.target.value)}
+                options={[
+                  { label: "All", value: "ALL" },
+                  { label: "Covered", value: "COVERED" },
+                  { label: "Critical", value: "CRITICAL" },
+                  { label: "Urgent", value: "URGENT" },
+                  { label: "Standard", value: "STANDARD" },
+                  { label: "Overdue", value: "OVERDUE" },
+                ]}
+              />
+            </div>
+          </div>
 
-      <DataTable
-      columns={column}
-      data={paginatedData}
-      highlightFirstRow={true}
-      renderRow={(data) => (
-        <>
-        <Td>{data.order_reference}</Td>
-        <Td>{data.customer}</Td>
-        <Td>{data.product_name}</Td>
-        {/* <Td>{data.species}({data.grade})</Td> */}
-        <Td>{`${getSpeciesGradeLabel(SpeciesList, Number(data.species))}(${data.grade})`}</Td>
-        <Td>{data.order_qty_mt}</Td>
-        <Td>{data.in_progress_mt}</Td>
-        <Td>{data.delivery_date}</Td>
-        <Td>{data.days_until_delivery}</Td>
-        <Td><Badge variant={getUrgencyVariant(data.procurement_urgency)}>{data.procurement_urgency}</Badge></Td>
-        {/* <Td>{data.procurement_urgency}</Td> */}
-        <Td>{data.supplier_count}</Td>
-        <Td><Button iconOnly={true} title="View" onClick={() => {setIsModalOpen(true); setSelectedOrder(data)}}><FaEye /></Button></Td>
-        </>
-      )}
-      
-      />
-      <PaginationComponent
-        totalItems = {totalItems}
-  itemsPerPage = {itemsPerPage}
-  currentPage = {currentPage}
-  onPageChange = {handlePageChange}
-      
-      />
+          <div className="min-w-[250px]">
+            <Tabs
+              tabs={planningTabs}
+              activeTab={viewMode}
+              setActiveTab={setViewMode}
+            />
+          </div>
+        </div> {/* <-- Missing closing div */}
+
+        {/* Content */}
+        {viewMode === "order" ? (
+          <>
+            <DataTable
+              columns={column}
+              data={paginatedData}
+              highlightFirstRow
+              renderRow={(data) => (
+                <>
+                  <Td>{data.order_reference}</Td>
+                  <Td>{data.customer}</Td>
+                  <Td>{data.product_name}</Td>
+                  <Td>{`${getSpeciesGradeLabel(
+                    SpeciesList,
+                    Number(data.species)
+                  )} (${data.grade})`}</Td>
+                  <Td>{data.order_qty_mt}</Td>
+                  <Td>{data.in_progress_mt}</Td>
+                  <Td>{data.delivery_date}</Td>
+                  <Td>{data.days_until_delivery}</Td>
+                  <Td>
+                    <Badge variant={getUrgencyVariant(data.procurement_urgency)}>
+                      {data.procurement_urgency}
+                    </Badge>
+                  </Td>
+                  <Td>{data.supplier_count}</Td>
+                  <Td>
+                    <Button
+                      iconOnly
+                      title="View"
+                      onClick={() => {
+                        setIsModalOpen(true);
+                        setSelectedOrder(data);
+                      }}
+                    >
+                      <FaEye />
+                    </Button>
+                  </Td>
+                </>
+              )}
+            />
+
+            <PaginationComponent
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+            />
+          </>
+        ) : (
+          <GradeWiseSummary
+            data={planningFiletredData}
+            speciesList={SpeciesList}
+          />
+        )}
       </Card>
+
 
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => {setIsModalOpen(false); setSelectedOrder(null)}}
+        onClose={() => { setIsModalOpen(false); setSelectedOrder(null) }}
         title={`Order Details — ${selectedOrder?.order_reference}`}
         width="max-w-2xl"
         showSaveButton={false}
@@ -177,7 +230,7 @@ function InfoRow({ label, value, valueStyle = {} }) {
     </div>
   );
 }
- 
+
 function StatBox({ label, value, sub, colorVar = "var(--color-text)" }) {
   return (
     <div style={{
@@ -193,12 +246,12 @@ function StatBox({ label, value, sub, colorVar = "var(--color-text)" }) {
     </div>
   );
 }
- 
+
 function UrgencyBadge({ urgency }) {
   const map = {
-    URGENT:   { bg: "var(--color-error)",   text: "#fff",  label: "⚡ Urgent" },
-    HIGH:     { bg: "var(--color-warning)", text: "#fff",  label: "🔶 High" },
-    NORMAL:   { bg: "var(--color-success)", text: "#fff",  label: "✓ Normal" },
+    URGENT: { bg: "var(--color-error)", text: "#fff", label: "⚡ Urgent" },
+    HIGH: { bg: "var(--color-warning)", text: "#fff", label: "🔶 High" },
+    NORMAL: { bg: "var(--color-success)", text: "#fff", label: "✓ Normal" },
   };
   const c = map[urgency] || map.NORMAL;
   return (
@@ -211,28 +264,26 @@ function UrgencyBadge({ urgency }) {
     </span>
   );
 }
- 
+
 /* ── Timeline ─────────────────────────────────────────────── */
 function Timeline({ order }) {
   const steps = [
-    { label: "Arrive by",         date: order.must_arrive_by,            icon: FiTruck,      days: order.days_until_arrival_needed },
-    { label: "Finish pre-grade",  date: order.must_finish_pre_grading,   icon: FiLayers,     days: null },
-    { label: "Start post-grade",  date: order.must_start_post_grading,   icon: FiCheckCircle, days: null },
-    { label: "Ship by",           date: order.must_ship_by,              icon: FiPackage,    days: null },
-    { label: "Delivery",          date: order.delivery_date,             icon: FiCalendar,   days: order.days_until_delivery },
+    { label: "Arrive by", date: order.must_arrive_by, icon: FiTruck, days: order.days_until_arrival_needed },
+    { label: "Finish pre-grade", date: order.must_finish_pre_grading, icon: FiLayers, days: null },
+    { label: "Start post-grade", date: order.must_start_post_grading, icon: FiCheckCircle, days: null },
+    { label: "Ship by", date: order.must_ship_by, icon: FiPackage, days: null },
+    { label: "Delivery", date: order.delivery_date, icon: FiCalendar, days: order.days_until_delivery },
   ];
- 
+
   return (
     <div style={{ position: "relative", paddingLeft: 24 }}>
-      {/* vertical line */}
       <div style={{
         position: "absolute", left: 7, top: 8, bottom: 8,
         width: 2, background: "var(--color-border)", borderRadius: 2,
       }} />
- 
+
       {steps.map((s, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: i < steps.length - 1 ? 12 : 0, position: "relative" }}>
-          {/* dot */}
           <div style={{
             width: 16, height: 16, borderRadius: "50%",
             background: i === 0 ? "var(--color-primary)" : "var(--color-background-alt)",
@@ -265,7 +316,7 @@ function Timeline({ order }) {
     </div>
   );
 }
- 
+
 /* ── Supplier Card ────────────────────────────────────────── */
 function SupplierCard({ s, currency = "INR" }) {
   return (
@@ -274,7 +325,6 @@ function SupplierCard({ s, currency = "INR" }) {
       borderRadius: 12, overflow: "hidden",
       background: "var(--color-background-alt)",
     }}>
-      {/* supplier header */}
       <div style={{
         padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "var(--color-input-bg)", borderBottom: "1px solid var(--color-border)",
@@ -297,21 +347,20 @@ function SupplierCard({ s, currency = "INR" }) {
         </div>
         {s.can_deliver_in_time
           ? <span style={{ fontSize: 11, fontWeight: 600, color: "var(--color-success)", background: "var(--color-success)18", padding: "3px 9px", borderRadius: 20, display: "flex", alignItems: "center", gap: 4 }}>
-              <FiCheckCircle size={11} /> On Time
-            </span>
+            <FiCheckCircle size={11} /> On Time
+          </span>
           : <span style={{ fontSize: 11, fontWeight: 600, color: "var(--color-error)", background: "var(--color-error)18", padding: "3px 9px", borderRadius: 20, display: "flex", alignItems: "center", gap: 4 }}>
-              <FiAlertCircle size={11} /> Late Risk
-            </span>
+            <FiAlertCircle size={11} /> Late Risk
+          </span>
         }
       </div>
- 
-      {/* supplier body */}
+
       <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 0 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 16px" }}>
-          <InfoRow label="Grade yield"     value={`${s.grade_yield_pct}%`} />
-          <InfoRow label="Lead time"       value={`${s.lead_time_days} days`} />
+          <InfoRow label="Grade yield" value={`${s.grade_yield_pct}%`} />
+          <InfoRow label="Lead time" value={`${s.lead_time_days} days`} />
           <InfoRow label="Buy qty (unsorted)" value={`${s.unsorted_purchase_mt} MT`} />
-          <InfoRow label="PO deadline"     value={fmtDate(s.po_deadline)} valueStyle={{ color: s.po_overdue ? "var(--color-error)" : "var(--color-text)" }} />
+          <InfoRow label="PO deadline" value={fmtDate(s.po_deadline)} valueStyle={{ color: s.po_overdue ? "var(--color-error)" : "var(--color-text)" }} />
         </div>
         <div style={{ height: 1, background: "var(--color-border)", margin: "8px 0" }} />
         <div style={{ display: "flex", gap: 10 }}>
@@ -342,15 +391,14 @@ function SupplierCard({ s, currency = "INR" }) {
     </div>
   );
 }
- 
+
 /* ── Modal Content ───────────────────────────────────────── */
 function OrderDetailContent({ order }) {
   const tl = order.timeline_breakdown;
- 
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
- 
-      {/* ── 1. Order identity ── */}
+
       <div>
         <SectionTitle icon={FiTag} label="Order Details" />
         <div style={{
@@ -358,7 +406,6 @@ function OrderDetailContent({ order }) {
           border: "1px solid var(--color-border)",
           borderRadius: 12, padding: "12px 14px",
         }}>
-          {/* Top row */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "var(--color-text)", letterSpacing: "-0.01em" }}>
@@ -372,30 +419,28 @@ function OrderDetailContent({ order }) {
             </div>
             <UrgencyBadge urgency={order.procurement_urgency} />
           </div>
- 
+
           <div style={{ height: 1, background: "var(--color-border)", marginBottom: 10 }} />
- 
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 16px" }}>
-            <InfoRow label="Product"      value={order.product_name} />
+            <InfoRow label="Product" value={order.product_name} />
             <InfoRow label="Product Code" value={order.product_code} valueStyle={{ fontFamily: "monospace", fontSize: 12 }} />
-            <InfoRow label="Grade"        value={order.grade} />
-            <InfoRow label="Species"      value={order.species} />
+            <InfoRow label="Grade" value={order.grade} />
+            <InfoRow label="Species" value={order.species} />
           </div>
         </div>
       </div>
- 
-      {/* ── 2. Stock status ── */}
+
       <div>
         <SectionTitle icon={FiBox} label="Stock Status" />
         <div style={{ display: "flex", gap: 8 }}>
-          <StatBox label="Ordered"    value={`${order.order_qty_mt} MT`}  sub="total order" />
-          <StatBox label="Remaining"  value={`${order.remaining_mt} MT`}  sub="unfulfilled" colorVar="var(--color-warning)" />
-          <StatBox label="In Stock"   value={`${order.in_stock_mt} MT`}   sub="available now" colorVar={order.in_stock_mt > 0 ? "var(--color-success)" : "var(--color-text-light)"} />
-          <StatBox label="Shortfall"  value={`${order.shortfall_mt} MT`}  sub="to procure" colorVar={order.shortfall_mt > 0 ? "var(--color-error)" : "var(--color-success)"} />
+          <StatBox label="Ordered" value={`${order.order_qty_mt} MT`} sub="total order" />
+          <StatBox label="Remaining" value={`${order.remaining_mt} MT`} sub="unfulfilled" colorVar="var(--color-warning)" />
+          <StatBox label="In Stock" value={`${order.in_stock_mt} MT`} sub="available now" colorVar={order.in_stock_mt > 0 ? "var(--color-success)" : "var(--color-text-light)"} />
+          <StatBox label="Shortfall" value={`${order.shortfall_mt} MT`} sub="to procure" colorVar={order.shortfall_mt > 0 ? "var(--color-error)" : "var(--color-success)"} />
         </div>
       </div>
- 
-      {/* ── 3. Timeline ── */}
+
       <div>
         <SectionTitle icon={FiClock} label="Processing Timeline" color="var(--color-secondary)" />
         <div style={{
@@ -403,9 +448,9 @@ function OrderDetailContent({ order }) {
           gap: 6, marginBottom: 14,
         }}>
           {[
-            { label: "Pre-grading",   value: `${tl.pre_grading_days}d` },
-            { label: "Grading",       value: `${tl.grading_session_days}d` },
-            { label: "Post-grading",  value: `${tl.post_grading_days}d` },
+            { label: "Pre-grading", value: `${tl.pre_grading_days}d` },
+            { label: "Grading", value: `${tl.grading_session_days}d` },
+            { label: "Post-grading", value: `${tl.post_grading_days}d` },
             { label: "Total process", value: `${tl.total_processing_days}d` },
           ].map(({ label, value }) => (
             <div key={label} style={{
@@ -420,8 +465,7 @@ function OrderDetailContent({ order }) {
         </div>
         <Timeline order={order} />
       </div>
- 
-      {/* ── 4. Suppliers ── */}
+
       <div>
         <SectionTitle icon={FiTruck} label={`Supplier Options (${order.supplier_count})`} color="var(--color-accent)" />
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -430,7 +474,7 @@ function OrderDetailContent({ order }) {
           ))}
         </div>
       </div>
- 
+
     </div>
   );
 }

@@ -64,3 +64,5 @@ export const GetBaseUnitListUrl = `${hrendpoint}/get_base_unit_list/${db_name}/`
 export const ActiveAlertsUrl = `${newPPpont}/${db_name}/alerts/active/`;
 export const DashboardSummaryUrl = `${PPendPoint}/dashboard/summary/${db_name}/`;
 export const Supplierprofile = `${newPPpont}/${db_name}/supplier-profiles/`;
+export const PeelingCenterUrl = `${newPPpont}/${db_name}/pilling-location/`;
+export const PROCESSPILLING = `${newPPpont}/${db_name}/process-pilling/`;
