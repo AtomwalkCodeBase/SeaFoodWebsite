@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder, getDashboardSummary, getActiveAlerts, getSupplierprofile, getEquipmentList, getPeelingCenters, AddPeelingCenter, getProcessPilling, AddProcessPilling } from "../services/productServices";
+import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder, getDashboardSummary, getActiveAlerts, getSupplierprofile, getEquipmentList, getPeelingCenters, AddPeelingCenter, getProcessPilling, AddProcessPilling, RecordSessionGrades } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -566,5 +566,23 @@ export const useProcessPillingList = (poRequestId) => {
       return list.filter(item => item.po_request === poRequestId);
     },
     errorMessage: `${ErrorText} process pilling list`,
+  });
+};
+export const useRecordSessionGrades = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ sessionId, data }) => RecordSessionGrades(sessionId, data),
+
+    onSuccess: async () => {
+      toast.success("Grades recorded. Supplier data updated.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PO_ITEM_LIST] }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GRN_LIST] }),
+        // queryClient.invalidateQueries({ queryKey: ["SUPPLIER_PROFILE"] }), // refresh supplier page
+      ]);
+      handleCloseModal?.();
+    },
+    onError: handleApiError,
   });
 };

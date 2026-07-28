@@ -7,7 +7,16 @@ import { FaRegHourglassHalf } from 'react-icons/fa6'
 import Tabs from '../../components/Tabs'
 import Card from '../../components/Card'
 import { Badge as BadgeUI, EmptyState, SectionHeader } from '../../components/EmptyState'
-import { useCreateGradingSession, useGetBaseUnitList, useGetEmployeeList, useGradeSegregation, useGRNList, usePOItemList, useSpecies } from '../../hooks/useProductQueries'
+import {
+  useCreateGradingSession,
+  useGetBaseUnitList,
+  useGetEmployeeList,
+  useGradeSegregation,
+  useGRNList,
+  usePOItemList,
+  useSpecies,
+  useRecordSessionGrades,
+} from '../../hooks/useProductQueries'
 import { RiDraftFill } from 'react-icons/ri'
 import Button from '../../components/Button'
 import Modal from '../../components/Modal'
@@ -16,7 +25,7 @@ import InputField from '../../components/InputField'
 import { LuUserRound } from 'react-icons/lu'
 import { FaBoxOpen, FaClipboardCheck, FaEye, FaFlask, FaLayerGroup, FaMapMarkerAlt, FaStore, FaUser } from 'react-icons/fa'
 import { TbArrowAutofitContentFilled } from 'react-icons/tb'
-import DataTable, { Td } from '../../components/DataTable'
+import DataTable, { Td } from '../../components/Datatable'
 import Badge from '../../components/Badge'
 import { useFilter } from '../../hooks/useFilter'
 import { usePagination } from '../../hooks/usePagination'
@@ -87,15 +96,12 @@ const ProductionPipelineDashboard = () => {
 
   const { paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange } = usePagination(filteredPoList, 10);
 
-  // console.log("filteredPoList", filteredPoList)
-
   const inProgressQc = filteredPoList.filter((item) => item?.grnItem?.status === "IN_PROGRESS").length;
   const draftPO = filteredPoList.filter((item) => item?.poItem?.ref_po?.po_status === "D").length;
 
 
   const STATS_CARD = [
     { label: "Total GRN", icon: <GrNotes />, value: filteredPoList.length, color: "primary" },
-    // {label: "Active QC",icon: <BsBookmarkCheckFill />, value: "2", color: "secondary"},
     { label: "In Progress QC", icon: <FaRegHourglassHalf />, value: inProgressQc, color: "accent" },
     { label: "Draft PO", icon: <RiDraftFill />, value: draftPO, color: "success" }
   ]
@@ -217,16 +223,12 @@ const ProductionPipelineDashboard = () => {
             const status = getStatusDisplay(data?.grnItem);
             return (
               <>
-                {/* <Td className="cursor-pointer" onClick={() =>  setExpandedRow((prev) => prev === data.id ? null : data.id)} >{expandedRow === data.id ? <IoIosArrowUp /> : <IoIosArrowDown /> }</Td> */}
                 <Td>{data?.poItem?.po_ref_number}</Td>
                 <Td>{data?.poItem?.grn_detail?.grn_number}</Td>
                 <Td>{data?.poItem?.po_items[0].po_item.name}</Td>
                 <Td>{data?.poItem?.po_items[0].quantity} MT</Td>
                 <Td>{data?.grnItem?.total_graded_mt || 0} MT</Td>
                 <Td>{data?.grnItem?.waste_mt || 0} MT</Td>
-                {/* <Td>{data?.poItem?.supplier_name}</Td> */}
-                {/* <Td>{data?.poItem?.grn_detail.grn_date}</Td> */}
-                {/* <Td>{data?.grnItem?.qc_inspector || "Not Assigned"}</Td> */}
                 <Td><Badge variant={status.variant}>{status.label}</Badge></Td>
                 <Td className='flex gap-3'>
                   {!data?.grnItem &&
@@ -244,18 +246,6 @@ const ProductionPipelineDashboard = () => {
                       </Button>
                     )
                   )}
-
-
-
-                  {/* {!data?.grnItem && 
-            <Button size='sm' onClick={() => setStartGradingData(data.poItem)}}>Start Grading</Button> }
-            {data?.grnItem?.grade_lines.length === 0 &&
-            <Button size='sm' onClick={() => setSegregationData({ grnItem: data.grnItem, poItem: data.poItem})}> Grade Segregation </Button> 
-          } */}
-
-                  {/* <Button size='sm' onClick={() => setStartGradingData(data.poItem)}>Start Grading</Button>  */}
-                  {/* <Button size='sm' onClick={() => setSegregationData({ grnItem: data.grnItem, poItem: data.poItem})}> Grade Segregation </Button>  */}
-                  {/* <Button size='sm' onClick={() => console.log(data)}>QC View</Button> */}
                 </Td>
               </>
             )
@@ -287,22 +277,15 @@ const ProductionPipelineDashboard = () => {
                           key={item.id}
                           className="border-b border-border/50 hover:bg-muted/40 transition-colors"
                         >
-                          {/* Batch Number */}
                           <td className="py-3 px-2 whitespace-nowrap">
                             {data?.grnItem?.erp_batch || "-"}
                           </td>
-
-                          {/* Name */}
                           <td className="py-3 px-2 whitespace-nowrap">
                             {item?.po_item?.name || "-"}
                           </td>
-
-                          {/* Item Number */}
                           <td className="py-3 px-2 whitespace-nowrap">
                             {item?.po_item?.item_number || "-"}
                           </td>
-
-                          {/* Quantity */}
                           <td className="py-3 px-2 whitespace-nowrap">
                             {item?.quantity || 0} MT
                           </td>
@@ -446,7 +429,6 @@ const StartGradingModal = ({ isOpen, onClose, grnData }) => {
     <Modal title="Start Grading" saveButtonText='Create Grading Session' width='max-w-xl' isOpen={isOpen} onClose={onClose} onSave={handleSubmit} showSaveButton={true}>
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
-          {/* <div className="col-span-2"> */}
           <InputField
             label="GRN reference number"
             name="grn_reference"
@@ -475,9 +457,6 @@ const StartGradingModal = ({ isOpen, onClose, grnData }) => {
             required
           />
 
-
-          {/* </div> */}
-
           <InputField
             label="Enter grading Quantity(MT)"
             name="total_received_mt"
@@ -496,9 +475,7 @@ const StartGradingModal = ({ isOpen, onClose, grnData }) => {
             required
           />
 
-
           <div className='col-span-2'>
-
             <InputField
               label="Storage Location"
               name="storage_location"
@@ -524,33 +501,42 @@ const STATUS_CONFIG = {
 const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
   const qcData = segregationData?.grnItem;
   const poData = segregationData?.poItem;
-  // console.log()
 
-  const EMPTY_GRADE_ROW = { grade_config_id: "", quantity_mt: "", unit_of_quantity: "" };
+  // console.log('qcData:', qcData);        // ADD THIS
+  // console.log('poData:', poData);
+
+  const EMPTY_GRADE_ROW = { grade_config_id: "", quantity_mt: "", unit_of_quantity: "", bin_location_id: "" };
   const [gradeRows, setGradeRows] = useState([EMPTY_GRADE_ROW]);
-  // const [wasteMt, setWasteMt] = useState(0);
   const [notes, setNotes] = useState("");
+
   // Auto calculate waste
   const totalReceived = Number(qcData?.total_received_mt || 0);
   const totalGraded = gradeRows.reduce(
     (sum, row) => sum + (Number(row.quantity_mt) || 0),
     0);
   const wasteMt = Math.max(0, totalReceived - totalGraded);
+  // console.log('totalReceived:', totalReceived);   // ADD THIS
+  // console.log('totalGraded:', totalGraded);        // ADD THIS
+  // console.log('wasteMt:', wasteMt);
 
   const { data: speciesList, isLoading: speciesLoading } = useSpecies(isOpen, qcData?.species_config);
   const { data: baseUnitList = [], isLoading: baseUnitLoading } = useGetBaseUnitList();
   const speciesArray = Array.isArray(speciesList) ? speciesList : speciesList ? [speciesList] : [];
 
+  // Options for the Grade Code select — now also carries the raw grade_code
+  // needed by the record-grades API (separate from grade_config_id/id used
+  // by the existing grade-segregation FormData call).
   const gradeOptions = speciesArray.flatMap(
     (species) => (species?.grades || []).map((grade) => ({
       id: grade.id,
       value: grade.id,
       label: `${species.scientific_name} (${grade.grade_code})`,
+      grade_code: grade.grade_code,
     }))
   );
 
   const handleInputChange = (index, e) => {
-    const { name, value, type } = event.target;
+    const { name, value, type } = e.target;
     setGradeRows((prev) =>
       prev.map((row, i) =>
         i === index
@@ -572,8 +558,10 @@ const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
   const handleRemoveRow = (index) => setGradeRows((prev) => prev.filter((_, i) => i !== index));
 
   const createGradeSegregation = useGradeSegregation(onClose);
+  const recordSessionGrades = useRecordSessionGrades(onClose);
 
   const handleSubmit = async () => {
+    // ---- existing call: grade-segregation (FormData) ----
     const grade_data_list = gradeRows.map(row => ({
       grade_config_id: row.grade_config_id,
       unit_of_quantity: Number(row.unit_of_quantity),
@@ -581,38 +569,72 @@ const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
     }));
 
     const formData = new FormData();
-
     formData.append("g_session_id", qcData?.id);
     formData.append("call_mode", "CLOSE");
     formData.append("po_id", poData?.id);
     formData.append("waste_mt", Number(wasteMt) || 0);
-    formData.append(
-      "notes",
-      notes.trim() || "Normal grading completed"
-    );
-
-    // append array data
-    formData.append(
-      "grade_data_list",
-      JSON.stringify(grade_data_list)
-    );
-
-    // for (let pair of formData.entries()) {
-    //   console.log(pair[0], pair[1]);
+    formData.append("notes", notes.trim() || "Normal grading completed");
+    formData.append("grade_data_list", JSON.stringify(grade_data_list));
+    // console.log('FormData payload:');              // ADD THIS
+    // for (let [key, value] of formData.entries()) {  // ADD THIS
+    //   console.log(key, ':', value);                 // ADD THIS
     // }
 
+
+
     createGradeSegregation.mutate(formData);
+
+    // ---- new call: record-grades (JSON, drives supplier profile data) ----
+    const grades = gradeRows.map((row) => {
+      const matched = gradeOptions.find((g) => g.id === row.grade_config_id);
+      return {
+        grade_code: matched?.grade_code || "",
+        quantity_mt: String(row.quantity_mt || 0),
+        bin_location_id: row.bin_location_id || "",
+      };
+    });
+
+    recordSessionGrades.mutate({
+      sessionId: qcData?.id,
+      data: {
+        grades,
+        waste_mt: String(wasteMt),
+      },
+
+    });
   };
+
+
+  //   const grades = gradeRows.map((row) => {
+  //     const matched = gradeOptions.find((g) => g.id === row.grade_config_id);
+  //     return {
+  //       grade_code: matched?.grade_code || "",
+  //       quantity_mt: String(row.quantity_mt || 0),
+  //       bin_location_id: row.bin_location_id || "",
+  //     };
+  //   });
+
+  //   recordSessionGrades.mutate(
+  //     {
+  //       sessionId: qcData?.id,
+  //       data: { grades },
+  //     },
+  //     {
+  //       onSuccess: () => {
+  //         createGradeSegregation.mutate(formData);
+  //       },
+  //     }
+  //   );
+  // };
+
+
 
   useEffect(() => {
     if (!isOpen) {
       setGradeRows([EMPTY_GRADE_ROW]);
-      // setWasteMt(0);
       setNotes("");
     }
   }, [isOpen]);
-
-
 
   return (
     <Modal title='Grade Segregation' width='max-w-6xl' isOpen={isOpen} onClose={onClose} saveButtonText='Save Segregation' onSave={handleSubmit}>
@@ -654,18 +676,6 @@ const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
                 />
               </div>
 
-              {/* <div className="col-span-3">
-                  <InputField
-                    label="Bin Location ID"
-                    name="bin_location_id"
-                    type="text"
-                    value={row.bin_location_id}
-                    onChange={(e) =>
-                      handleInputChange(index, e)
-                    }
-                  />
-                </div> */}
-
               <div className="col-span-2 flex gap-2">
                 {/* Add Button */}
                 {index === gradeRows.length - 1 && (
@@ -696,7 +706,6 @@ const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
               label="Waste (MT)"
               type="number"
               value={wasteMt}
-              // onChange={(e) => setWasteMt(e.target.value)}
               disabled
             />
             <InputField

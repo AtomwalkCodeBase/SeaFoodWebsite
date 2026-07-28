@@ -66,3 +66,4 @@ export const DashboardSummaryUrl = `${PPendPoint}/dashboard/summary/${db_name}/`
 export const Supplierprofile = `${newPPpont}/${db_name}/supplier-profiles/`;
 export const PeelingCenterUrl = `${newPPpont}/${db_name}/pilling-location/`;
 export const PROCESSPILLING = `${newPPpont}/${db_name}/process-pilling/`;
+// export const RecordSessionGradesUrl = (sessionId) => `${GradingSessionsUrl}${sessionId}/record-grades/`;

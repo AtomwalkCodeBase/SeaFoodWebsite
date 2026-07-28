@@ -1,8 +1,0 @@
-$kind: http-request
-name: https://crm.atomwalk.com/pp_api/config/PMA_002/pilling-location/
-description: ""
-url: https://crm.atomwalk.com/pp_api/config/PMA_002/pilling-location/
-method: GET
-headers:
-  Authorization: Token 021c6dfb7994c3aeb681339644d4d5dd9ef36c0e
-order: 544270780989439

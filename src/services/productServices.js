@@ -327,3 +327,9 @@ export async function UpdateProcessPilling(data, id) {
   const response = await authAxiosPatch(`${PROCESSPILLING}${id}/`, data);
   return response;
 }
+// NEW — posts { grades: [...] } as JSON to /grading-sessions/{id}/record-grades/
+export async function RecordSessionGrades(sessionId, data) {
+  // const response = await authAxiosPost(RecordSessionGradesUrl(sessionId), data);
+  const response = await authAxiosPost(`${GradingSessionsUrl}${sessionId}/record-grades/`, data);
+  return response;
+}

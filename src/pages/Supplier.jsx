@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import Card from "../components/Card";
 import InputField from "../components/InputField";
-import DataTable, { Td } from "../components/DataTable";
+import DataTable, { Td } from "../components/Datatable";
 import PaginationComponent from "../components/Pagination";
 import Button from "../components/Button";
 import Modal from "../components/Modal";

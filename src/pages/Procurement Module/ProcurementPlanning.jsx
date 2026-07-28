@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useProcurementPlan, useSpecies } from '../../hooks/useProductQueries'
-import DataTable, { Td } from '../../components/DataTable';
+import DataTable, { Td } from '../../components/Datatable';
 import Button from '../../components/Button';
 import Tabs from '../../components/Tabs';
 import { FaEye } from 'react-icons/fa';

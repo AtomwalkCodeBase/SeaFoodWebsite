@@ -7,7 +7,7 @@ import { HiOutlinePencilAlt } from "react-icons/hi";
 
 import Card from "../../../components/Card";
 import Button from "../../../components/Button";
-import DataTable, { Td } from "../../../components/DataTable";
+import DataTable, { Td } from "../../../components/Datatable";
 import Modal from "../../../components/Modal";
 import InputField from "../../../components/InputField";
 import { useFormHandler } from "../../../hooks/useFormHandler";

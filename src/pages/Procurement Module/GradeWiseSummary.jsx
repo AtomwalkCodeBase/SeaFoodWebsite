@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import DataTable, { Td } from '../../components/DataTable';
+import DataTable, { Td } from '../../components/Datatable';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
 import Modal from '../../components/Modal';

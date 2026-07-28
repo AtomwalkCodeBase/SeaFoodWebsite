@@ -1,18 +1,18 @@
 // Modal.jsx
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { 
-  IoClose, 
-  IoBusiness, 
-  IoCalendar, 
-  IoTicket, 
-  IoCube, 
-  IoScale, 
-  IoCash, 
-  IoLocation, 
-  IoCar, 
+import {
+  IoClose,
+  IoBusiness,
+  IoCalendar,
+  IoTicket,
+  IoCube,
+  IoScale,
+  IoCash,
+  IoLocation,
+  IoCar,
   IoDocumentText,
-  IoChevronDown, 
+  IoChevronDown,
   IoDocumentTextOutline,
   IoAdd,
   IoTrash,
@@ -194,7 +194,7 @@ const InputWrapper = styled.div`
 const StyledInput = styled.input`
   width: 100%;
   padding: ${theme.spacing.sm} ${theme.spacing.md};
-  padding-left: ${props => props.hasIcon ? '2.2rem' : theme.spacing.md};
+  padding-left: ${props => props.hasicon ? '2.2rem' : theme.spacing.md};
   border: 1px solid ${props => props.error ? theme.colors.error : theme.colors.border};
   border-radius: ${theme.borderRadius.lg};
   font-size: ${theme.fontSizes.sm};
@@ -424,22 +424,22 @@ const SecondaryButton = styled(Button)`
 
 // ─── Reusable FormField Component ──────────────────────────────────────────────
 
-const FormField = ({ 
-  label, 
-  name, 
-  type = "text", 
-  icon: Icon, 
-  options = null, 
+const FormField = ({
+  label,
+  name,
+  type = "text",
+  icon: Icon,
+  options = null,
   required = false,
   value,
   onChange,
   error,
   placeholder,
-  valueKey = "id", 
-  labelKey = "name" 
+  valueKey = "id",
+  labelKey = "name"
 }) => {
   const fieldId = `field-${name}`;
-  const hasIcon = !!Icon;
+  const hasicon = !!Icon;
 
   return (
     <FormGroup>
@@ -461,7 +461,7 @@ const FormField = ({
             >
               <option value="">Select {label}</option>
               {options?.map(opt => (
-                <option 
+                <option
                   key={opt[valueKey]}
                   value={opt[valueKey]}
                 >
@@ -481,7 +481,7 @@ const FormField = ({
             placeholder={placeholder}
             error={error}
             required={required}
-            hasIcon={hasIcon}
+            hasicon={hasicon}
           />
         )}
       </InputWrapper>
@@ -522,7 +522,7 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
@@ -565,7 +565,7 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
     const newErrors = {};
 
     // Validate PO data
-    const requiredFields = ["supplier_id", "po_due_date", ];
+    const requiredFields = ["supplier_id", "po_due_date",];
     requiredFields.forEach(field => {
       if (!formData[field]) {
         newErrors[field] = `${field.replace('_', ' ')} is required`;
@@ -580,19 +580,20 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
       if (!item.unit_price || item.unit_price <= 0) {
         newErrors[`item_${index}_unit_price`] = "Valid price required";
       }
-      if(screen === "purchase_request"){
-      if (!item.quantity || item.quantity <= 0) {
-        newErrors[`item_${index}_quantity`] = "Valid quantity required";
-      }}
+      if (screen === "purchase_request") {
+        if (!item.quantity || item.quantity <= 0) {
+          newErrors[`item_${index}_quantity`] = "Valid quantity required";
+        }
+      }
     });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       const payload = {
         po_data: {
@@ -600,8 +601,8 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
           // Convert date to DD-MM-YYYY format
           po_type: screen === "purchase_request" ? "R" : "S",
           po_due_date: formData.po_due_date.split('-').reverse().join('-'),
-           ...(screen !== "purchase_request" && {
-          service_item: itemList[0]?.item_number
+          ...(screen !== "purchase_request" && {
+            service_item: itemList[0]?.item_number
           }),
           item_list: itemList.map(item => ({
             ...item,
@@ -717,9 +718,9 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
                 <IoDocumentText size={20} />
                 Purchase {screen === "purchase_request" ? "Order" : "Service"} Information
               </SectionTitle>
-              
+
               <FormGrid>
-               {screen === "purchase_request" && <FormField
+                {screen === "purchase_request" && <FormField
                   label="Supplier"
                   name="supplier_id"
                   icon={IoBusiness}
@@ -729,8 +730,8 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
                   onChange={handleChange}
                   error={errors.supplier_id}
                   required
-                    valueKey="id"
-  labelKey="name"
+                  valueKey="id"
+                  labelKey="name"
                 />}
 
                 <FormField
@@ -778,7 +779,7 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
               <ItemsContainer>
                 {itemList.map((item, index) => (
                   <ItemCard key={index}>
-                   {screen === "purchase_request" && <ItemHeader>
+                    {screen === "purchase_request" && <ItemHeader>
                       <ItemNumber>
                         <IoCube />
                         Item #{index + 1}
@@ -844,8 +845,8 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
 
                     {/* Item Total Preview */}
                     {item.unit_price && item.quantity && (
-                      <div style={{ 
-                        marginTop: theme.spacing.md, 
+                      <div style={{
+                        marginTop: theme.spacing.md,
                         padding: theme.spacing.sm,
                         background: theme.colors.primaryLight,
                         borderRadius: theme.borderRadius.lg,
@@ -868,16 +869,16 @@ const PurchaseOrderModal = ({ isOpen, onClose, mode = "ADD", supplier_id, screen
           </ModalBody>
 
           <ModalFooter>
-          {screen === "purchase_request" &&  <ItemCount>
+            {screen === "purchase_request" && <ItemCount>
               Total Items: <span>{itemList.length}</span>
             </ItemCount>}
-            
+
             <ButtonGroup>
               <SecondaryButton type="button" onClick={onClose}>
                 Cancel
               </SecondaryButton>
               <PrimaryButton type="submit">
-               {screen === "purchase_request" ? "Create Purchase Request" : "Create Purchase Service"}
+                {screen === "purchase_request" ? "Create Purchase Request" : "Create Purchase Service"}
               </PrimaryButton>
             </ButtonGroup>
           </ModalFooter>

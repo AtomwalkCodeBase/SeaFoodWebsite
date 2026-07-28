@@ -1,6 +1,6 @@
 import React from "react";
 import Modal from "../Modal";
-import DataTable, { Td } from "../DataTable";
+import DataTable, { Td } from "../Datatable";
 import { usePeelingCenters, useProcessPillingList } from "../../hooks/useProductQueries";
 
 const ViewPeelingCenter = ({
