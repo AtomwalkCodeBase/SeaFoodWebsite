@@ -14,20 +14,20 @@ const utilColor = (pct) =>
 
 const labelVariant = (label = "") => {
   const l = label.toUpperCase();
-  if (l === "CRITICAL") return { bg: "bg-red-100",    text: "text-error",   border: "border-red-200"   };
-  if (l === "URGENT")   return { bg: "bg-yellow-100", text: "text-warning", border: "border-yellow-200" };
-  return                       { bg: "bg-blue-100",   text: "text-info",    border: "border-blue-200"   };
+  if (l === "CRITICAL") return { bg: "bg-red-100", text: "text-error", border: "border-red-200" };
+  if (l === "URGENT") return { bg: "bg-yellow-100", text: "text-warning", border: "border-yellow-200" };
+  return { bg: "bg-blue-100", text: "text-info", border: "border-blue-200" };
 };
 
 // ─── CapacitySummaryBar ───────────────────────────────────────────────────────
 
 const CapacitySummaryBar = ({ data, batchState }) => {
-  const totalPlanned  = batchState.filter((b) => b.included).reduce((s, b) => s + Number(b.qty), 0);
-  const utilization   = data.capacity_available_mt
+  const totalPlanned = batchState.filter((b) => b.included).reduce((s, b) => s + Number(b.qty), 0);
+  const utilization = data.capacity_available_mt
     ? Math.min((totalPlanned / data.capacity_available_mt) * 100, 100) : 0;
-  const batchCount    = batchState.filter((b) => b.included).length;
+  const batchCount = batchState.filter((b) => b.included).length;
   const coveredOrders = batchState.reduce((s, b) => s + (b.orders?.length || 0), 0);
-  const totalOrders   = data.priority_queue?.length || 0;
+  const totalOrders = data.priority_queue?.length || 0;
 
   return (
     <div className="flex flex-row gap-3 w-full mb-5">
@@ -109,7 +109,7 @@ const AlertColumn = ({ title, icon: Icon, iconClass, items, emptyText, borderCla
 
 const AlertsPanel = ({ alerts = [], ordersAtRisk = [], stockShortfalls = [] }) => {
   const [open, setOpen] = useState(true);
-  const {theme} = useTheme();
+  const { theme } = useTheme();
 
   // bucket all alerts by severity
   const allAlerts = [
@@ -137,8 +137,8 @@ const AlertsPanel = ({ alerts = [], ordersAtRisk = [], stockShortfalls = [] }) =
   });
 
   const critical = unique.filter((a) => a.severity === "CRITICAL");
-  const warning  = unique.filter((a) => ["WARNING", "URGENT"].includes(a.severity));
-  const info     = unique.filter((a) => !["CRITICAL", "WARNING", "URGENT"].includes(a.severity));
+  const warning = unique.filter((a) => ["WARNING", "URGENT"].includes(a.severity));
+  const info = unique.filter((a) => !["CRITICAL", "WARNING", "URGENT"].includes(a.severity));
 
   const total = unique.length;
 
@@ -152,29 +152,29 @@ const AlertsPanel = ({ alerts = [], ordersAtRisk = [], stockShortfalls = [] }) =
       <Card onClick={() => setOpen((v) => !v)} variant='primary' className="cursor-pointer mt-4">
         <div className="flex items-center justify-between">
 
-        <span className="flex items-center gap-2 text-text font-semibold">
-          <FiAlertCircle className="text-error" size={16} />
-          Alerts &amp; Warnings
-          {critical.length > 0 && (
-            <span className="bg-error text-white text-xs font-bold px-2 py-0.5 rounded-full">
-              {critical.length} Critical
-            </span>
-          )}
-          {warning.length > 0 && (
-            <span className="bg-warning text-white text-xs font-bold px-2 py-0.5 rounded-full">
-              {warning.length} Warning
-            </span>
-          )}
-          {info.length > 0 && (
-            <span className="bg-info text-white text-xs font-bold px-2 py-0.5 rounded-full">
-              {info.length} Info
-            </span>
-          )}
-        </span>
+          <span className="flex items-center gap-2 text-text font-semibold">
+            <FiAlertCircle className="text-error" size={16} />
+            Alerts &amp; Warnings
+            {critical.length > 0 && (
+              <span className="bg-error text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {critical.length} Critical
+              </span>
+            )}
+            {warning.length > 0 && (
+              <span className="bg-warning text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {warning.length} Warning
+              </span>
+            )}
+            {info.length > 0 && (
+              <span className="bg-info text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {info.length} Info
+              </span>
+            )}
+          </span>
 
-        {open ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
-  </div>
-            </Card>
+          {open ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+        </div>
+      </Card>
       {/* </button> */}
 
       {open && total > 0 && (
@@ -224,15 +224,15 @@ const MachineUtilization = ({ machines = [] }) => {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-text shadow-sm hover:bg-backgroundAlt transition-colors"
       > */}
-       <Card onClick={() => setOpen((v) => !v)} variant='secondary' className="cursor-pointer">
+      <Card onClick={() => setOpen((v) => !v)} variant='secondary' className="cursor-pointer">
         <div className="flex items-center justify-between">
-        <span className="flex items-center gap-2 text-text font-semibold">
-          <MdOutlineFactory className="text-primary" size={16} />
-          Machine Utilization
-        </span>
-        {open ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+          <span className="flex items-center gap-2 text-text font-semibold">
+            <MdOutlineFactory className="text-primary" size={16} />
+            Machine Utilization
+          </span>
+          {open ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
         </div>
-        </Card>
+      </Card>
       {/* </button> */}
       {open && (
         <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -264,36 +264,35 @@ const MachineUtilization = ({ machines = [] }) => {
 
 const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChange, onNotesChange }) => {
   // look up order info from priority_queue by order reference
-  const orderRef  = batch.fulfills_orders?.[0]?.order;
+  const orderRef = batch.fulfills_orders?.[0]?.order;
   const queueItem = priorityQueueMap?.[orderRef];
-  const order     = queueItem?.order || {};
+  const order = queueItem?.order || {};
 
-  const maxQty      = queueItem?.remaining_mt || batch.input_weight_mt * 2;
-  const yieldPct    = queueItem?.yield_chain_pct ?? 78.5;
-  const outputMt    = (Number(state.qty) * yieldPct) / 100;
+  const maxQty = queueItem?.remaining_mt || batch.input_weight_mt * 2;
+  const yieldPct = queueItem?.yield_chain_pct ?? 78.5;
+  const outputMt = (Number(state.qty) * yieldPct) / 100;
   const marginPerMt = order.margin_per_mt ?? 0;
   const totalMargin = marginPerMt * outputMt;
-  const daysLeft    = order.days_until_delivery ?? null;
-  const label       = queueItem?.label || batch.label || "";
-  const lv          = labelVariant(label);
+  const daysLeft = order.days_until_delivery ?? null;
+  const label = queueItem?.label || batch.label || "";
+  const lv = labelVariant(label);
 
   const daysColor =
     daysLeft === null ? "text-textLight"
-    : daysLeft < 0   ? "text-error font-semibold"
-    : daysLeft <= 3  ? "text-warning font-semibold"
-    :                  "text-success";
+      : daysLeft < 0 ? "text-error font-semibold"
+        : daysLeft <= 3 ? "text-warning font-semibold"
+          : "text-success";
 
   const formatMargin = (v) =>
     v === 0 ? "—"
-    : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.abs(v));
+      : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.abs(v));
 
   return (
     <div
-      className={`rounded-xl border transition-all duration-200 overflow-hidden mb-3 ${
-        state.included
-          ? "bg-card border-primary shadow-sm"
-          : "bg-background-alt border-border opacity-55"
-      }`}
+      className={`rounded-xl border transition-all duration-200 overflow-hidden mb-3 ${state.included
+        ? "bg-card border-primary shadow-sm"
+        : "bg-background-alt border-border opacity-55"
+        }`}
     >
       <div className="px-4 py-3">
         {/* ── Row 1: order meta ── */}
@@ -308,154 +307,153 @@ const BatchCard = ({ batch, index, state, priorityQueueMap, onToggle, onQtyChang
             {state.included && <FiCheck size={11} />}
           </button> */}
           <div
-  onClick={() => onToggle(index)}
-  className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 cursor-pointer transition-colors ${
-    state.included ? "bg-primary border-primary text-white" : "border-border bg-backgroundAlt"
-  }`}
->
-  {state.included && <FiCheck size={11} />}
-</div>
+            onClick={() => onToggle(index)}
+            className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 cursor-pointer transition-colors ${state.included ? "bg-primary border-primary text-white" : "border-border bg-backgroundAlt"
+              }`}
+          >
+            {state.included && <FiCheck size={11} />}
+          </div>
 
-            <div className="flex flex-col w-48">
-              <div>
-          {/* order id */}
-          <span className="text-xs font-bold text-primary">
-            {orderRef || "—"}
-          </span>
-
-          {/* priority label */}
-          {label && (
-            <span className={`text-xs font-bold px-2 py-0.5 ml-2 rounded-full border ${lv.bg} ${lv.text} ${lv.border}`}>
-              {label}
-            </span>
-          )}
-
-              </div>
-
-              <div>
-
-                    {/* customer */}
-          <span className="text-xs text-textLight truncate max-w-[160px]">
-            {order.customer_name || "—"}
-          </span>
-
-          {/* days left */}
-          {daysLeft !== null && (
-            <>
-              <span className="text-textLight text-xs">·</span>
-              <span className={`text-xs ${daysColor}`}>
-                {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
+          <div className="flex flex-col w-48">
+            <div>
+              {/* order id */}
+              <span className="text-xs font-bold text-primary">
+                {orderRef || "—"}
               </span>
-            </>
-          )}
 
-              </div>
-          <span className="text-xs text-text-light font-semibold">
-            Order: {order.quantity_mt || "—"} | Remaining: {order.remaining_qty_mt || "—"}
-          </span>
+              {/* priority label */}
+              {label && (
+                <span className={`text-xs font-bold px-2 py-0.5 ml-2 rounded-full border ${lv.bg} ${lv.text} ${lv.border}`}>
+                  {label}
+                </span>
+              )}
+
+            </div>
+
+            <div>
+
+              {/* customer */}
+              <span className="text-xs text-textLight truncate max-w-[160px]">
+                {order.customer_name || "—"}
+              </span>
+
+              {/* days left */}
+              {daysLeft !== null && (
+                <>
+                  <span className="text-textLight text-xs">·</span>
+                  <span className={`text-xs ${daysColor}`}>
+                    {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
+                  </span>
+                </>
+              )}
+
+            </div>
+            <span className="text-xs text-text-light font-semibold">
+              Order: {order.quantity_mt || "—"} | Remaining: {order.remaining_qty_mt || "—"}
+            </span>
 
           </div>
 
-<div>
+          <div>
 
-                 {/* product name — push to end */}
-          {order.product_name && (
-            <span className="text-xs text-textLight italic truncate max-w-[180px]">
-              {order.product_name}
-            </span>
-          )}
-<div>
+            {/* product name — push to end */}
+            {order.product_name && (
+              <span className="text-xs text-textLight italic truncate max-w-[180px]">
+                {order.product_name}
+              </span>
+            )}
+            <div>
 
-          {/* product code + grade */}
-          <span className="text-xs font-semibold bg-primaryLight text-primary px-2 py-0.5 rounded-full">
-            {batch.product_code}
-          </span>
-          <span className="text-xs font-semibold bg-backgroundAlt text-textLight px-2 py-0.5 rounded-full">
-            {batch.grade_code}
-          </span>
-</div>
-</div>
+              {/* product code + grade */}
+              <span className="text-xs font-semibold bg-primaryLight text-primary px-2 py-0.5 rounded-full">
+                {batch.product_code}
+              </span>
+              <span className="text-xs font-semibold bg-backgroundAlt text-textLight px-2 py-0.5 rounded-full">
+                {batch.grade_code}
+              </span>
+            </div>
+          </div>
 
           {/* separator dot */}
           <span className="text-textLight text-xs">·</span>
 
 
 
-        <div className="flex items-center gap-4 flex-wrap">
- 
+          <div className="flex items-center gap-4 flex-wrap">
 
-          {/* slider */}
-<div className="flex-1 min-w-[120px]">
-  <input
-    type="range"
-    min={0}
-    max={maxQty}
-    step={0.1}
-    disabled={!state.included}
-    value={Math.max(0, state.qty)}
-    onChange={(e) => onQtyChange(index, parseFloat(e.target.value))}
-    style={{
-      "--range-progress": `${Math.max(0, (state.qty / maxQty) * 100)}%`,
-      "--primary-color": "var(--color-primary)",
-    }}
-    className="custom-range w-full h-2 appearance-none rounded-full cursor-pointer 
+
+            {/* slider */}
+            <div className="flex-1 min-w-[120px]">
+              <input
+                type="range"
+                min={0.001}
+                max={maxQty}
+                step={0.1}
+                disabled={!state.included}
+                value={Math.max(0, state.qty)}
+                onChange={(e) => onQtyChange(index, parseFloat(e.target.value))}
+                style={{
+                  "--range-progress": `${Math.max(0, (state.qty / maxQty) * 100)}%`,
+                  "--primary-color": "var(--color-primary)",
+                }}
+                className="custom-range w-full h-2 appearance-none rounded-full cursor-pointer 
                disabled:opacity-40"
-  />
-                     {/* stock label */}
-          <span className="text-xs text-textLight whitespace-nowrap mx-auto">
-            Stock: <strong className="text-text">{queueItem?.stock_available_mt ?? "—"} MT</strong>
-          </span>
-          </div>
+              />
+              {/* stock label */}
+              <span className="text-xs text-textLight whitespace-nowrap mx-auto">
+                Stock: <strong className="text-text">{queueItem?.stock_available_mt ?? "—"} MT</strong>
+              </span>
+            </div>
 
-          {/* number input */}
-          <div className="flex items-center gap-1">
-            <input
-              type="number"
-              min={0.1}
-              max={maxQty}
-              step={0.1}
-              disabled={!state.included}
-              value={state.qty}
-              onChange={(e) => onQtyChange(index, parseFloat(e.target.value))}
-              className="w-20 text-sm font-bold text-text text-center bg-backgroundAlt border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary disabled:opacity-40"
-            />
-            <span className="text-xs text-textLight">MT</span>
-          </div>
+            {/* number input */}
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0.1}
+                max={maxQty}
+                step={0.1}
+                disabled={!state.included}
+                value={state.qty}
+                onChange={(e) => onQtyChange(index, parseFloat(e.target.value))}
+                className="w-20 text-sm font-bold text-text text-center bg-backgroundAlt border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary disabled:opacity-40"
+              />
+              <span className="text-xs text-textLight">MT</span>
+            </div>
 
-          {/* divider */}
-          <div className="w-px h-6 bg-border" />
+            {/* divider */}
+            <div className="w-px h-6 bg-border" />
 
-          {/* output */}
-          <div className="text-center">
-            <p className="text-xs text-textLight leading-none">Output</p>
-            <p className="text-xs font-semibold text-text mt-0.5">{outputMt.toFixed(2)} MT</p>
-          </div>
+            {/* output */}
+            <div className="text-center">
+              <p className="text-xs text-textLight leading-none">Output</p>
+              <p className="text-xs font-semibold text-text mt-0.5">{outputMt.toFixed(2)} MT</p>
+            </div>
 
-          {/* yield */}
-          <div className="text-center">
-            <p className="text-xs text-textLight leading-none">Yield</p>
-            <p className="text-xs font-bold text-success mt-0.5">{yieldPct.toFixed(1)}%</p>
-          </div>
+            {/* yield */}
+            <div className="text-center">
+              <p className="text-xs text-textLight leading-none">Yield</p>
+              <p className="text-xs font-bold text-success mt-0.5">{yieldPct.toFixed(1)}%</p>
+            </div>
 
-          {/* margin */}
-          {/* <div className="text-center">
+            {/* margin */}
+            {/* <div className="text-center">
             <p className="text-xs text-textLight leading-none">Margin</p>
             <p className={`text-xs font-bold mt-0.5 ${totalMargin >= 0 ? "text-success" : "text-error"}`}>
               {totalMargin < 0 ? "−" : ""}{formatMargin(totalMargin)}
             </p>
           </div> */}
-                <div className="px-4 pb-3">
-        <input
-          type="text"
-          placeholder="Notes…"
-          disabled={!state.included}
-          value={state.notes || ""}
-          onChange={(e) => onNotesChange(index, e.target.value)}
-          className="w-full text-xs bg-inputBg border border-border rounded-lg px-3 py-1.5 text-text placeholder:text-textLight focus:outline-none focus:border-primary disabled:opacity-40"
-        />
-      </div>
-        </div>
-   
+            <div className="px-4 pb-3">
+              <input
+                type="text"
+                placeholder="Notes…"
+                disabled={!state.included}
+                value={state.notes || ""}
+                onChange={(e) => onNotesChange(index, e.target.value)}
+                className="w-full text-xs bg-inputBg border border-border rounded-lg px-3 py-1.5 text-text placeholder:text-textLight focus:outline-none focus:border-primary disabled:opacity-40"
+              />
+            </div>
+          </div>
+
         </div>
 
         {/* ── Row 2: slider + qty + output + yield + margin ── */}
@@ -514,7 +512,7 @@ const RecommendedBatch = ({
     <div className="space-y-4">
       <CapacitySummaryBar data={data} batchState={batchState} />
 
-            {/* batch list */}
+      {/* batch list */}
       <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">

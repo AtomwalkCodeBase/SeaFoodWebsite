@@ -1,34 +1,39 @@
 import React, { useMemo, useState } from 'react'
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import DataTable, { Td } from '../../components/Datatable';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
 import Modal from '../../components/Modal';
 import PaginationComponent from '../../components/Pagination';
 import { usePagination } from '../../hooks/usePagination';
+import { useInventoryCategory } from '../../hooks/useProductQueries';
+import { getInventoryStatus } from '../../services/productServices';
 import { FaEye } from 'react-icons/fa';
-import { FiLayers, FiPackage, FiTrendingUp, FiAlertTriangle, FiUser, FiMapPin, FiCalendar } from 'react-icons/fi';
+import { FiPackage, FiTrendingUp, FiAlertTriangle, FiUser, FiCalendar, FiBox } from 'react-icons/fi';
+import StatsCard from "../../components/StatsCard";
 
-const column = ["SPECIES", "GRADE", "TOTAL REQUIRED (MT)", "IN PROGRESS (MT)", "REMAINING (MT)", "ORDER COUNT", "URGENCY BREAKDOWN", "ACTION"];
+const column = ["SPECIES", "GRADE", "REQUIRED (MT)", "IN STOCK (MT)", "COMMITTED (MT)", "AVAILABLE (MT)", "SHORTFALL (MT)", "ORDER COUNT", "URGENCY BREAKDOWN", "ACTION"];
 
 const urgencyOrder = ["OVERDUE", "CRITICAL", "URGENT", "STANDARD", "COVERED"];
 
-// Thresholds (in MT) for REMAINING quantity color tiers — tune these to your business scale
-const REMAINING_THRESHOLDS = {
-    low: 10,   // <= this  -> green (low remaining, mostly covered)
-    medium: 50, // <= this -> yellow (moderate remaining)
-    // above medium -> red (high remaining, needs urgent procurement)
+// Thresholds (in MT) for SHORTFALL color tiers — tune these to your business scale
+const SHORTFALL_THRESHOLDS = {
+    low: 10,    // <= this  -> green (small shortfall / mostly covered)
+    medium: 50, // <= this  -> yellow (moderate shortfall)
+    // above medium -> red (large shortfall, needs urgent procurement)
 };
 
-const getRemainingColor = (remaining) => {
-    if (remaining <= 0) return "var(--color-success)";
-    if (remaining <= REMAINING_THRESHOLDS.low) return "var(--color-success)";
-    if (remaining <= REMAINING_THRESHOLDS.medium) return "var(--color-warning)";
+const getShortfallColor = (shortfall) => {
+    if (shortfall <= 0) return "var(--color-success)";
+    if (shortfall <= SHORTFALL_THRESHOLDS.low) return "var(--color-success)";
+    if (shortfall <= SHORTFALL_THRESHOLDS.medium) return "var(--color-warning)";
     return "var(--color-error)";
 };
 
-const getRemainingBg = (remaining) => {
-    if (remaining <= REMAINING_THRESHOLDS.low) return "var(--color-success)18";
-    if (remaining <= REMAINING_THRESHOLDS.medium) return "var(--color-warning)18";
+const getShortfallBg = (shortfall) => {
+    if (shortfall <= SHORTFALL_THRESHOLDS.low) return "var(--color-success)18";
+    if (shortfall <= SHORTFALL_THRESHOLDS.medium) return "var(--color-warning)18";
     return "var(--color-error)18";
 };
 
@@ -43,47 +48,14 @@ const getUrgencyVariant = (urgency) => {
     return variantMap[urgency] || "info";
 };
 
-function getSpeciesGradeLabel(speciesList, speciesConfigId) {
-    const foundSpecies = speciesList.find((species) => species.item_category === speciesConfigId);
-    if (!foundSpecies) return "--";
-    return `${foundSpecies.scientific_name}`;
-}
-
-function SummaryStat({ icon: Icon, label, value, colorVar = "var(--color-primary)" }) {
-    return (
-        <div style={{
-            display: "flex", alignItems: "center", gap: 10,
-            background: "var(--color-background-alt)",
-            border: "1px solid var(--color-border)",
-            borderRadius: 10, padding: "10px 14px", flex: 1,
-        }}>
-            <div style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: "var(--color-primary-light)",
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-                <Icon size={15} style={{ color: colorVar }} />
-            </div>
-            <div>
-                <div style={{ fontSize: 10, color: "var(--color-text-light)", opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    {label}
-                </div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.2 }}>
-                    {value}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function RemainingBadge({ value }) {
+function ShortfallBadge({ value }) {
     return (
         <span style={{
             display: "inline-block",
             fontWeight: 700,
             fontSize: 13,
-            color: getRemainingColor(value),
-            background: getRemainingBg(value),
+            color: getShortfallColor(value),
+            background: getShortfallBg(value),
             padding: "3px 10px",
             borderRadius: 8,
         }}>
@@ -93,25 +65,51 @@ function RemainingBadge({ value }) {
 }
 
 /* ── Orders-in-group Modal Content ───────────────────────── */
-function GroupOrdersContent({ group, speciesList }) {
+function GroupOrdersContent({ group }) {
     if (!group) return null;
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
                 background: "var(--color-background-alt)", border: "1px solid var(--color-border)",
                 borderRadius: 10, padding: "10px 14px", marginBottom: 4,
             }}>
-                <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)" }}>
-                        {getSpeciesGradeLabel(speciesList, Number(group.species))} ({group.grade})
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)" }}>
+                            {group.species_name} ({group.grade})
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--color-text-light)", marginTop: 2 }}>
+                            {group.orders.length} order(s) contributing to this grade
+                        </div>
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--color-text-light)", marginTop: 2 }}>
-                        {group.order_count} order(s) contributing to this grade
+                    <ShortfallBadge value={group.shortfall} />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "6px 10px", fontSize: 12 }}>
+                    <div>
+                        <span style={{ color: "var(--color-text-light)", opacity: 0.7 }}>Required: </span>
+                        <span style={{ fontWeight: 600 }}>{group.required.toFixed(2)} MT</span>
+                    </div>
+                    <div>
+                        <span style={{ color: "var(--color-text-light)", opacity: 0.7 }}>In Stock: </span>
+                        <span style={{ fontWeight: 600 }}>{group.in_stock.toFixed(2)} MT</span>
+                    </div>
+                    <div>
+                        <span style={{ color: "var(--color-text-light)", opacity: 0.7 }}>Committed: </span>
+                        <span style={{ fontWeight: 600 }}>{group.committed.toFixed(2)} MT</span>
+                    </div>
+                    <div>
+                        <span style={{ color: "var(--color-text-light)", opacity: 0.7 }}>Available: </span>
+                        <span style={{ fontWeight: 600 }}>{group.available.toFixed(2)} MT</span>
                     </div>
                 </div>
-                <RemainingBadge value={group.remaining} />
             </div>
+
+            {group.orders.length === 0 && (
+                <div style={{ fontSize: 12, color: "var(--color-text-light)", textAlign: "center", padding: "10px 0" }}>
+                    No open orders currently linked to this species/grade.
+                </div>
+            )}
 
             {group.orders.map((o) => (
                 <div key={o.order_reference} style={{
@@ -150,103 +148,138 @@ function GroupOrdersContent({ group, speciesList }) {
     );
 }
 
-const GradeWiseSummary = ({ data = [], speciesList = [] }) => {
-    const [urgencyFilter, setUrgencyFilter] = useState("ALL");
+const GradeWiseSummary = ({ data = [] }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedGroup, setSelectedGroup] = useState(null);
 
-    const grouped = useMemo(() => {
-        const map = {};
+    const { data: inventoryCategoryList = [] } = useInventoryCategory();
 
+    const { data: inventoryGrades = [], isLoading: inventoryLoading } = useQuery({
+        queryKey: ["inventory"],
+        queryFn: () => getInventoryStatus(),
+        select: (res) => {
+            const payload = res?.data || res;
+            return (payload?.grades || []).map((item) => ({
+                grade: item.grade_code || "-",
+                species: item.species,
+                in_stock: item.in_stock_mt ?? 0,
+                committed: item.committed_mt ?? 0,
+                available: item.available_mt ?? 0,
+                required: item.required_mt ?? 0,
+                shortfall: item.shortfall_mt ?? 0,
+                purchase_qty: item.purchase_needed_mt ?? 0,
+                estimated_cost: item.estimated_cost || (item.price_per_mt * item.purchase_needed_mt) || 0,
+                orders: item.active_orders ?? 0,
+            }));
+        },
+        onError: () => toast.error("Failed to load inventory"),
+    });
+
+    const getSpeciesName = (speciesId) => {
+        const found = inventoryCategoryList?.find((s) => s.id === Number(speciesId));
+        return found?.name || "Unknown Species";
+    };
+
+    // Group procurement orders by species+grade — used only for order-level drill-down (count, urgency, list)
+    const orderGroupsMap = useMemo(() => {
+        const map = {};
         data.forEach((item) => {
             const key = `${item.species}||${item.grade}`;
             if (!map[key]) {
-                map[key] = {
-                    species: item.species,
-                    grade: item.grade,
-                    total_qty: 0,
-                    in_progress: 0,
-                    order_count: 0,
-                    urgency_counts: {},
-                    orders: [],
-                };
+                map[key] = { order_count: 0, urgency_counts: {}, orders: [] };
             }
-            map[key].total_qty += Number(item.order_qty_mt) || 0;
-            map[key].in_progress += Number(item.in_progress_mt) || 0;
             map[key].order_count += 1;
             map[key].orders.push(item);
-
             const u = item.procurement_urgency || "STANDARD";
             map[key].urgency_counts[u] = (map[key].urgency_counts[u] || 0) + 1;
         });
-
-        return Object.values(map)
-            .map((g) => ({
-                ...g,
-                remaining: g.total_qty - g.in_progress,
-            }))
-            .sort((a, b) => b.remaining - a.remaining);
+        return map;
     }, [data]);
 
-    const filteredGrouped = useMemo(() => {
-        if (urgencyFilter === "ALL") return grouped;
-        return grouped.filter((g) => g.urgency_counts[urgencyFilter] > 0);
-    }, [grouped, urgencyFilter]);
+    // Inventory API is the source of truth for required/in_stock/committed/available/shortfall
+    const grouped = useMemo(() => {
+        return inventoryGrades
+            .map((inv) => {
+                const key = `${inv.species}||${inv.grade}`;
+                const orderInfo = orderGroupsMap[key] || { order_count: 0, urgency_counts: {}, orders: [] };
+                return {
+                    ...inv,
+                    species_name: getSpeciesName(inv.species),
+                    ...orderInfo,
+                };
+            })
+            .sort((a, b) => b.shortfall - a.shortfall);
+    }, [inventoryGrades, orderGroupsMap, inventoryCategoryList]);
 
     const totals = useMemo(() => {
         return grouped.reduce(
             (acc, g) => {
-                acc.total_qty += g.total_qty;
-                acc.remaining += g.remaining;
+                acc.required += g.required;
+                acc.in_stock += g.in_stock;
+                acc.shortfall += g.shortfall;
                 acc.order_count += g.order_count;
                 return acc;
             },
-            { total_qty: 0, remaining: 0, order_count: 0 }
+            { required: 0, in_stock: 0, shortfall: 0, order_count: 0 }
         );
     }, [grouped]);
 
-    const { currentPage, paginatedData, totalItems, handlePageChange, itemsPerPage } = usePagination(filteredGrouped, 10);
+    const { currentPage, paginatedData, totalItems, handlePageChange, itemsPerPage } = usePagination(grouped, 10);
 
     return (
         <div>
             {/* Summary stats */}
-            <div className="grid grid-cols-4 gap-3 mb-3">
-                <SummaryStat icon={FiLayers} label="Species/Grade Combos" value={grouped.length} />
-                <SummaryStat icon={FiPackage} label="Total Required" value={`${totals.total_qty.toFixed(2)} MT`} />
-                <SummaryStat icon={FiTrendingUp} label="Remaining to Procure" value={`${totals.remaining.toFixed(2)} MT`} colorVar="var(--color-warning)" />
-                <SummaryStat icon={FiAlertTriangle} label="Total Orders" value={totals.order_count} />
-            </div>
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                    gap: "1rem",
+                    marginBottom: "1rem",
+                }}
+            >
+                <StatsCard
+                    icon={<FiPackage />}
+                    label="Total Required"
+                    value={`${totals.required.toFixed(2)} MT`}
+                    color="primary"
+                />
 
-            {/* Urgency quick filter */}
-            <div className="flex gap-2 mb-3 flex-wrap">
-                {["ALL", ...urgencyOrder].map((u) => (
-                    <button
-                        key={u}
-                        onClick={() => setUrgencyFilter(u)}
-                        style={{
-                            fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20,
-                            border: `1px solid ${urgencyFilter === u ? "var(--color-primary)" : "var(--color-border)"}`,
-                            background: urgencyFilter === u ? "var(--color-primary-light)" : "transparent",
-                            color: urgencyFilter === u ? "var(--color-primary)" : "var(--color-text-light)",
-                            cursor: "pointer",
-                        }}
-                    >
-                        {u === "ALL" ? "All" : u.charAt(0) + u.slice(1).toLowerCase()}
-                    </button>
-                ))}
+                <StatsCard
+                    icon={<FiBox />}
+                    label="Total In Stock"
+                    value={`${totals.in_stock.toFixed(2)} MT`}
+                    color="success"
+                />
+
+                <StatsCard
+                    icon={<FiAlertTriangle />}
+                    label="Total Shortfall"
+                    value={`${totals.shortfall.toFixed(2)} MT`}
+                    color="error"
+                />
+
+                <StatsCard
+                    icon={<FiTrendingUp />}
+                    label="Total Orders"
+                    value={totals.order_count}
+                    color="warning"
+                />
             </div>
 
             <DataTable
                 columns={column}
                 data={paginatedData}
+                isLoading={inventoryLoading}
                 highlightFirstRow={true}
                 renderRow={(g) => (
                     <>
-                        <Td>{getSpeciesGradeLabel(speciesList, Number(g.species))}</Td>
+                        <Td>{g.species_name}</Td>
                         <Td>{g.grade}</Td>
-                        <Td>{g.total_qty.toFixed(2)}</Td>
-                        <Td>{g.in_progress.toFixed(2)}</Td>
-                        <Td><RemainingBadge value={g.remaining} /></Td>
+                        <Td>{g.required.toFixed(2)}</Td>
+                        <Td>{g.in_stock.toFixed(2)}</Td>
+                        <Td>{g.committed.toFixed(2)}</Td>
+                        <Td>{g.available.toFixed(2)}</Td>
+                        <Td><ShortfallBadge value={g.shortfall} /></Td>
                         <Td>{g.order_count}</Td>
                         <Td>
                             <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
@@ -282,16 +315,12 @@ const GradeWiseSummary = ({ data = [], speciesList = [] }) => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => { setIsModalOpen(false); setSelectedGroup(null); }}
-                title={
-                    selectedGroup
-                        ? `Orders — ${getSpeciesGradeLabel(speciesList, Number(selectedGroup.species))} (${selectedGroup.grade})`
-                        : "Orders"
-                }
+                title={selectedGroup ? `Orders — ${selectedGroup.species_name} (${selectedGroup.grade})` : "Orders"}
                 width="max-w-2xl"
                 showSaveButton={false}
                 cancelButtonText="Close"
             >
-                <GroupOrdersContent group={selectedGroup} speciesList={speciesList} />
+                <GroupOrdersContent group={selectedGroup} />
             </Modal>
         </div>
     );

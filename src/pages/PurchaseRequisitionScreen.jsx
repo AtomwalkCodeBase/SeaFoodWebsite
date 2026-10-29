@@ -2,18 +2,25 @@ import React, { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { getPoItem } from '../services/productServices';
 import { usePagination } from '../hooks/usePagination';
-import { POCardItem } from '../components/ScreenComponents/POCardItem';
 import PurchaseOrderModal from '../components/Modal/PurchaseOrderModal';
+import PeelingCenter from '../components/Modal/PeelingCenter';
+import ViewPeelingCenter from '../components/Modal/ViewPeelingCenters';
+import PRProgressCard from '../components/Modal/PRProgressCard';
+import PeelingStatusBadge from '../components/Modal/PeelingStatusBadge';
 import styled from 'styled-components';
 import { theme } from '../styles/Theme';
 import { FiFilter, FiPackage, FiSearch } from 'react-icons/fi';
 import { MdOutlineWaterDrop } from 'react-icons/md';
 import { TbFish } from 'react-icons/tb';
 import Button from '../components/Button';
-import { FaPlus } from 'react-icons/fa';
+import { FaEye, FaPlus } from 'react-icons/fa';
 import StatsCard from '../components/StatsCard';
-import { EmptyState } from '../components/EmptyState';
 import PaginationComponent from '../components/Pagination';
+import DataTable, { Td } from '../components/Datatable';
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
+import { formatNumber } from "../utils";
+import Badge from "../components/Badge";
+import Card from '../components/Card';
 
 const Page = styled.div`
   min-height: 100vh;
@@ -24,7 +31,6 @@ const Page = styled.div`
     padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing["2xl"]}; 
   }
 `;
-
 const SubtitleSection = styled.div`
   display: flex;
   justify-content: space-between;
@@ -65,6 +71,12 @@ const SearchWrap = styled.div`
   flex: 1;
   min-width: 200px;
 `;
+const statusMap = {
+  A: "Approved",
+  P: "Pending",
+  R: "Rejected",
+  D: "Draft",
+};
 const SearchIcon = styled.span`
   position: absolute;
   left: ${({ theme }) => theme.spacing.sm}; top: 50%;
@@ -121,27 +133,35 @@ const CountBadge = styled.span`
   border-radius: ${({ theme }) => theme.borderRadius.full};
 `;
 
-// Cards grid
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: ${({ theme }) => theme.spacing.lg};
+const ActionsCell = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.xs};
+  flex-wrap: wrap;
+`;
 
-  @media (max-width: 420px) { grid-template-columns: 1fr; }
+const ProgressSection = styled.div`
+  margin-top: ${({ theme }) => theme.spacing.xl};
+`;
+
+const ProgressSectionTitle = styled.h3`
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 const PurchaseRequisitionScreen = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // const [itemsPerPage, setItemsPerPage] = useState(10);
-  // const [currentPage, setCurrentPage] = useState(1);
-
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
-  
+  const [expandedRow, setExpandedRow] = useState(null);
+
   const [poItemList, setPoItemList] = useState([]);
 
-    function countByPoType(arr, po_type) {
+  const [selectedPurchaseData, setSelectedPurchaseData] = useState(null);
+  const [isAddPeelingOpen, setIsAddPeelingOpen] = useState(false);
+  const [isViewPeelingOpen, setIsViewPeelingOpen] = useState(false);
+
+  function countByPoType(arr, po_type) {
     if (!Array.isArray(arr)) return 0;
 
     return arr.reduce((count, item) => {
@@ -152,7 +172,7 @@ const PurchaseRequisitionScreen = () => {
     }, 0);
   }
 
-    const STATS = [
+  const STATS = [
     { label: "Total Requests", value: poItemList.length, icon: <FiPackage />, color: "primary", bg: "primaryLight" },
     { label: "Purchase Order Request", value: countByPoType(poItemList, "R"), icon: <MdOutlineWaterDrop />, color: "warning", bg: "warningLight" },
     { label: "Purchase order", value: countByPoType(poItemList, "P"), icon: <TbFish />, color: "success", bg: "successLight" },
@@ -172,13 +192,7 @@ const PurchaseRequisitionScreen = () => {
     }
   }
 
-    const filtered = poItemList.filter((po) => {
-    const statusMap = {
-      A: "Approved",
-      P: "Pending",
-      R: "Rejected",
-      D: "Draft",
-    };
+  const filtered = poItemList.filter((po) => {
     const poStatusLabel = statusMap[po.po_status] || "Pending";
     const matchStatus = filter === "All" || poStatusLabel === filter;
 
@@ -207,11 +221,23 @@ const PurchaseRequisitionScreen = () => {
     return matchStatus && matchSearch;
   });
 
-  const { paginatedData, currentPage, itemsPerPage, totalItems, handlePageChange,} = usePagination(filtered, 10);
+  const { paginatedData, currentPage, itemsPerPage, totalItems, handlePageChange, } = usePagination(filtered, 10);
+
+  const openAddPeeling = (e, data) => {
+    e.stopPropagation();
+    setSelectedPurchaseData(data);
+    setIsAddPeelingOpen(true);
+  };
+
+  const openViewPeeling = (e, data) => {
+    e.stopPropagation();
+    setSelectedPurchaseData(data);
+    setIsViewPeelingOpen(true);
+  };
 
   return (
-     <Layout title="Purchase Request Screen">
-        <SubtitleSection>
+    <Layout title="Purchase Request Screen">
+      <SubtitleSection>
         <div>
           <Subtitle>See all Purchase requests List </Subtitle>
         </div>
@@ -222,7 +248,7 @@ const PurchaseRequisitionScreen = () => {
         </div>
       </SubtitleSection>
       <Page>
-      <StatsGrid>
+        <StatsGrid>
           {STATS.map(({ label, value, icon, color, bg }, i) => (
             <StatsCard icon={icon} label={label} value={value} color={color} />
           ))}
@@ -251,39 +277,208 @@ const PurchaseRequisitionScreen = () => {
               <option value="Approved">Approved</option>
               <option value="Rejected">Rejected</option>
             </Select>
-            {/* <ChevronIcon><FiChevronDown /></ChevronIcon> */}
           </FilterSelect>
 
           <CountBadge>{filtered.length} record{filtered.length !== 1 ? "s" : ""}</CountBadge>
         </Toolbar>
 
-        <Grid>
-          {paginatedData.length > 0
-            ? paginatedData.map((pr, i) => <POCardItem key={pr.id} po={pr} index={i} />)
-            : (
-              <EmptyState>
-                <TbFish />
-                <strong>No purchase requests found</strong>
-                <span>Try adjusting your search or filter.</span>
-              </EmptyState>
-            )
-          }
-        </Grid>
+        <Card title="PR List">
 
-        <PaginationComponent
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          currentPage={currentPage}
-          onPageChange={handlePageChange}
-          siblingCount={2}
-        />
+          <DataTable
+            columns={[
+              "",
+              "PR Reference",
+              "Supplier",
+              "Items",
+              "Date",
+              "Quantity",
+              "Total Amount",
+              "Peeling Status",
+              "Actions"
+            ]}
+            data={paginatedData}
+            isLoading={false}
+            emptyMessage="No Purchase Requests Found"
+            rowAction={(data) =>
+              setExpandedRow(prev =>
+                prev === data.id ? null : data.id
+              )
+            }
+            renderRow={(data) => (
+              <>
+                <Td>
+                  {expandedRow === data.id
+                    ? <IoIosArrowUp />
+                    : <IoIosArrowDown />
+                  }
+                </Td>
 
-        {isModalOpen &&  <PurchaseOrderModal
+                <Td>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span>{data.po_ref_number}</span>
+                    <small style={{ color: "#6b7280" }}>
+                      {data.po_items?.[0]?.po_item?.name || "--"}
+                      {data.po_items?.length > 1 &&
+                        ` +${data.po_items.length - 1} more`}
+                    </small>
+                  </div>
+                </Td>
+
+                <Td>
+                  {data.supplier_name || "--"}
+                </Td>
+
+                <Td>{data.po_items?.length || 0} </Td>
+
+                <Td>{data.po_date}</Td>
+
+                <Td>{data.po_items?.reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</Td>
+
+                <Td> ₹{formatNumber(data.total)} </Td>
+
+                <Td>
+                  <PeelingStatusBadge poId={data.id} />
+                </Td>
+
+                <Td>
+                  <ActionsCell>
+                    {data.po_status !== "D" && (
+                      <Button size="sm" onClick={(e) => openAddPeeling(e, data)} >
+                        Add Peeling
+                      </Button>
+                    )}
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => openViewPeeling(e, data)}
+                    ><FaEye />
+
+                      View Peeling
+                    </Button>
+                  </ActionsCell>
+                </Td>
+              </>
+            )}
+
+            expandedRow={expandedRow}
+
+            renderExpandedRow={(data) => (
+              <div className="p-4 bg-card rounded-md">
+
+                <table className="w-full text-sm">
+
+                  <thead>
+                    <tr className="border-b border-border text-left">
+                      <th className="p-2"> Item Name </th>
+
+                      <th className="p-2"> Item Number </th>
+
+                      <th className="p-2">Quantity </th>
+
+                      <th className="p-2"> Unit Price </th>
+
+                      <th className="p-2"> Tax </th>
+
+                      <th className="p-2"> Total </th>
+                    </tr>
+                  </thead>
+
+
+                  <tbody>
+
+                    {
+                      data.po_items?.map(item => (
+                        <tr
+                          key={item.id}
+                          className="border-b border-border/50"
+                        >
+
+                          <td className="p-2">
+                            {item.po_item?.name}
+                          </td>
+
+                          <td className="p-2">
+                            {item.po_item?.item_number}
+                          </td>
+
+
+                          <td className="p-2">
+                            {item.quantity}
+                          </td>
+
+
+                          <td className="p-2">
+                            ₹{formatNumber(item.unit_price)}
+                          </td>
+
+
+                          <td className="p-2">
+                            ₹{formatNumber(item.tax_amount || 0)}
+                            <br />
+                            <small>{item.tax_rate}%</small>
+                          </td>
+
+
+                          <td className="p-2 font-semibold">
+                            ₹{formatNumber(item.total_price)}
+                          </td>
+
+                        </tr>
+                      ))
+                    }
+
+                  </tbody>
+
+                </table>
+
+              </div>
+            )}
+          />
+
+          <PaginationComponent
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            siblingCount={2}
+          />
+
+        </Card>
+
+        {poItemList.some((pr) => pr.po_status === "A") && (
+          <ProgressSection>
+            <ProgressSectionTitle>
+              Peeling Progress — Approved Requests
+            </ProgressSectionTitle>
+
+            {poItemList
+              .filter((pr) => pr.po_status === "A")
+              .map((pr) => (
+                <PRProgressCard key={pr.id} purchaseData={pr} />
+              ))
+            }
+          </ProgressSection>
+        )}
+
+        {isModalOpen && <PurchaseOrderModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           screen="purchase_request"
           addMultipleItem={true}
           refreshData={FetchPoItem}
+        />}
+
+        {isAddPeelingOpen && <PeelingCenter
+          isOpen={isAddPeelingOpen}
+          onClose={() => setIsAddPeelingOpen(false)}
+          purchaseData={selectedPurchaseData}
+        />}
+
+        {isViewPeelingOpen && <ViewPeelingCenter
+          isOpen={isViewPeelingOpen}
+          onClose={() => setIsViewPeelingOpen(false)}
+          purchaseData={selectedPurchaseData}
         />}
       </Page>
 

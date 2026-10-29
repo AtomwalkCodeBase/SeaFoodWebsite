@@ -1,4 +1,4 @@
-import { setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl, WorkForceCoverageUrl, WorkForceAssignUrl, WorkForceReleaseUrl, WorkForceAllocationUrl, CreateGRNUrl, GetBaseUnitListUrl, RecordGradesUrl, CreateBatchUrl, WorkForceAvailableUrl, ActiveAlertsUrl, DashboardSummaryUrl, Supplierprofile, getEquipment, PeelingCenterUrl, PROCESSPILLING } from "../services/ConstantServies";
+import { setuserpin, getCompany, forgetPin, getCustomerDetailListURL, profileDtlURL, getPoItemList, getInventoryItemList, processPoRequest, getCustomerListURL, processQCallocation, getPOqcList, getProductListUrl, getProcessActivityListUrl, getYieldConfigUrl, getMachineCapacityUrl, PlanningConfigUrl, SpeciesUrl, GradesUrl, ItemCategoryListUrl, OrdersUrl, CapacityPlanningUrl, PlanningReportUrl, InventoryStatusUrl, InventoryProjectionUrl, BatchesUrl, GradingSessionsUrl, OrdersByDestinationUrl, ProcurementPlanUrl, WorkForceCoverageUrl, WorkForceAssignUrl, WorkForceReleaseUrl, WorkForceAllocationUrl, CreateGRNUrl, GetBaseUnitListUrl, RecordGradesUrl, CreateBatchUrl, WorkForceAvailableUrl, ActiveAlertsUrl, DashboardSummaryUrl, Supplierprofile, getEquipment, PeelingCenterUrl, PROCESSPILLING, OrderTrace, Scheduleorder, GetScheduleorder } from "../services/ConstantServies";
 import { authAxios, authAxiosFilePost, authAxiosget, authAxiosPatch, authAxiosPost, authAxiosPut } from "./HttpMethod";
 
 export function getDashboardSummary(data) {
@@ -265,6 +265,14 @@ export async function ManualAllocateBatch(batchId, data = {}) {
   const response = await authAxiosPost(`${BatchesUrl}${batchId}/allocate/`, data);
   return response;
 }
+export async function UpdateActualOutput(batchId, data = {}) {
+  const response = await authAxiosPost(
+    `${BatchesUrl}${batchId}/actual-output/`,
+    data
+  );
+
+  return response;
+}
 
 export function getProcurementPlan(data) {
   return authAxios(ProcurementPlanUrl, data);
@@ -332,4 +340,55 @@ export async function RecordSessionGrades(sessionId, data) {
   // const response = await authAxiosPost(RecordSessionGradesUrl(sessionId), data);
   const response = await authAxiosPost(`${GradingSessionsUrl}${sessionId}/record-grades/`, data);
   return response;
+}
+// for the entire tracebility 
+export const getOrderTraceability = async (orderNumber) => {
+  const { data } = await authAxios(OrderTrace, {
+    order_number: orderNumber,
+  });
+
+  return data;
+}
+
+export const processOrderSchedule = (scheduleData) => {
+  return authAxiosPost(
+    Scheduleorder,
+    { schedule_data: scheduleData }
+  );
+};
+
+export const getOrderSchedule = (orderNumber) => {
+  return authAxios(
+    GetScheduleorder,
+    {
+      order_number: orderNumber,
+    }
+  );
+};
+/** 'YYYY-MM-DD' (HTML date input) -> 'DD-MM-YYYY' (API expects this format) */
+function toApiDate(isoDate) {
+  if (!isoDate) return undefined;
+  const [y, m, d] = isoDate.split('-');
+  if (!y || !m || !d) return undefined;
+  return `${d}-${m}-${y}`;
+}
+
+export const FREQUENCY_UI_TO_API = { MONTHLY: 'M', QUARTERLY: 'Q', HALF_YEARLY: 'H', YEARLY: 'Y' };
+
+/** Build the schedule_data payload the backend expects, from the order form. */
+export function buildScheduleDataPayload(form, { callMode, scheduleId, orderNumber }) {
+  const payload = { call_mode: callMode, order_number: orderNumber };
+  if (scheduleId != null) payload.schedule_id = scheduleId;
+
+  // CLOSE / CANCEL only need call_mode + schedule_id per the backend view.
+  if (callMode === 'CLOSE' || callMode === 'CANCEL') return payload;
+
+  payload.name = form.recurring_schedule_name?.trim() || `${form.customer_name} - Recurring Order`;
+  payload.amount_type = form.recurring_amount_type || 'F';
+  payload.frequency = FREQUENCY_UI_TO_API[form.recurring_frequency] || 'M';
+  payload.start_date = toApiDate(form.delivery_date);
+  payload.next_run_date = toApiDate(form.recurring_next_run_date);
+  if (form.recurring_end_date) payload.end_date = toApiDate(form.recurring_end_date);
+
+  return payload;
 }

@@ -78,7 +78,7 @@ const BatchScreen = ({ hideActionButtons = false }) => {
     if (datePreset === "CUSTOM") {
       return {
         dateRange: {
-          field: "created_at",
+          field: "scheduled_date",
           from: customDateRange.from || undefined,
           to: customDateRange.to || undefined,
         },
@@ -96,7 +96,7 @@ const BatchScreen = ({ hideActionButtons = false }) => {
     }
 
     // console.log("targetDate", targetDate)
-    
+
     const value = format(targetDate, "yyyy-MM-dd");
     console.log("value", value)
     return {
@@ -110,7 +110,7 @@ const BatchScreen = ({ hideActionButtons = false }) => {
 
   const filteredActiveSubBatches = useFilter({
     data: batchList,
-    fields: [ "batch_number", "product_code", "grade_code", "product_name", "species", "status"],
+    fields: ["batch_number", "product_code", "grade_code", "product_name", "species", "status"],
     extraFilters: {
       ...(statusFilter !== "ALL" ? { status: statusFilter } : {}),
       ...(Object.keys(dateFilter).length ? dateFilter : {}),
@@ -126,48 +126,48 @@ const BatchScreen = ({ hideActionButtons = false }) => {
   const stats = useMemo(() => {
     return {
       total: dateFilteredBatches.length,
-      inProgress: dateFilteredBatches.filter( (b) => b.status === "IN_PROGRESS").length,
-      scheduled: dateFilteredBatches.filter( (b) => b.status === "SCHEDULED").length,
-      allocating: dateFilteredBatches.filter( (b) => b.status === "ALLOCATING").length,
+      inProgress: dateFilteredBatches.filter((b) => b.status === "IN_PROGRESS").length,
+      scheduled: dateFilteredBatches.filter((b) => b.status === "SCHEDULED").length,
+      allocating: dateFilteredBatches.filter((b) => b.status === "ALLOCATING").length,
       completed: dateFilteredBatches.filter((b) => b.status === "COMPLETED").length,
     };
   }, [dateFilteredBatches]);
 
   const STATUS_CARD = [
-    { 
-      label: "TOTAL BATCHES", 
-      value: stats.total, 
-      icon: <BsListOl />, 
-      color: "primary", 
-      filter: "ALL" 
+    {
+      label: "TOTAL BATCHES",
+      value: stats.total,
+      icon: <BsListOl />,
+      color: "primary",
+      filter: "ALL"
     },
-    { 
-      label: "IN PROGRESS", 
-      value: stats.inProgress, 
-      icon: <FaClockRotateLeft />, 
-      color: "warning", 
-      filter: "IN_PROGRESS" 
+    {
+      label: "IN PROGRESS",
+      value: stats.inProgress,
+      icon: <FaClockRotateLeft />,
+      color: "warning",
+      filter: "IN_PROGRESS"
     },
-    { 
-      label: "SCHEDULED", 
-      value: stats.scheduled, 
-      icon: <TbCalendarClock />, 
-      color: "error", 
-      filter: "SCHEDULED" 
+    {
+      label: "SCHEDULED",
+      value: stats.scheduled,
+      icon: <TbCalendarClock />,
+      color: "error",
+      filter: "SCHEDULED"
     },
-    { 
-      label: "ALLOCATING", 
-      value: stats.allocating, 
-      icon: <LuPackageCheck />, 
-      color: "allocatingBlue", 
-      filter: "ALLOCATING" 
+    {
+      label: "ALLOCATING",
+      value: stats.allocating,
+      icon: <LuPackageCheck />,
+      color: "allocatingBlue",
+      filter: "ALLOCATING"
     },
-    { 
-      label: "COMPLETED", 
-      value: stats.completed, 
-      icon: <LuPackageCheck />, 
-      color: "success", 
-      filter: "COMPLETED" 
+    {
+      label: "COMPLETED",
+      value: stats.completed,
+      icon: <LuPackageCheck />,
+      color: "success",
+      filter: "COMPLETED"
     },
   ];
 
@@ -177,7 +177,7 @@ const BatchScreen = ({ hideActionButtons = false }) => {
     setCustomDateRange({ from: "", to: "" });
   };
 
-    const handleStatClick = (filter) => {
+  const handleStatClick = (filter) => {
     if (filter === "ALL") {
       setStatusFilter("ALL");
     } else {
@@ -291,26 +291,26 @@ const BatchScreen = ({ hideActionButtons = false }) => {
             datePreset !== "ALL" ||
             customDateRange.from ||
             customDateRange.to) && (
-            <Button type="button" onClick={clearFilters}>
-              Clear
-            </Button>
-          )}
+              <Button type="button" onClick={clearFilters}>
+                Clear
+              </Button>
+            )}
         </div>
-          {isLoading ? (
-            <EmptyState message="Loading active batches..." />
-          ) : filteredActiveSubBatches.length === 0 ? (
-            <EmptyState message="No active batches found for the selected filters." />
-          ) : (
-            <BatchGrid>
-           {filteredActiveSubBatches.map((batch) => (
+        {isLoading ? (
+          <EmptyState message="Loading active batches..." />
+        ) : filteredActiveSubBatches.length === 0 ? (
+          <EmptyState message="No active batches found for the selected filters." />
+        ) : (
+          <BatchGrid>
+            {filteredActiveSubBatches.map((batch) => (
               <ActiveBatchCard
                 key={batch.id}
                 batch={batch}
                 hideActionButtons={hideActionButtons}
               />
             ))}
-        </BatchGrid>
-          )}
+          </BatchGrid>
+        )}
       </Card>
     </div>
   );

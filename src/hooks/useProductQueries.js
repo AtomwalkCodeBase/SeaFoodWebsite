@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder, getDashboardSummary, getActiveAlerts, getSupplierprofile, getEquipmentList, getPeelingCenters, AddPeelingCenter, getProcessPilling, AddProcessPilling, RecordSessionGrades } from "../services/productServices";
+import { useMutation, useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
+import { AddNewOrder, AssignWorkForce, createGradingSession, createGRN, GenerateBatchPlan, getAllYieldConfig, GetBaseUnitList, getCustomerListView, getemployeeList, getGrades, getGradingSessionsList, getInventoryStatus, GetItemCategory, GetOrdersByDestinationList, GetOrdersFulfillList, GetOrdersList, GetOrdersPriorityQueueList, GetPlanningReport, getPoItem, getProcessActivityList, getProcurementPlan, getProductList, getSpecies, getWorkForceAvailable, getWorkForceCoverage, getYieldConfig, RecordGrades, ReleaseWorkForce, UpdateOrder, getDashboardSummary, getActiveAlerts, getSupplierprofile, getEquipmentList, getPeelingCenters, AddPeelingCenter, getProcessPilling, AddProcessPilling, RecordSessionGrades, UpdateProcessPilling, getOrderTraceability, processOrderSchedule, getOrderSchedule } from "../services/productServices";
 import { toast } from "react-toastify";
 import { QUERY_KEYS } from "../constants";
 import { handleApiError } from "../utils";
@@ -162,11 +162,30 @@ export const useInventoryStatus = (enabled = true) => {
   });
 };
 
+// export const usePOItemList = (params, enabled = true) => {
+//   return useApiQuery({
+//     queryKey: [QUERY_KEYS.PO_ITEM_LIST, params],
+//     queryFn: () => getPoItem(params),
+//     select: (res) => res.data,
+//     enabled,
+//     onError: `${ErrorText} Purchase Request List`,
+//   });
+// };
 export const usePOItemList = (params, enabled = true) => {
   return useApiQuery({
     queryKey: [QUERY_KEYS.PO_ITEM_LIST, params],
-    queryFn: () => getPoItem(params),
+
+    queryFn: async () => {
+      const res = await getPoItem(params);
+
+      console.log("getPoItem raw response:", res);
+      console.log("getPoItem response data:", res?.data);
+
+      return res;
+    },
+
     select: (res) => res.data,
+
     enabled,
     onError: `${ErrorText} Purchase Request List`,
   });
@@ -508,6 +527,30 @@ export const useReleaseWorker = (handleCloseModal) => {
     onError: handleApiError,
   });
 };
+export const useUpdateProcessPilling = (handleCloseModal) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }) => UpdateProcessPilling(payload, id),
+
+    onSuccess: async () => {
+      toast.success("Peeling record updated successfully!");
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["PROCESS_PILLING"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.PO_ITEM_LIST],
+        }),
+      ]);
+
+      handleCloseModal?.();
+    },
+
+    onError: handleApiError,
+  });
+};
 export const useAddProcessPilling = (handleCloseModal) => {
   const queryClient = useQueryClient();
 
@@ -558,14 +601,81 @@ export const useProcessPillingList = (poRequestId) => {
     enabled: !!poRequestId,
     queryFn: () => getProcessPilling(),
     select: (res) => {
-      console.log("API Response:", res);
-      console.log("API Data:", res.data);
-
       const list = Array.isArray(res.data) ? res.data : [];
 
       return list.filter(item => item.po_request === poRequestId);
     },
     errorMessage: `${ErrorText} process pilling list`,
+  });
+};
+
+export const useGetOrderTrace = (enabled, orderNumber) => {
+  return useQuery({
+    queryKey: ["order-trace", orderNumber],
+    queryFn: () => getOrderTraceability(orderNumber),
+    enabled: Boolean(enabled) && Boolean(orderNumber),
+  });
+};
+
+export const useProcessOrderSchedule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: processOrderSchedule,
+
+    onSuccess: (response, variables) => {
+      console.log("Recurring schedule updated:", response);
+
+      const orderNumber = variables?.order_number;
+
+      if (orderNumber) {
+        queryClient.invalidateQueries({
+          queryKey: ['orderSchedule', orderNumber],
+        });
+      }
+    },
+
+    onError: (err) => {
+      console.error('processOrderSchedule failed:', err);
+
+      if (err?.response) {
+        const serverMessage =
+          err.response.data?.message ||
+          err.response.data?.detail;
+
+        toast.error(
+          serverMessage ||
+          `Failed to save the recurring schedule (status ${err.response.status}).`
+        );
+      } else if (err?.request) {
+        toast.error(
+          'Could not reach the schedule service. Check the browser console.'
+        );
+      } else {
+        toast.error('Failed to save the recurring schedule.');
+      }
+    },
+  });
+};
+
+export const useOrderSchedule = (orderNumber, enabled = true) => {
+  return useQuery({
+    queryKey: ['orderSchedule', orderNumber],
+    queryFn: () => getOrderSchedule(orderNumber).then((res) => res.data),
+    enabled: enabled && !!orderNumber,
+  });
+};
+
+export const useOrderSchedules = (orders = []) => {
+  return useQueries({
+    queries: orders.map((order) => ({
+      queryKey: ['orderSchedule', order.erp_order_reference],
+      queryFn: () =>
+        getOrderSchedule(order.erp_order_reference).then(
+          (res) => res.data
+        ),
+      enabled: !!order.erp_order_reference,
+    })),
   });
 };
 export const useRecordSessionGrades = (handleCloseModal) => {

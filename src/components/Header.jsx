@@ -205,7 +205,7 @@ const LogoutButton = styled(ActionButton)`
 //   width: 80px;
 
 const Header = ({ sidebarWidth = "250px", onMobileMenuClick }) => {
-  const { logout, profile, companyInfo } = useAuth()
+  const { logout, profile, companyInfo, currentUser } = useAuth()
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState([])
@@ -341,7 +341,8 @@ const Header = ({ sidebarWidth = "250px", onMobileMenuClick }) => {
         {/* <MobileMenuButton onClick={onMobileMenuClick}>
           <FaBars />
         </MobileMenuButton> */}
-        <img src={profile ? profile?.image : companyInfo.image } alt="Company Logo" style={{ width: "50px", height: "50px", borderRadius: "10px", marginRight: "10px", border: "0.2px solid #000" }} />
+        <img src={profile ? profile?.image : companyInfo.image} alt="Company Logo" style={{ width: "50px", height: "50px", borderRadius: "10px", marginRight: "10px", border: "0.2px solid #000" }} />
+        <span>{companyInfo?.name}</span>
         {/* <SearchBar expanded={searchExpanded}>
           <FaSearch onClick={handleSearchClick} style={{ cursor: "pointer", color: `${theme.colors.textLight}` }} />
           <SearchInput
@@ -398,11 +399,11 @@ const Header = ({ sidebarWidth = "250px", onMobileMenuClick }) => {
           {/* {profile?.image ? (
             <img src={profile.image} alt="Profile" style={{ width: "50px", height: "50px", marginRight: "1rem", borderRadius: "50%", border: "2px solid rgb(245, 247, 214)" }} />
           ) : ( */}
-            <UserAvatar>
-              {profile?.name?.charAt(0) || <FaUser />}
-            </UserAvatar>
+          <UserAvatar>
+            {profile?.name?.charAt(0) || <FaUser />}
+          </UserAvatar>
           {/* )} */}
-          <UserName>{profile?.name || "User"}</UserName>
+          <UserName>{currentUser?.username || profile?.name || "User"}</UserName>
         </UserProfile>
 
         <LogoutButton onClick={handleLogoutConfirm} title="Logout">

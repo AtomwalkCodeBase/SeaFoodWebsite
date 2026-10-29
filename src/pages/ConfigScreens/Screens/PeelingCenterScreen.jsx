@@ -381,12 +381,12 @@ const AddPeelingCenterModal = ({
                     onChange={handleChange}
                 />
 
-                <InputField
+                {/* <InputField
                     label="Digi PIN"
                     name="digi_pin"
                     value={form.digi_pin}
                     onChange={handleChange}
-                />
+                /> */}
 
                 <div className="col-span-2">
 

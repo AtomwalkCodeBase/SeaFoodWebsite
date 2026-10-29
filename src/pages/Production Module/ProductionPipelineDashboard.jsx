@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import Layout from '../../components/Layout'
 import StatsCard from '../../components/StatsCard'
 import { GrNotes } from 'react-icons/gr'
-import { BsBookmarkCheckFill } from 'react-icons/bs'
 import { FaRegHourglassHalf } from 'react-icons/fa6'
 import Tabs from '../../components/Tabs'
 import Card from '../../components/Card'
@@ -22,17 +21,15 @@ import Button from '../../components/Button'
 import Modal from '../../components/Modal'
 import { useFormHandler } from '../../hooks/useFormHandler'
 import InputField from '../../components/InputField'
-import { LuUserRound } from 'react-icons/lu'
-import { FaBoxOpen, FaClipboardCheck, FaEye, FaFlask, FaLayerGroup, FaMapMarkerAlt, FaStore, FaUser } from 'react-icons/fa'
-import { TbArrowAutofitContentFilled } from 'react-icons/tb'
+import { FaClipboardCheck, FaEye, FaFlask, FaLayerGroup } from 'react-icons/fa'
 import DataTable, { Td } from '../../components/Datatable'
 import Badge from '../../components/Badge'
 import { useFilter } from '../../hooks/useFilter'
 import { usePagination } from '../../hooks/usePagination'
 import PaginationComponent from '../../components/Pagination'
-import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
 import GradeSegregationViewModal from './Modal/GradeSegregationViewModal'
 import RMQCModal from '../../components/Modal/QCModal'
+import { MdFilterAltOff } from 'react-icons/md'
 
 const PIPELINE_COLUMNS = ["Purchase Ref.", "GRN Number", "Species", "Received(MT)", "Graded(MT)", "Waste(MT)", "Status", "Action"];
 
@@ -57,7 +54,7 @@ const ProductionPipelineDashboard = () => {
   const [segregationDataView, setSegregationDataView] = useState(null);
   const [isQcModalOpen, setIsQcModalOpen] = useState(false)
 
-  const { data: PoItemList, isLoading: poItemListIsLoading, error: poItemListError } = usePOItemList({ po_type: "R" });
+  const { data: PoItemList, isLoading: poItemListIsLoading, error: poItemListError } = usePOItemList({ po_type: "" });
   const { data: grnList, isLoading: grnLoading, error: grnError } = useGRNList();
 
   const filteredPoData = PoItemList?.filter((data) => data.po_status === "D");
@@ -97,7 +94,7 @@ const ProductionPipelineDashboard = () => {
   const { paginatedData, totalItems, currentPage, itemsPerPage, handlePageChange } = usePagination(filteredPoList, 10);
 
   const inProgressQc = filteredPoList.filter((item) => item?.grnItem?.status === "IN_PROGRESS").length;
-  const draftPO = filteredPoList.filter((item) => item?.poItem?.ref_po?.po_status === "D").length;
+  const draftPO = filteredPoList.filter((item) => item?.poItem?.ref_po?.po_status === "R").length;
 
 
   const STATS_CARD = [
@@ -209,7 +206,7 @@ const ProductionPipelineDashboard = () => {
                   })
                 }
                 className="w-full h-10"
-              >
+              ><MdFilterAltOff />
                 Clear
               </Button>
             </div>
@@ -227,6 +224,7 @@ const ProductionPipelineDashboard = () => {
                 <Td>{data?.poItem?.grn_detail?.grn_number}</Td>
                 <Td>{data?.poItem?.po_items[0].po_item.name}</Td>
                 <Td>{data?.poItem?.po_items[0].quantity} MT</Td>
+                {/* <Td>{data?.grnItem?.total_received_mt || 0} MT</Td> */}
                 <Td>{data?.grnItem?.total_graded_mt || 0} MT</Td>
                 <Td>{data?.grnItem?.waste_mt || 0} MT</Td>
                 <Td><Badge variant={status.variant}>{status.label}</Badge></Td>
@@ -410,7 +408,8 @@ const StartGradingModal = ({ isOpen, onClose, grnData }) => {
         supplier_id: grnData?.supplier_id || "",
         supplier_name: grnData?.supplier_name || "",
         species_config: "",
-        total_received_mt: Number(grnData?.po_items?.[0]?.quantity) || "",
+        // total_received_mt: Number(grnData?.po_items?.[0]?.quantity) || "",
+        total_received_mt: Number(grnData?.grnItem?.total_received_mt) || "",
         qc_inspector: "",
         temperature_on_arrival: "",
         qc_notes: "",
@@ -515,8 +514,8 @@ const GradeSegregationModal = ({ isOpen, onClose, segregationData }) => {
     (sum, row) => sum + (Number(row.quantity_mt) || 0),
     0);
   const wasteMt = Math.max(0, totalReceived - totalGraded);
-  // console.log('totalReceived:', totalReceived);   // ADD THIS
-  // console.log('totalGraded:', totalGraded);        // ADD THIS
+  // console.log('totalReceived:', totalReceived);   
+  // console.log('totalGraded:', totalGraded);        
   // console.log('wasteMt:', wasteMt);
 
   const { data: speciesList, isLoading: speciesLoading } = useSpecies(isOpen, qcData?.species_config);

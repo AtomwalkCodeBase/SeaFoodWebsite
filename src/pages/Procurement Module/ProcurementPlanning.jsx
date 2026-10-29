@@ -6,24 +6,7 @@ import Tabs from '../../components/Tabs';
 import { FaEye } from 'react-icons/fa';
 import Modal from '../../components/Modal';
 import {
-  FiPackage,
-  FiMapPin,
-  FiCalendar,
-  FiClock,
-  FiAlertTriangle,
-  FiCheckCircle,
-  FiTrendingUp,
-  FiUser,
-  FiTag,
-  FiLayers,
-  FiBox,
-  FiAlertCircle,
-  FiChevronRight,
-  FiX,
-  FiDollarSign,
-  FiTruck,
-  FiList,
-  FiGrid,
+  FiPackage, FiMapPin, FiCalendar, FiClock, FiAlertTriangle, FiCheckCircle, FiUser, FiTag, FiLayers, FiBox, FiAlertCircle, FiTruck, FiList, FiGrid,
 } from "react-icons/fi";
 import Badge from '../../components/Badge';
 import PaginationComponent from '../../components/Pagination';
@@ -34,7 +17,7 @@ import Layout from '../../components/Layout';
 import Card from '../../components/Card';
 import GradeWiseSummary from './GradeWiseSummary';
 
-const column = ["ORDER REF.", "CUSTOMER", "PRODUCT", "SPECIES", "QYT(MT)", "IN PROG.(MT)", "DELIVERY DATE", "DAYS LEFT", "PROCUR. URGENCY", "SUPP. COUNT", "ACTION"]
+const column = ["ORDER REF.", "CUSTOMER", "PRODUCT", "SPECIES", "QTY", "IN PROG.", "DELIVERY DATE", "DAYS LEFT", "PROCUR. URGENCY", "SUPP. COUNT", "ACTION"]
 
 const getUrgencyVariant = (urgency) => {
   const variantMap = {
@@ -59,13 +42,11 @@ const ProcurementPlanning = () => {
   const planningTabs = [
     {
       key: "order",
-      label: "Order Wise",
-      icon: <FiList />,
+      label: (<span style={{ display: "flex", alignItems: "center", gap: "6px" }}> <FiList /> Order Wise </span>),
     },
     {
       key: "grade",
-      label: "Grade Wise",
-      icon: <FiGrid />,
+      label: (<span style={{ display: "flex", alignItems: "center", gap: "6px" }}> <FiGrid />Grade Wise </span>),
     },
   ];
   const planningFiletredData = useFilter({
@@ -84,45 +65,42 @@ const ProcurementPlanning = () => {
   return (
     <Layout title="Procurement Planning">
       <Card>
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="grid grid-cols-4 items-end gap-3 flex-1">
-            <div className="col-span-2">
-              <InputField
-                label=""
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by order ref, customer, product..."
-              />
-            </div>
+        {/* Tabs */}
+        <Tabs
+          tabs={planningTabs}
+          activeTab={viewMode}
+          setActiveTab={setViewMode}
+        />
 
-            <div className="col-span-1">
-              <InputField
-                label="Status"
-                type="select"
-                value={procurmentUrgencyStatus}
-                onChange={(e) => setprocurmentUrgencyStatus(e.target.value)}
-                options={[
-                  { label: "All", value: "ALL" },
-                  { label: "Covered", value: "COVERED" },
-                  { label: "Critical", value: "CRITICAL" },
-                  { label: "Urgent", value: "URGENT" },
-                  { label: "Standard", value: "STANDARD" },
-                  { label: "Overdue", value: "OVERDUE" },
-                ]}
-              />
-            </div>
-          </div>
-
-          <div className="min-w-[250px]">
-            <Tabs
-              tabs={planningTabs}
-              activeTab={viewMode}
-              setActiveTab={setViewMode}
+        {/* Filters */}
+        <div className="grid grid-cols-4 items-end gap-3 mb-3">
+          <div className="col-span-2">
+            <InputField
+              label=""
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by order ref, customer, product..."
             />
           </div>
-        </div> {/* <-- Missing closing div */}
+
+          <div className="col-span-1">
+            <InputField
+              label="Status"
+              type="select"
+              value={procurmentUrgencyStatus}
+              onChange={(e) => setprocurmentUrgencyStatus(e.target.value)}
+              options={[
+                { label: "All", value: "ALL" },
+                { label: "Covered", value: "COVERED" },
+                { label: "Critical", value: "CRITICAL" },
+                // { label: "Urgent", value: "URGENT" },
+                { label: "Standard", value: "STANDARD" },
+                { label: "Overdue", value: "OVERDUE" },
+              ]}
+            />
+          </div>
+        </div>
 
         {/* Content */}
         {viewMode === "order" ? (
@@ -136,16 +114,20 @@ const ProcurementPlanning = () => {
                   <Td>{data.order_reference}</Td>
                   <Td>{data.customer}</Td>
                   <Td>{data.product_name}</Td>
-                  <Td>{`${getSpeciesGradeLabel(
-                    SpeciesList,
-                    Number(data.species)
-                  )} (${data.grade})`}</Td>
+                  <Td>
+                    {`${getSpeciesGradeLabel(
+                      SpeciesList,
+                      Number(data.species)
+                    )} (${data.grade})`}
+                  </Td>
                   <Td>{data.order_qty_mt}</Td>
                   <Td>{data.in_progress_mt}</Td>
                   <Td>{data.delivery_date}</Td>
                   <Td>{data.days_until_delivery}</Td>
                   <Td>
-                    <Badge variant={getUrgencyVariant(data.procurement_urgency)}>
+                    <Badge
+                      variant={getUrgencyVariant(data.procurement_urgency)}
+                    >
                       {data.procurement_urgency}
                     </Badge>
                   </Td>
@@ -155,8 +137,8 @@ const ProcurementPlanning = () => {
                       iconOnly
                       title="View"
                       onClick={() => {
-                        setIsModalOpen(true);
                         setSelectedOrder(data);
+                        setIsModalOpen(true);
                       }}
                     >
                       <FaEye />
@@ -181,11 +163,12 @@ const ProcurementPlanning = () => {
         )}
       </Card>
 
-
-
       <Modal
         isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setSelectedOrder(null) }}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedOrder(null);
+        }}
         title={`Order Details — ${selectedOrder?.order_reference}`}
         width="max-w-2xl"
         showSaveButton={false}
@@ -193,9 +176,8 @@ const ProcurementPlanning = () => {
       >
         <OrderDetailContent order={selectedOrder} />
       </Modal>
-
     </Layout>
-  )
+  );
 }
 
 export default ProcurementPlanning

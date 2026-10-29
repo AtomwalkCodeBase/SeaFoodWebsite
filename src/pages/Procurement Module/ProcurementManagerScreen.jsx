@@ -11,6 +11,7 @@ import Card from '../../components/Card';
 import Tabs from '../../components/Tabs';
 import PeelingCenter from "../../components/Modal/PeelingCenter";
 import ViewPeelingCenter from "../../components/Modal/ViewPeelingCenters";
+import PeelingStatusBadge from "../../components/Modal/PeelingStatusBadge";
 import {
   FiCalendar,
   FiClock,
@@ -27,7 +28,7 @@ import {
 } from "react-icons/fi";
 import { useFilter } from '../../hooks/useFilter';
 import Button from '../../components/Button';
-import { Badge, EmptyState, InfoRow } from '../../components/EmptyState';
+import Badge from "../../components/Badge";
 import InputField from '../../components/InputField';
 import DataTable, { Td } from '@/components/DataTable';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
@@ -40,6 +41,8 @@ import { usePagination } from '../../hooks/usePagination';
 import PaginationComponent from '../../components/Pagination';
 import { formatNumber, formatToDDMMYYYY } from '../../utils';
 import { isToday } from 'date-fns';
+// import React from 'react';
+import { FaEye } from 'react-icons/fa';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -137,30 +140,7 @@ const ProcurementManagerScreen = () => {
     },
   });
 
-  // console.log("selectedPR", selectedPR)
-
-
   const handleAddGRN = () => {
-    // if (!form.grn_reference?.trim()) {
-    //   return toast.error('Please enter GRN reference number');
-    // }
-
-    // if (!form.supplier_id) {
-    //   return toast.error('Please select supplier');
-    // }
-
-    // if (!form.total_received_mt || Number(form.total_received_mt) <= 0) {
-    //   return toast.error('Please enter total received quantity');
-    // }
-
-    // if (!form.species_config) {
-    //   return toast.error('Please select species');
-    // }
-
-    // if (!form.erp_batch?.trim()) {
-    //   return toast.error('Please enter ERP batch');
-    // }
-
     if (!selectedPR) return toast.error('Please select a Purchase Request');
     if (!selectedPR.po_items[0].po_item.id) return toast.error('Please select an Item to receive');
     if (!form.quantity_received || Number(form.quantity_received) <= 0) return toast.error('Please enter quantity received');
@@ -191,9 +171,8 @@ const ProcurementManagerScreen = () => {
     //   species_config: form.species_config,
     //   erp_batch: form.erp_batch,
     // };
-
+    console.log("GRN PAYLOAD:", payload);
     createGRNMutation.mutate(payload);
-    // console.log("payload",payload)
   };
 
   const handleCloseModal = () => {
@@ -209,7 +188,7 @@ const ProcurementManagerScreen = () => {
 
   const STATS = [
     { label: "Total Requests", value: POItemList.length, icon: <FiPackage />, color: "primary", bg: "primaryLight" },
-    { label: "Purchase Order Request", value: countByPoType(POItemList, "R"), icon: <MdOutlineWaterDrop />, color: "warning", bg: "warningLight" },
+    { label: "Purchase Request", value: countByPoType(POItemList, "R"), icon: <MdOutlineWaterDrop />, color: "warning", bg: "warningLight" },
     { label: "Purchase order", value: countByPoType(POItemList, "P"), icon: <TbFish />, color: "success", bg: "successLight" },
   ];
 
@@ -337,22 +316,6 @@ const ProcurementManagerScreen = () => {
                 disabled
               />
             </div>
-            {/* 
-              <div className="col-span-2">
-                <InputField
-                  label="Select Item"
-                  name="item_id"
-                  type="select"
-                  value={selectedItem ? selectedItem.id : ""}
-                  onChange={(e) => {
-                    const itemId = e.target.value;
-                    const item = (selectedPR?.po_items || []).find((it) => String(it.id) === String(itemId));
-                    setSelectedItem(item || null);
-                    handleChange({ target: { name: 'item_id', value: itemId } });
-                  }}
-                  options={(selectedPR?.po_items || []).map((it) => ({ value: it.id, label: it.po_item?.name || it.name }))}
-                />
-              </div> */}
 
             <InputField
               label="Quantity Received"
@@ -397,41 +360,6 @@ const ProcurementManagerScreen = () => {
                 onChange={handleChange}
               />
             </div>
-
-            {/* 
-              <InputField
-                label="Supplier Name"
-                name="supplier_id"
-                type="select"
-                value={form.supplier_id}
-                onChange={handleChange}
-                options={supplierList.map((c) => ({ value: c.id, label: c.name }))}
-              />
-
-              <InputField
-                label="Total Received Quantity (MT)"
-                name="total_received_mt"
-                type="number"
-                value={form.total_received_mt}
-                onChange={handleChange}
-              />
-
-              <InputField
-                label="Species"
-                name="species_config"
-                type="select"
-                value={form.species_config}
-                onChange={handleChange}
-                options={speciesList.map(item => ({ id: item.id, value: item.id, label: `${item.scientific_name}`}))}
-              />
-              
-              <InputField
-                label="ERP Batch"
-                name="erp_batch"
-                type="text"
-                value={form.erp_batch}
-                onChange={handleChange}
-              /> */}
           </div>
         </div>
 
@@ -465,7 +393,8 @@ const POCard = ({ po, isLoading, activeTab, isOpenGrnModal, openPeelingCenterMod
   const typeConf = TYPE_CONFIG[po.po_type] || TYPE_CONFIG["R"];
   const statusConf = STATUS_CONFIG[po.po_status] || STATUS_CONFIG["P"];
   const TypeIcon = typeConf.icon;
-  const purchase_column = ["", "Ref. no", "Supplier", "Item count", "Date", "Tax Amt", "Total Amt.", `${activeTab === "PR" ? "Action" : ""}`]
+  const purchase_column = ["", "Ref. no", "Supplier", "Item count", "Date", "Tax Amt", "Total Amt.", ...(activeTab === "PO"
+    ? ["P.O Status"] : []), ...(activeTab === "PR" ? ["Peeling Status", "GRN Status", "Action"] : [])];
 
   const [filters, setFilters] = useState({ search: "", fromDate: "", toDate: "" });
 
@@ -481,7 +410,6 @@ const POCard = ({ po, isLoading, activeTab, isOpenGrnModal, openPeelingCenterMod
   return (
     <>
       <div className='grid grid-cols-4 gap-3 items-end mb-4'>
-        {/* <div className='col-span-12 md:col-span-4'> */}
         <InputField
           label=""
           type="text"
@@ -546,10 +474,12 @@ const POCard = ({ po, isLoading, activeTab, isOpenGrnModal, openPeelingCenterMod
             <Td>{data.po_date}</Td>
             <Td>{data.tax_amount}</Td>
             <Td>{formatNumber(data.total)}</Td>
+            {activeTab === "PR" && (
+              <Td> <PeelingStatusBadge poId={data.id} /> </Td>)}
+            <Td> {data.po_status === "D" ? (<Badge variant="success">Created</Badge>) : (<Badge variant="warning">Pending</Badge>)}</Td>
             <Td>{activeTab === "PR" && <>
-              <Button variant="secondary" size="sm" style={{ marginRight: "8px" }} onClick={(e) => { e.stopPropagation(); openPeelingCenterModal(data); }} > Add Peeling Center</Button>
               <Button style={{ marginRight: "8px" }} disabled={data.po_status === "D"} variant={data.po_status === "D" ? "outline" : "primary"} size='sm' onClick={(e) => { e.stopPropagation(); isOpenGrnModal(data) }}>{data.po_status !== "D" ? "Create GRN" : "GRN Created"}</Button>
-              <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openViewPeelingCenterModal(data); }}> View Peeling Centers</Button>
+              <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openViewPeelingCenterModal(data); }}> <FaEye /> View Peeling </Button>
             </>
             }</Td>
           </>
@@ -569,7 +499,6 @@ const POCard = ({ po, isLoading, activeTab, isOpenGrnModal, openPeelingCenterMod
                   <th className="py-2">Total Price</th>
                 </tr>
               </thead>
-
               <tbody>
                 {data.po_items?.map((item) => (
                   <tr
@@ -632,7 +561,7 @@ const GRN_CARDS = ({ grn, isLoading }) => {
     return `${foundSpecies.scientific_name} (${foundGrade.grade_code})`;
   };
 
-  const columns = ["", "GRN Reference", "Batch", "Location", "Supplier", "Total Received (MT)", "Status"];
+  const columns = ["", "GRN Reference", "Batch", "Location", "Supplier", "Total Received (MT)",];
 
   const handleRowClick = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
@@ -660,7 +589,7 @@ const GRN_CARDS = ({ grn, isLoading }) => {
             <Td>{data.total_received_mt || "--"} MT</Td>
             <Td>
               {/* <Badge1 variant={data.status === "COMPLETED" ? "success" : "warning"}>{data.status === "COMPLETED" ? "Completed" : "In Progress"}</Badge1> */}
-              <Badge label={data.status === "COMPLETED" ? "Completed" : "In Progress"} variant={data.status === "COMPLETED" ? "success" : "info"} />
+              {/* <Badge label={data.status === "COMPLETED" ? "Completed" : "In Progress"} variant={data.status === "COMPLETED" ? "success" : "info"} /> */}
               {/* {data.status === "COMPLETED" ? "Completed" : "In Progress"} */}
             </Td>
           </>

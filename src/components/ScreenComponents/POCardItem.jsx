@@ -437,7 +437,7 @@ const FooterValue = styled.span`
 export function POCardItem({ po, index, supplier_screen = false }) {
   const navigate = useNavigate()
   const [itemsOpen, setItemsOpen] = useState(false);
-    // const showButton = window.location.pathname ="/seaFood/home"
+  // const showButton = window.location.pathname ="/seaFood/home"
 
   const poStatus = PO_STATUS[po.po_status] || PO_STATUS.P;
   const poType = PO_TYPE[po.po_type] || PO_TYPE.P;
@@ -617,7 +617,7 @@ export function POCardItem({ po, index, supplier_screen = false }) {
             <FooterValue>{po.payment_terms}</FooterValue>
           </FooterInfo>
         )}
-       {/* {!supplier_screen && <ActionBtns>
+        {/* {!supplier_screen && <ActionBtns>
           <IconBtn title="View" $hbg={T.infoLight} $hcolor={T.info}>
             <FiEye />
           </IconBtn>

@@ -16,7 +16,6 @@ import {
   FaRunning,
   FaUserCircle,
   FaWarehouse,
-  FaGift,
   FaExchangeAlt,
   FaChartBar,
   FaUsers,
@@ -41,6 +40,7 @@ import { useTheme } from "../context/ThemeContext"
 import { IoBarChart, IoTicket } from "react-icons/io5"
 import { RiDashboardFill, RiNodeTree, RiShoppingCartLine } from "react-icons/ri"
 import { LuClipboardList } from "react-icons/lu"
+import { RiAdminFill } from "react-icons/ri";
 import { BsBoxSeamFill, BsFillCalendar2RangeFill, BsTruck } from "react-icons/bs"
 import { FaGear } from "react-icons/fa6"
 import { HiUserGroup } from "react-icons/hi"
@@ -541,7 +541,7 @@ const Sidebar = ({ onToggle, initialOpen = false }) => {
     },
     {
       name: "Administration",
-      icon: <FaGear />,
+      icon: <RiAdminFill />,
       items: [
         { path: "/configuration", name: "Configuration", icon: <FaGear /> },
         { path: "/dashboard", name: "Dashboard", icon: <FaTachometerAlt /> },

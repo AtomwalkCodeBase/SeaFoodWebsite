@@ -634,30 +634,30 @@ const PreviewCard = styled.div`
   
   &.component-preview-card {
     border-radius: ${({ theme }) =>
-      theme.uiPreferences?.cardStyle?.borderRadius === "square"
-        ? "0"
-        : theme.uiPreferences?.cardStyle?.borderRadius === "rounded"
-          ? "16px"
-          : "8px"};
+    theme.uiPreferences?.cardStyle?.borderRadius === "square"
+      ? "0"
+      : theme.uiPreferences?.cardStyle?.borderRadius === "rounded"
+        ? "16px"
+        : "8px"};
     box-shadow: ${({ theme }) =>
-      theme.uiPreferences?.cardStyle?.shadow === "none"
-        ? "none"
-        : theme.uiPreferences?.cardStyle?.shadow === "heavy"
-          ? "0 15px 25px rgba(0, 0, 0, 0.15)"
-          : "0 4px 12px rgba(0, 0, 0, 0.1)"};
+    theme.uiPreferences?.cardStyle?.shadow === "none"
+      ? "none"
+      : theme.uiPreferences?.cardStyle?.shadow === "heavy"
+        ? "0 15px 25px rgba(0, 0, 0, 0.15)"
+        : "0 4px 12px rgba(0, 0, 0, 0.1)"};
     transition: ${({ theme }) =>
-      theme.uiPreferences?.cardStyle?.animation ? "transform 0.3s ease, box-shadow 0.3s ease" : "none"};
+    theme.uiPreferences?.cardStyle?.animation ? "transform 0.3s ease, box-shadow 0.3s ease" : "none"};
     
     &:hover {
       transform: ${({ theme }) => (theme.uiPreferences?.cardStyle?.animation ? "translateY(-5px)" : "none")};
       box-shadow: ${({ theme }) =>
-        theme.uiPreferences?.cardStyle?.animation && theme.uiPreferences?.cardStyle?.shadow !== "none"
-          ? "0 20px 30px rgba(0, 0, 0, 0.15)"
-          : theme.uiPreferences?.cardStyle?.shadow === "none"
-            ? "none"
-            : theme.uiPreferences?.cardStyle?.shadow === "heavy"
-              ? "0 15px 25px rgba(0, 0, 0, 0.15)"
-              : "0 4px 12px rgba(0, 0, 0, 0.1)"};
+    theme.uiPreferences?.cardStyle?.animation && theme.uiPreferences?.cardStyle?.shadow !== "none"
+      ? "0 20px 30px rgba(0, 0, 0, 0.15)"
+      : theme.uiPreferences?.cardStyle?.shadow === "none"
+        ? "none"
+        : theme.uiPreferences?.cardStyle?.shadow === "heavy"
+          ? "0 15px 25px rgba(0, 0, 0, 0.15)"
+          : "0 4px 12px rgba(0, 0, 0, 0.1)"};
     }
   }
 `
@@ -696,11 +696,11 @@ const PreviewButton = styled.button`
   &:hover {
     transform: ${({ theme }) => (theme.uiPreferences?.buttonStyle?.animation ? "translateY(-2px)" : "none")};
     box-shadow: ${({ theme }) =>
-      theme.uiPreferences?.buttonStyle?.shadow && theme.uiPreferences?.buttonStyle?.animation
-        ? "0 6px 8px rgba(0, 0, 0, 0.15)"
-        : theme.uiPreferences?.buttonStyle?.shadow
-          ? "0 4px 6px rgba(0, 0, 0, 0.1)"
-          : "none"};
+    theme.uiPreferences?.buttonStyle?.shadow && theme.uiPreferences?.buttonStyle?.animation
+      ? "0 6px 8px rgba(0, 0, 0, 0.15)"
+      : theme.uiPreferences?.buttonStyle?.shadow
+        ? "0 4px 6px rgba(0, 0, 0, 0.1)"
+        : "none"};
   }
   
   ${(props) =>
@@ -1128,13 +1128,13 @@ const Profile = () => {
   const [confirmPin, setConfirmPin] = useState("")
   const [pinError, setPinError] = useState("")
   const [pinSuccess, setPinSuccess] = useState("")
-  const [activeTab, setActiveTab] = useState("personal")
+  const [activeTab, setActiveTab] = useState("theme")
   const [profileData, setProfileData] = useState(profile)
   const [activeThemeTab, setActiveThemeTab] = useState("presets")
   const isFmsLogin = localStorage.getItem("fmsUser")
   const isEmpId = localStorage.getItem('empId')
 
-    // console.log("profile", profile)
+  // console.log("profile", profile)
   const {
     theme,
     currentTheme,
@@ -1227,7 +1227,7 @@ const Profile = () => {
     setPinError("")
     setPinSuccess("")
   }
-    const getShiftLabel = (shiftNo) => {
+  const getShiftLabel = (shiftNo) => {
     switch (shiftNo) {
       case 1:
         return "Morning Shift"
@@ -1242,69 +1242,69 @@ const Profile = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "personal":
-        return (
-          <>
-            <SectionTitle>Personal Information</SectionTitle>
-            <DetailGrid>
-              <DetailCard color="#4776E6">
-                <DetailLabel iconColor="#4776E6">
-                  <FaIdCard /> Employee ID
-                </DetailLabel>
-                <DetailValue>{profileData.emp_id || "Not specified"}</DetailValue>
-              </DetailCard>
+      // case "personal":
+      //   return (
+      //     <>
+      //       <SectionTitle>Personal Information</SectionTitle>
+      //       <DetailGrid>
+      //         <DetailCard color="#4776E6">
+      //           <DetailLabel iconColor="#4776E6">
+      //             <FaIdCard /> Employee ID
+      //           </DetailLabel>
+      //           <DetailValue>{profileData.emp_id || "Not specified"}</DetailValue>
+      //         </DetailCard>
 
-              <DetailCard color="#8E54E9">
-                <DetailLabel iconColor="#8E54E9">
-                  <FaUserTie /> Role
-                </DetailLabel>
-                <DetailValue>{profileData.grade_name || "Not specified"}</DetailValue>
-              </DetailCard>
+      //         <DetailCard color="#8E54E9">
+      //           <DetailLabel iconColor="#8E54E9">
+      //             <FaUserTie /> Role
+      //           </DetailLabel>
+      //           <DetailValue>{profileData.grade_name || "Not specified"}</DetailValue>
+      //         </DetailCard>
 
-              <DetailCard color="#38A169">
-                <DetailLabel iconColor="#38A169">
-                  <FaBuilding /> Department
-                </DetailLabel>
-                <DetailValue>{profileData.department_name || "Not specified"}</DetailValue>
-              </DetailCard>
+      //         <DetailCard color="#38A169">
+      //           <DetailLabel iconColor="#38A169">
+      //             <FaBuilding /> Department
+      //           </DetailLabel>
+      //           <DetailValue>{profileData.department_name || "Not specified"}</DetailValue>
+      //         </DetailCard>
 
-              <DetailCard color="#DD6B20">
-                <DetailLabel iconColor="#DD6B20">
-                  <FaCalendarAlt /> Join Date
-                </DetailLabel>
-                <DetailValue>{profileData.date_of_join || "Not specified"}</DetailValue>
-              </DetailCard>
+      //         <DetailCard color="#DD6B20">
+      //           <DetailLabel iconColor="#DD6B20">
+      //             <FaCalendarAlt /> Join Date
+      //           </DetailLabel>
+      //           <DetailValue>{profileData.date_of_join || "Not specified"}</DetailValue>
+      //         </DetailCard>
 
-              <DetailCard color="#3182CE">
-                <DetailLabel iconColor="#3182CE">
-                  <FaPhone /> Mobile
-                </DetailLabel>
-                <DetailValue>{profileData.mobile_number || "Not specified"}</DetailValue>
-              </DetailCard>
+      //         <DetailCard color="#3182CE">
+      //           <DetailLabel iconColor="#3182CE">
+      //             <FaPhone /> Mobile
+      //           </DetailLabel>
+      //           <DetailValue>{profileData.mobile_number || "Not specified"}</DetailValue>
+      //         </DetailCard>
 
-              <DetailCard color="#805AD5">
-                <DetailLabel iconColor="#805AD5">
-                  <FaEnvelope /> Email
-                </DetailLabel>
-                <DetailValue>{profileData.email_id || "Not specified"}</DetailValue>
-              </DetailCard>
+      //         <DetailCard color="#805AD5">
+      //           <DetailLabel iconColor="#805AD5">
+      //             <FaEnvelope /> Email
+      //           </DetailLabel>
+      //           <DetailValue>{profileData.email_id || "Not specified"}</DetailValue>
+      //         </DetailCard>
 
-              <DetailCard color="#D53F8C">
-                <DetailLabel iconColor="#D53F8C">
-                  <FaBirthdayCake /> Birthday
-                </DetailLabel>
-                <DetailValue>{profileData.dob || "Not specified"}</DetailValue>
-              </DetailCard>
+      //         <DetailCard color="#D53F8C">
+      //           <DetailLabel iconColor="#D53F8C">
+      //             <FaBirthdayCake /> Birthday
+      //           </DetailLabel>
+      //           <DetailValue>{profileData.dob || "Not specified"}</DetailValue>
+      //         </DetailCard>
 
-              <DetailCard color="#2B6CB0">
-                <DetailLabel iconColor="#2B6CB0">
-                  <FaExchangeAlt /> My Shift
-                </DetailLabel>
-                <DetailValue>{getShiftLabel(profileData.current_shift) || "Not specified"}</DetailValue>
-              </DetailCard>
-            </DetailGrid>
-          </>
-        )
+      //         <DetailCard color="#2B6CB0">
+      //           <DetailLabel iconColor="#2B6CB0">
+      //             <FaExchangeAlt /> My Shift
+      //           </DetailLabel>
+      //           <DetailValue>{getShiftLabel(profileData.current_shift) || "Not specified"}</DetailValue>
+      //         </DetailCard>
+      //       </DetailGrid>
+      //     </>
+      //   )
 
       // case "permissions":
       //   return (
@@ -1546,7 +1546,7 @@ const Profile = () => {
                     </ThemeCard>
 
                     {isCustomTheme && (
-                      <ThemeCard isActive={isCustomTheme} onClick={() => {}}>
+                      <ThemeCard isActive={isCustomTheme} onClick={() => { }}>
                         <ThemePreview colors={theme.colors} />
                         <ThemeInfo>
                           <div style={{ display: "flex", alignItems: "center" }}>
@@ -2010,7 +2010,7 @@ const Profile = () => {
                       <FaFont /> Font Family
                     </ComponentSectionTitle>
                     <OptionGrid>
-                        <OptionCard
+                      <OptionCard
                         isActive={uiPreferences.typography.fontFamily === "'Centra', sans-serif"}
                         onClick={() => updateUIPreferences("typography", { fontFamily: "'Centra', sans-serif" })}
                       >
@@ -2230,19 +2230,22 @@ const Profile = () => {
         <ProfileSidebar>
           <StyledCard>
             <ProfileImage>
-              <img src={profileData.image || "/placeholder.svg"} alt={profileData.name} />
+              <img
+                src={profileData?.image || "/placeholder.svg"}
+                alt={profileData?.name || "Profile"}
+              />
             </ProfileImage>
 
             <ProfileInfo>
-              <ProfileName>{profileData.name}</ProfileName>
+              {/* <ProfileName>{profileData.name}</ProfileName>
               <ProfileRole>{profileData.grade_name}</ProfileRole>
 
               <BadgesContainer>
                 <StyledBadge variant="primary">{profileData.is_manager ? "Manager" : "Employee"}</StyledBadge>
                 <StyledBadge variant="secondary"> {getExperience(profileData.date_of_join)}</StyledBadge>
-              </BadgesContainer>
+              </BadgesContainer> */}
 
-              <div>
+              {/* <div>
                 <ProfileDetail>
                   <FaIdCard />
                   <span>Employee ID: {profileData.emp_id}</span>
@@ -2264,37 +2267,37 @@ const Profile = () => {
                   <span>Joined: {profileData.date_of_join || "Not specified"}</span>
                 </ProfileDetail>
                 <ProfileDetail>
-                  <FaExchangeAlt/>
+                  <FaExchangeAlt />
                   <span>{getShiftLabel(profileData.current_shift) || "Not specified"}</span>
                 </ProfileDetail>
-              </div>
+              </div> */}
             </ProfileInfo>
           </StyledCard>
 
-          {!isFmsLogin && 
-          <StyledCard>
-            <div style={{ padding: "1.5rem" }}>
-              <SectionTitle>Quick Stats</SectionTitle>
-              <div style={{ display: "grid", gap: "1rem" }}>
-                <StatCard bgStart="#4C51BF" bgEnd="#6B46C1" style={{ position: "relative", minHeight: "120px" }}>
-                  <StatIcon>
-                    <FaCalendarAlt />
-                  </StatIcon>
-                  <StatLabel>Leave Balance</StatLabel>
-                  <StatValue>{profileData.max_no_leave} Days</StatValue>
-                </StatCard>
+          {/* {!isFmsLogin &&
+            <StyledCard>
+              <div style={{ padding: "1.5rem" }}>
+                <SectionTitle>Quick Stats</SectionTitle>
+                <div style={{ display: "grid", gap: "1rem" }}>
+                  <StatCard bgStart="#4C51BF" bgEnd="#6B46C1" style={{ position: "relative", minHeight: "120px" }}>
+                    <StatIcon>
+                      <FaCalendarAlt />
+                    </StatIcon>
+                    <StatLabel>Leave Balance</StatLabel>
+                    <StatValue>{profileData.max_no_leave} Days</StatValue>
+                  </StatCard>
+                </div>
               </div>
-            </div>
-          </StyledCard>}
+            </StyledCard>}*/}
         </ProfileSidebar>
 
         <ProfileContent>
           <StyledCard>
             <TabContainer>
               <TabGroup>
-                <TabButton active={activeTab === "personal"} onClick={() => setActiveTab("personal")}>
+                {/* <TabButton active={activeTab === "personal"} onClick={() => setActiveTab("personal")}>
                   <FaIdCard /> Personal Info
-                </TabButton>
+                </TabButton> */}
                 {/* <TabButton active={activeTab === "permissions"} onClick={() => setActiveTab("permissions")}>
                   <FaShieldAlt /> Permissions
                 </TabButton> */}

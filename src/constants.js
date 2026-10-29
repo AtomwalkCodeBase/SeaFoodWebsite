@@ -32,7 +32,10 @@ export const ORDERS_PRIORITY_OPTIONS = [
   { id: 2, value: "urgent", label: "URGENT" },
   { id: 3, value: "standard", label: "STANDARD" },
 ];
-
+// export const AMOUNT_TYPE_OPTIONS = [
+//   { value: 'F', label: 'Fixed' },
+//   { value: 'V', label: 'Variable' },
+// ];
 export const QUERY_KEYS = {
   CUSTOMER: 'customer',
   PRODUCTS: 'products',

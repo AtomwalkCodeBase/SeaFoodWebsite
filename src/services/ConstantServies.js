@@ -66,4 +66,7 @@ export const DashboardSummaryUrl = `${PPendPoint}/dashboard/summary/${db_name}/`
 export const Supplierprofile = `${newPPpont}/${db_name}/supplier-profiles/`;
 export const PeelingCenterUrl = `${newPPpont}/${db_name}/pilling-location/`;
 export const PROCESSPILLING = `${newPPpont}/${db_name}/process-pilling/`;
+export const OrderTrace = `${PPendPoint}/inventory/order/traceability/${db_name}/`;
+export const Scheduleorder = `${PPendPoint}/process_order_schedule/${db_name}/`;
+export const GetScheduleorder = `${PPendPoint}/get_order_schedule/${db_name}/`;
 // export const RecordSessionGradesUrl = (sessionId) => `${GradingSessionsUrl}${sessionId}/record-grades/`;

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {  useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { getChangedFields, useFormHandler } from "@/hooks/useFormHandler";
 import { useAllYieldConfig, useProcessActivityList, useProduct, useYieldConfig } from "@/hooks/useProductQueries";
@@ -39,43 +39,44 @@ export default function YieldConfigScreen() {
     processing_cost_per_mt: "",
   };
 
-  
+
   const { form, setForm, handleChange, resetForm } = useFormHandler(editFormData);
 
-  const {data: productsData , isLoading: productsLoading} = useProduct();
-  const {data: activitiesData , isLoading: processActivityLoading} = useProcessActivityList(!!selectedProductId, selectedProductId);
-  const {data: yieldData , isLoading: yieldLoading} = useYieldConfig(true, selectedProductId);
-  const {data: yieldAllData , isLoading: yieldAllLoading} = useAllYieldConfig();
+  const { data: productsData, isLoading: productsLoading } = useProduct();
+  const { data: activitiesData, isLoading: processActivityLoading } = useProcessActivityList(!!selectedProductId, selectedProductId);
+  const { data: yieldData, isLoading: yieldLoading } = useYieldConfig(true, selectedProductId);
+  const { data: yieldAllData, isLoading: yieldAllLoading } = useAllYieldConfig();
 
   const mergedYieldData = useMemo(() => {
-  if (!yieldData || !yieldAllData) return null;
+    if (!yieldData || !yieldAllData) return null;
 
-  const matchedYieldConfigs = yieldAllData.filter(
-    (item) => item.process_flow_name === yieldData.process_flow_name
-  );
+    const matchedYieldConfigs = yieldAllData.filter(
+      (item) => item.process_flow_name === yieldData.process_flow_name
+    );
 
-  const configMap = matchedYieldConfigs.reduce(
-    (acc, item) => { acc[item.sequence] = item;
-      return acc;
-    },{}
-  );
+    const configMap = matchedYieldConfigs.reduce(
+      (acc, item) => {
+        acc[item.sequence] = item;
+        return acc;
+      }, {}
+    );
 
-  const mergedSteps = yieldData.steps?.map((step) => ({
+    const mergedSteps = yieldData.steps?.map((step) => ({
       ...step,
       yield_config_data: configMap[step.sequence] || null,
     })) || [];
 
-  return {
-    ...yieldData,
-    steps: mergedSteps,
-  };
-}, [yieldData, yieldAllData]);
+    return {
+      ...yieldData,
+      steps: mergedSteps,
+    };
+  }, [yieldData, yieldAllData]);
 
   useEffect(() => {
-  if (productsData?.length > 0 && !selectedProductId) {
-    setSelectedProductId(productsData[0].id);
-  }
-}, [productsData, selectedProductId]);
+    if (productsData?.length > 0 && !selectedProductId) {
+      setSelectedProductId(productsData[0].id);
+    }
+  }, [productsData, selectedProductId]);
 
   if (productsLoading) {
     return <div className="font-body bg-background min-h-screen p-6 flex items-center justify-center">Loading configuration...</div>;
@@ -113,138 +114,136 @@ export default function YieldConfigScreen() {
   };
 
   const handleSubmit = async () => {
-  try {
-    if (form.id) {
-      const originalData = steps.find((item) => String(item?.yield_config_data?.id) === String(form.id))?.yield_config_data;
+    try {
+      if (form.id) {
+        const originalData = steps.find((item) => String(item?.yield_config_data?.id) === String(form.id))?.yield_config_data;
 
-      // console.log("originalData", originalData)
+        // console.log("originalData", originalData)
 
-      const normalizedOriginal = {
-        process_activity: String(originalData?.process_activity || ""),
-        sequence: originalData?.sequence || "",
-        yield_percentage: originalData?.yield_percentage || "",
-        loss_description: originalData?.loss_description || "",
-        is_pre_grading: Boolean(originalData?.is_pre_grading),
-        worker_efficiency_kg_per_hour: originalData?.worker_efficiency_kg_per_hour || "",
-        processing_cost_per_mt: originalData?.processing_cost_per_mt || "",
-      };
+        const normalizedOriginal = {
+          process_activity: String(originalData?.process_activity || ""),
+          sequence: originalData?.sequence || "",
+          yield_percentage: originalData?.yield_percentage || "",
+          loss_description: originalData?.loss_description || "",
+          is_pre_grading: Boolean(originalData?.is_pre_grading),
+          worker_efficiency_kg_per_hour: originalData?.worker_efficiency_kg_per_hour || "",
+          processing_cost_per_mt: originalData?.processing_cost_per_mt || "",
+        };
 
-      const changedPayload = getChangedFields( normalizedOriginal, form);
+        const changedPayload = getChangedFields(normalizedOriginal, form);
 
-      if (Object.keys(changedPayload).length === 0) {
-        toast.info("No changes detected");
-        return;
+        if (Object.keys(changedPayload).length === 0) {
+          toast.info("No changes detected");
+          return;
+        }
+
+        // console.log({id: form.id, ...changedPayload})
+
+        await UpdateYieldConfig({ id: form.id, ...changedPayload });
+
+        toast.success("Yield data updated successfully");
+      } else {
+        // ADD API payload
+        const payload = {
+          product_id: selectedProductId,
+          process_activity: Number(form.process_activity),
+          sequence: Number(form.sequence),
+          yield_percentage: form.yield_percentage,
+          loss_description: form.loss_description,
+          is_pre_grading: form.is_pre_grading,
+          worker_efficiency_kg_per_hour: form.worker_efficiency_kg_per_hour,
+          processing_cost_per_mt: form.processing_cost_per_mt,
+        };
+
+        await AddYieldConfig(payload);
+        toast.success("Yield data add successfully");
       }
 
-      // console.log({id: form.id, ...changedPayload})
+      setIsModalOpen(false);
+      setIsConfirmOpen(false);
+      await queryClient.invalidateQueries([QUERY_KEYS.YIELD_BY_PRODUCT, selectedProductId]);
 
-      await UpdateYieldConfig({id: form.id, ...changedPayload});
-
-      toast.success("Yield data updated successfully");
-    } else {
-      // ADD API payload
-      const payload = {
-        product_id: selectedProductId,
-        process_activity: Number(form.process_activity),
-        sequence: Number(form.sequence),
-        yield_percentage: form.yield_percentage,
-        loss_description: form.loss_description,
-        is_pre_grading: form.is_pre_grading,
-        worker_efficiency_kg_per_hour:form.worker_efficiency_kg_per_hour,
-        processing_cost_per_mt:form.processing_cost_per_mt,
-      };
-
-      await AddYieldConfig(payload);
-      toast.success("Yield data add successfully");
+    } catch (error) {
+      handleApiError(error, form.id ? "Failed to update" : "Failed to save")
     }
+  };
 
-    setIsModalOpen(false);
-    setIsConfirmOpen(false);
-    await queryClient.invalidateQueries([QUERY_KEYS.YIELD_BY_PRODUCT, selectedProductId]);
+  const parsedInputMT = parseFloat(inputMT);
+  const effectiveInputMT = Number.isFinite(parsedInputMT) ? parsedInputMT : 0;
 
-  } catch (error) {
-    handleApiError(error, form.id? "Failed to update" : "Failed to save")
-  }
-};
+  const finalOutput = (effectiveInputMT * ((yieldData?.total_yield_pct || 0) / 100)).toFixed(3);
 
-const parsedInputMT = parseFloat(inputMT);
-const effectiveInputMT = Number.isFinite(parsedInputMT) ? parsedInputMT : 0;
+  const STATS_CARD_DATA = [
+    { label: "Total Yield", value: `${yieldData?.total_yield_pct || 0}%`, colorClass: "text-warning" },
+    { label: "Pre-Grading Yield", value: `${yieldData?.pre_grading_yield_pct || 0}%`, colorClass: "text-secondary" },
+    { label: "Post-Grading Yield", value: `${yieldData?.post_grading_yield_pct || 0}%`, colorClass: "text-[#C97AFF]" },
+    { label: "Final Output", value: `${finalOutput || 0} MT`, colorClass: "text-success" },
+  ]
 
-const finalOutput = (effectiveInputMT * ((yieldData?.total_yield_pct || 0) / 100)).toFixed(3);
+  const steps = mergedYieldData?.steps || [];
+  let runningInput = effectiveInputMT;
 
-const STATS_CARD_DATA = [
-  {label: "Total Yield", value: `${yieldData?.total_yield_pct || 0}%` , colorClass: "text-warning"},
-  {label: "Pre-Grading Yield", value: `${yieldData?.pre_grading_yield_pct || 0}%`, colorClass:"text-secondary"},
-  {label:"Post-Grading Yield", value: `${yieldData?.post_grading_yield_pct || 0}%`, colorClass: "text-[#C97AFF]"},
-  {label:"Final Output", value: `${finalOutput || 0} MT`, colorClass:"text-success"},
-]
+  const processedSteps = [];
+  steps.forEach((step) => {
+    const inputQty = runningInput;
+    const outputQty = inputQty * (step.yield_pct / 100);
+    const lossQty = outputQty - inputQty;
 
-const steps = mergedYieldData?.steps || [];
-let runningInput = effectiveInputMT;
-
-const processedSteps = [];
-steps.forEach((step) => {
-  const inputQty = runningInput;
-  const outputQty = inputQty * (step.yield_pct / 100);
-  const lossQty = outputQty - inputQty;
-
-  processedSteps.push({
-    ...step,
-    inputQty,
-    outputQty,
-    lossQty,
+    processedSteps.push({
+      ...step,
+      inputQty,
+      outputQty,
+      lossQty,
+    });
+    runningInput = outputQty;
   });
-  runningInput = outputQty;
-});
 
-const selectedProduct = productsData?.find((product) => product.id === selectedProductId);
-const titleProductCode = yieldData?.product_code || selectedProduct?.product_code || "";
-const titleProductName = yieldData?.product_name || selectedProduct?.product_name || "";
+  const selectedProduct = productsData?.find((product) => product.id === selectedProductId);
+  const titleProductCode = yieldData?.product_code || selectedProduct?.product_code || "";
+  const titleProductName = yieldData?.product_name || selectedProduct?.product_name || "";
 
-const flow = [
-  {
-    label: "RAW",
-    val: `${effectiveInputMT.toFixed(2)} MT`,
-  },
+  const flow = [
+    {
+      label: "RAW",
+      val: `${effectiveInputMT.toFixed(2)} MT`,
+    },
 
-  ...processedSteps.map((step) => ({
-    label: step.activity_name,
+    ...processedSteps.map((step) => ({
+      label: step.activity_name,
 
-    val: `${step.outputQty.toFixed(2)} MT`,
+      val: `${step.outputQty.toFixed(2)} MT`,
 
-    delta: `${
-      step.lossQty >= 0 ? "+" : ""
-    }${step.lossQty.toFixed(2)}`,
-  })),
+      delta: `${step.lossQty >= 0 ? "+" : ""
+        }${step.lossQty.toFixed(2)}`,
+    })),
 
-  {
-    label: "FINISHED",
+    {
+      label: "FINISHED",
 
-    val: `${
-      processedSteps[
-        processedSteps.length - 1
-      ]?.outputQty?.toFixed(2) ||
-      effectiveInputMT.toFixed(2)
-    } MT`,
-  },
-];
+      val: `${processedSteps[
+          processedSteps.length - 1
+        ]?.outputQty?.toFixed(2) ||
+        effectiveInputMT.toFixed(2)
+        } MT`,
+    },
+  ];
   return (
-//         {/* Yield Comparison */}
-//         <SectionCard>
-//           <SectionHeader icon="📊" title="Product Yield Comparison" sub="Same raw input, different routes" />
-//           <div className="p-5">
-//             {uiProducts.map((p) => (
-//               <YieldBar key={p.id} product={p} inputMT={inputMT} active={p.id === selectedProductId} />
-//             ))}
-//           </div>
-//         </SectionCard>
-//       </div>
+    //         {/* Yield Comparison */}
+    //         <SectionCard>
+    //           <SectionHeader icon="📊" title="Product Yield Comparison" sub="Same raw input, different routes" />
+    //           <div className="p-5">
+    //             {uiProducts.map((p) => (
+    //               <YieldBar key={p.id} product={p} inputMT={inputMT} active={p.id === selectedProductId} />
+    //             ))}
+    //           </div>
+    //         </SectionCard>
+    //       </div>
     <div className="font-body min-h-screen transition-colors duration-300">
       <div className="mx-auto">
 
         <div className="flex gap-3 mb-4 flex-wrap">
           {productsData?.map((p) => (
-            <ProductTab key={p.id} product={p} active={p.id === selectedProductId} onClick={() => setSelectedProductId(p.id)}/>
+            <ProductTab key={p.id} product={p} active={p.id === selectedProductId} onClick={() => setSelectedProductId(p.id)} />
           ))}
         </div>
 
@@ -254,27 +253,28 @@ const flow = [
           ))}
 
           <div className="bg-card border border-border rounded-xl p-3 shadow-sm min-w-45">
-             <div className="text-xs font-medium uppercase tracking-wider text-textLight mb-2">Simulate Input</div>
-             <div className="flex items-center gap-2">
+            <div className="text-xs font-medium uppercase tracking-wider text-textLight mb-2">Simulate Input</div>
+            <div className="flex items-center gap-2">
               <InputField
-               type="number"
-                 value={inputMT}
-                 min={1}
-                 max={9999}
-                 onChange={(e) => {
-                   const nextValue = e.target.value;
-                   setInputMT(nextValue === "" ? "" : nextValue);
-                 }}
+                type="number"
+                value={inputMT}
+                min={1}
+                max={9999}
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setInputMT(nextValue === "" ? "" : nextValue);
+                }}
               />
-               <span className="text-sm text-textLight font-medium">MT</span>
-             </div>
-           </div>
-         </div>
+              <span className="text-sm text-textLight font-medium">MT</span>
+            </div>
+          </div>
+        </div>
 
-         <Card style={{border: `1px solid ${theme.colors.border}`}} hoverable={false}>
-           <div className="flex justify-between items-center border-b border-border mb-2">
-             <SectionHeader icon="🔗" title={`${titleProductCode} — ${titleProductName}`} border={false}/>
-             {(() => {const yieldActivityIds = new Set(
+        <Card style={{ border: `1px solid ${theme.colors.border}` }} hoverable={false}>
+          <div className="flex justify-between items-center border-b border-border mb-2">
+            <SectionHeader icon="🔗" title={`${titleProductCode} — ${titleProductName}`} border={false} />
+            {(() => {
+              const yieldActivityIds = new Set(
                 steps?.map(s => String(s.process_activity_id).trim())
               );
 
@@ -282,57 +282,57 @@ const flow = [
                 return !yieldActivityIds.has(String(act.id).trim());
               });
 
-              return hasMissingActivities  && (
-                 <Button size="sm" onClick={handleAddNew}>
-                   <FaPlus /> Add Yield Step
-                 </Button>
+              return hasMissingActivities && (
+                <Button size="sm" onClick={handleAddNew}>
+                  <FaPlus /> Add Yield Step
+                </Button>
               );
-              })()}
-           </div>
+            })()}
+          </div>
 
-           <DataTable
-           columns={["#", "Activity", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"]}
-           data={processedSteps}
-           emptyMessage="No yield steps configured for this product."
-           isLoading={yieldLoading}
-           renderRow={(step) => {
+          <DataTable
+            columns={["#", "Activity", "Yield %", "Input MT", "Output MT", "Loss/Gain", "Worker Eff.", "Equipment", "Loss Reason", "Action"]}
+            data={processedSteps}
+            emptyMessage="No yield steps configured for this product."
+            isLoading={yieldLoading}
+            renderRow={(step) => {
 
-            return(
-            <>
-            <Td>{step.sequence || 0}</Td>
-            <Td>{step.activity_name || "--"}</Td>
-            {/* <Td><Badge variant={step.phase === "POST_GRADE" ? "success" : "forward"}>{step.phase || "--"}</Badge></Td> */}
-            <Td className={`${step.yield_pct.toFixed(1) < 90 ? "text-error" : step.yield_pct.toFixed(1) > 100 ? "text-success" : "text-warning"} font-semibold`}>{step.yield_pct.toFixed(1) || 0}%</Td>
-            <Td>{step.inputQty.toFixed(3) || 0}</Td>
-            <Td>{step.outputQty.toFixed(3) || 0}</Td>
-            <Td className={`${step.lossQty >= 0 ? "text-success": "text-error"} font-semibold`}> {step.lossQty >= 0 ? "+" : ""}{step.lossQty.toFixed(3) || 0}</Td>
-            <Td>{step.worker_efficiency || "--"}</Td>
-            <Td>{step.equipment[0] || "--"}</Td>
-            <Td>{step.loss_description || "--"}</Td>
-            <Td>
-              <Button size="sm" variant="outline"  onClick={() => handleEditClick(step.yield_config_data, step)} title="Edit" iconOnly={true}>
-               <HiOutlinePencilAlt /> Edit
-             </Button>
-            </Td>
-            </>
-            )
-           } 
-           }
-           
-           />
-         </Card>
+              return (
+                <>
+                  <Td>{step.sequence || 0}</Td>
+                  <Td>{step.activity_name || "--"}</Td>
+                  {/* <Td><Badge variant={step.phase === "POST_GRADE" ? "success" : "forward"}>{step.phase || "--"}</Badge></Td> */}
+                  <Td className={`${step.yield_pct.toFixed(1) < 90 ? "text-error" : step.yield_pct.toFixed(1) > 100 ? "text-success" : "text-warning"} font-semibold`}>{step.yield_pct.toFixed(1) || 0}%</Td>
+                  <Td>{step.inputQty.toFixed(3) || 0}</Td>
+                  <Td>{step.outputQty.toFixed(3) || 0}</Td>
+                  <Td className={`${step.lossQty >= 0 ? "text-success" : "text-error"} font-semibold`}> {step.lossQty >= 0 ? "+" : ""}{step.lossQty.toFixed(3) || 0}</Td>
+                  <Td>{step.worker_efficiency || "--"}</Td>
+                  <Td>{step.equipment[0] || "--"}</Td>
+                  <Td>{step.loss_description || "--"}</Td>
+                  <Td>
+                    <Button size="sm" variant="outline" onClick={() => handleEditClick(step.yield_config_data, step)} title="Edit" iconOnly={true}>
+                      <HiOutlinePencilAlt /> Edit
+                    </Button>
+                  </Td>
+                </>
+              )
+            }
+            }
 
-         <div className="flex gap-4 flex-wrap">
-           <SectionCard className="flex-[2] min-w-[300px] border-l-4 border-l-primary">
-             <SectionHeader icon="📦" title="Material Flow" subtitle={`${effectiveInputMT} MT input → ${finalOutput} MT output`}/>
-             <div className="p-6 flex flex-wrap gap-3 items-center">
-               {flow.map((node, i) => (
-                 <FlowNode key={i} node={node} isLast={i === flow.length - 1} />
-               ))}
-             </div>
-           </SectionCard>
-         </div>
-{/* 
+          />
+        </Card>
+
+        <div className="flex gap-4 flex-wrap">
+          <SectionCard className="flex-[2] min-w-[300px] border-l-4 border-l-primary">
+            <SectionHeader icon="📦" title="Material Flow" subtitle={`${effectiveInputMT} MT input → ${finalOutput} MT output`} />
+            <div className="p-6 flex flex-wrap gap-3 items-center">
+              {flow.map((node, i) => (
+                <FlowNode key={i} node={node} isLast={i === flow.length - 1} />
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+        {/* 
           <SectionCard>
            <SectionHeader icon="📊" title="Product Yield Comparison" sub="Same raw input, different routes" />
            <div className="p-5">
@@ -341,51 +341,51 @@ const flow = [
              ))}
            </div>
          </SectionCard> */}
-        </div>
+      </div>
 
-     {isModalOpen && (
-        <Modal title={form.id ? "Edit Yield Step" : "Add New Yield Step"} isOpen={isModalOpen} onClose={() => {setIsModalOpen(false); resetForm()}} onSave={() => setIsConfirmOpen(true)} saveButtonText={form.id ? "Edit Step" : "Add Step"} >
+      {isModalOpen && (
+        <Modal title={form.id ? "Edit Yield Step" : "Add New Yield Step"} isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); resetForm() }} onSave={() => setIsConfirmOpen(true)} saveButtonText={form.id ? "Edit Step" : "Add Step"} >
 
-            {/* <div className="space-y-7"> */}
+          {/* <div className="space-y-7"> */}
 
-              <InputField
-                label="Activity"
-                name="process_activity"
-                type="select"
-                value={form.process_activity}
-                onChange={handleChange}
-                options={activitiesData.map((c) => ({ value: String(c.id), label: c.activity_name }))}
-                required
-              />
+          <InputField
+            label="Activity"
+            name="process_activity"
+            type="select"
+            value={form.process_activity}
+            onChange={handleChange}
+            options={activitiesData.map((c) => ({ value: String(c.id), label: c.activity_name }))}
+            required
+          />
 
-              <InputField
-                label="Sequence"
-                name="sequence"
-                type="number"
-                value={form.sequence}
-                onChange={handleChange}
-                required
-              />
+          <InputField
+            label="Sequence"
+            name="sequence"
+            type="number"
+            value={form.sequence}
+            onChange={handleChange}
+            required
+          />
 
-              <InputField
-                label="Yield Percentage"
-                name="yield_percentage"
-                type="number"
-                value={form.yield_percentage}
-                onChange={handleChange}
-                required
-                placeholder="Enter between 0 to 1"
-              />
+          <InputField
+            label="Yield Percentage"
+            name="yield_percentage"
+            type="number"
+            value={form.yield_percentage}
+            onChange={handleChange}
+            required
+            placeholder="Enter between 0 to 1"
+          />
 
-              <InputField
-                label="Loss Description"
-                name="loss_description"
-                type="text"
-                value={form.loss_description}
-                onChange={handleChange}
-              />
+          <InputField
+            label="Loss Description"
+            name="loss_description"
+            type="text"
+            value={form.loss_description}
+            onChange={handleChange}
+          />
 
-              {/* <InputField
+          {/* <InputField
                 label="Is Pre-Grading"
                 name="is_pre_grading"
                 type="checkbox"
@@ -394,25 +394,25 @@ const flow = [
                 required
               /> */}
 
-              <InputField
-                label="Worker Efficiency (kg/hr)"
-                name="worker_efficiency_kg_per_hour"
-                type="number"
-                value={form.worker_efficiency_kg_per_hour}
-                onChange={handleChange}
-                required
-              />
+          <InputField
+            label="Worker Efficiency (kg/hr)"
+            name="worker_efficiency_kg_per_hour"
+            type="number"
+            value={form.worker_efficiency_kg_per_hour}
+            onChange={handleChange}
+            required
+          />
 
-              <InputField
-                label="Processing Cost (per MT)"
-                name="processing_cost_per_mt"
-                type="number"
-                value={form.processing_cost_per_mt}
-                onChange={handleChange}
-              />
-              {/* </div> */}
+          <InputField
+            label="Processing Cost (per MT)"
+            name="processing_cost_per_mt"
+            type="number"
+            value={form.processing_cost_per_mt}
+            onChange={handleChange}
+          />
+          {/* </div> */}
 
- </Modal>
+        </Modal>
       )}
 
       <ConfirmPopup
@@ -424,18 +424,17 @@ const flow = [
         confirmLabel="Yes"
       />
 
-        </div>
+    </div>
   );
 }
 
 const ProductTab = ({ product, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`py-2 pl-2 pr-5 rounded-xl cursor-pointer text-left transition-all duration-200 min-w-[165px] font-body shadow-sm ${
-      active
+    className={`py-2 pl-2 pr-5 rounded-xl cursor-pointer text-left transition-all duration-200 min-w-[165px] font-body shadow-sm ${active
         ? "border-2 border-primary bg-gradient-to-br from-secondary to-primary text-white shadow-md shadow-primary/30"
         : "border border-border bg-card text-text hover:border-primary"
-    }`}
+      }`}
   >
     <div className="text-sm font-bold">{product.product_code}</div>
     <div className={`text-[10px] mt-0.5 ${active ? "opacity-85" : "opacity-60"}`}>{product.product_name}</div>
@@ -492,9 +491,8 @@ const YieldBar = ({ product, inputMT, active }) => {
       <div className="text-xs text-textLight w-10">{product.yield}%</div>
       <div className="flex-1 bg-backgroundAlt rounded-md h-2.5 overflow-hidden">
         <div
-          className={`h-full rounded-md transition-all duration-500 ease-in-out ${
-            active ? "bg-gradient-to-r from-primary to-secondary" : "bg-border"
-          }`}
+          className={`h-full rounded-md transition-all duration-500 ease-in-out ${active ? "bg-gradient-to-r from-primary to-secondary" : "bg-border"
+            }`}
           style={{ width: `${product.yield}%` }}
         />
       </div>

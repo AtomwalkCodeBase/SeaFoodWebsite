@@ -8,7 +8,6 @@ import Button from "../components/Button";
 import Modal from "../components/Modal";
 import Badge from "../components/Badge";
 import { FaEye } from "react-icons/fa";
-
 import { usePagination } from "../hooks/usePagination";
 import { useFilter } from "../hooks/useFilter";
 import { useCustomers, useGrades, useSpecies, useSupplierProfile } from "../hooks/useProductQueries";
@@ -42,6 +41,53 @@ const formatDatetime = (dateStr) =>
 const formatPercent = (value) =>
   value != null ? `${(Number(value) * 100).toFixed(2)}%` : "--";
 
+/**
+ * Table dedupe: one row per (supplier_id, grade_code), keeping only the
+ * most recently updated record for that pair. Full history for a supplier
+ * (including older records at the same grade) is available via the modal.
+ */
+const dedupeLatestBySupplierGrade = (list = []) => {
+  const latestByKey = new Map();
+
+  list.forEach((row) => {
+    const key = `${row.supplier_id}__${row.grade_code}`;
+    const existing = latestByKey.get(key);
+    if (!existing || new Date(row.last_updated) > new Date(existing.last_updated)) {
+      latestByKey.set(key, row);
+    }
+  });
+
+  return Array.from(latestByKey.values());
+};
+
+/**
+ * Modal grouping: bucket a supplier's full profile history by grade_code,
+ * then sort each grade's entries newest-first so every date-wise record
+ * is shown separately under its grade header.
+ */
+const groupProfilesByGrade = (profiles = []) => {
+  const groups = new Map();
+
+  profiles.forEach((row) => {
+    const key = row.grade_code || row.grade?.id || "unknown";
+    if (!groups.has(key)) {
+      groups.set(key, {
+        grade_code: row.grade_code,
+        grade: row.grade,
+        species: row.species,
+        entries: [],
+      });
+    }
+    groups.get(key).entries.push(row);
+  });
+
+  groups.forEach((group) => {
+    group.entries.sort((a, b) => new Date(b.last_updated) - new Date(a.last_updated));
+  });
+
+  return Array.from(groups.values());
+};
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const ModalField = ({ label, value, className = "", colSpan = false }) => (
@@ -62,14 +108,37 @@ const ModalSection = ({ title, children }) => (
   </div>
 );
 
+/**
+ * One history row inside a grade group: Expected % | Sample Size | Updated.
+ * Multiple rows under the same grade represent separate grading events
+ * on different dates.
+ */
+const GradeHistoryRow = ({ entry }) => (
+  <div className="grid grid-cols-3 gap-4 py-2 border-b border-border/50 last:border-b-0 text-sm">
+    <div>{formatPercent(entry.expected_percentage)}</div>
+    <div>{entry.sample_size_mt ? `${entry.sample_size_mt} MT` : "—"}</div>
+    <div className="text-muted">{formatDate(entry.last_updated)}</div>
+  </div>
+);
+
 // ─── Modal: loads per-supplier data + resolves grade & species ─────────────────
 
-const SupplierDetailModal = ({ supplierId, supplierName, isOpen, onClose }) => {
-  const { data: profileList = [], isLoading } = useSupplierProfile({ id: supplierId });
+const SupplierDetailModal = ({
+  supplierId,
+  supplierName,
+  gradeCode,
+  isOpen,
+  onClose,
+}) => {
+  const { data: profileList = [], isLoading } = useSupplierProfile(
+    isOpen,
+    supplierId
+  );
+
   const { data: gradeList = [] } = useGrades();
   const { data: speciesList = [] } = useSpecies();
 
-  // grade.id (UUID) → grade  — because supplier.grade_config is a grade UUID
+  // grade.id (UUID) → grade
   const gradeMap = useMemo(
     () => Object.fromEntries(gradeList.map((g) => [g.id, g])),
     [gradeList]
@@ -82,130 +151,203 @@ const SupplierDetailModal = ({ supplierId, supplierName, isOpen, onClose }) => {
   );
 
   /**
-   * Lookup chain per profile row:
-   *   row.grade_config (UUID) → gradeMap → grade
-   *   grade.species_config (single UUID) → speciesMap → scientific_name
+   * Only keep records belonging to the selected grade.
+   *
+   * Depending on your API, grade_code may already exist on the row.
+   * If not, resolve the grade from grade_config and compare its code.
+   */
+  const gradeProfiles = useMemo(() => {
+    return profileList.filter((row) => {
+      const grade = gradeMap[row.grade_config];
+
+      return (
+        row.grade_code === gradeCode ||
+        grade?.code === gradeCode ||
+        String(row.grade_config) === String(gradeCode)
+      );
+    });
+  }, [profileList, gradeMap, gradeCode]);
+
+  /**
+   * Enrich only the selected grade's records.
    */
   const enrichedProfiles = useMemo(
     () =>
-      profileList.map((row) => {
+      gradeProfiles.map((row) => {
         const grade = gradeMap[row.grade_config] ?? null;
-        const species = grade ? speciesMap[grade.species_config] ?? null : null;
-        return { ...row, grade, species };
+        const species = grade
+          ? speciesMap[grade.species_config] ?? null
+          : null;
+
+        return {
+          ...row,
+          grade,
+          species,
+        };
       }),
-    [profileList, gradeMap, speciesMap]
+    [gradeProfiles, gradeMap, speciesMap]
+  );
+
+  const gradeGroups = useMemo(
+    () => groupProfilesByGrade(enrichedProfiles),
+    [enrichedProfiles]
   );
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Supplier Profile"
+      title="Supplier Grade History"
       width="max-w-2xl"
       showSaveButton={false}
       cancelButtonText="Close"
     >
-      {/* ── Header Banner ── */}
+      {/* Header */}
       <div className="rounded-lg px-4 py-3 mb-4 bg-primary/10 border border-primary/20 flex items-center justify-between">
         <div>
           <div className="text-xs text-muted uppercase tracking-wide">
             Supplier
           </div>
+
           <div className="text-base font-bold text-primary">
             {supplierName || supplierId}
           </div>
-          <div className="text-xs text-muted mt-0.5">ID: {supplierId}</div>
+
+          <div className="text-xs text-muted mt-0.5">
+            ID: {supplierId}
+          </div>
         </div>
-        <Badge variant="info">{enrichedProfiles.length} Grade(s)</Badge>
+
+        <Badge variant="info">
+          Grade: {gradeCode}
+        </Badge>
       </div>
 
       {isLoading ? (
-        <div className="text-sm text-muted text-center py-6">Loading...</div>
-      ) : enrichedProfiles.length === 0 ? (
         <div className="text-sm text-muted text-center py-6">
-          No profile data found.
+          Loading...
+        </div>
+      ) : gradeGroups.length === 0 ? (
+        <div className="text-sm text-muted text-center py-6">
+          No history found for grade {gradeCode}.
         </div>
       ) : (
         <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1">
-          {enrichedProfiles.map((row, idx) => (
-            <div
-              key={row.id ?? idx}
-              className="border border-border rounded-lg p-4 space-y-4"
-            >
-              {/* Grade Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm font-semibold text-primary">
-                    {row.grade?.label || "—"}
-                  </span>
-                  <span className="ml-2 text-xs text-muted">
-                    {row.grade?.grade_code}
-                  </span>
-                </div>
-                <span className="text-xs text-muted">
-                  Updated: {formatDatetime(row.last_updated)}
-                </span>
-              </div>
+          {gradeGroups.map((group, idx) => {
+            const latest = group.entries[0];
 
-              {/* Grade Info */}
-              <ModalSection title="Grade Info">
-                <ModalField label="Size Code" value={row.grade_code} />
-                <ModalField
-                  label="Expected %"
-                  value={formatPercent(row.expected_percentage)}
-                />
-                <ModalField
-                  label="Sample Size"
-                  value={row.sample_size_mt ? `${row.sample_size_mt} MT` : "—"}
-                />
-                <ModalField
-                  label="Grade Label"
-                  value={row.grade?.label ?? "—"}
-                />
-                <ModalField
-                  label="Price Multiplier"
-                  value={row.grade?.price_multiplier ?? "—"}
-                />
-                <ModalField
-                  label="Yield Multiplier"
-                  value={row.grade?.yield_multiplier ?? "—"}
-                />
-              </ModalSection>
+            return (
+              <div
+                key={group.grade_code ?? idx}
+                className="border border-border rounded-lg p-4 space-y-4"
+              >
+                {/* Grade Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-semibold text-primary">
+                      {group.grade?.label ||
+                        `Grade ${group.grade_code}`}
+                    </span>
 
-              {/* Species */}
-              <ModalSection title="Species">
-                {row.species ? (
-                  <>
-                    <ModalField
-                      label="Scientific Name"
-                      value={row.species.scientific_name}
-                    />
-                    <ModalField
-                      label="Base Price / MT"
-                      value={
-                        row.species.base_procurement_price_per_mt
-                          ? `₹${Number(row.species.base_procurement_price_per_mt).toLocaleString("en-IN")}`
-                          : "—"
-                      }
-                    />
-                    {row.species.export_certifications?.length > 0 && (
-                      <div className="col-span-2 flex flex-wrap gap-2 mt-1">
-                        {row.species.export_certifications.map((cert) => (
-                          <Badge key={cert} variant="success">
-                            {cert}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="col-span-2 text-sm text-muted">
-                    No species linked to this grade.
+                    <span className="ml-2 text-xs text-muted">
+                      {group.grade_code}
+                    </span>
                   </div>
-                )}
-              </ModalSection>
-            </div>
-          ))}
+
+                  <Badge variant="secondary">
+                    {group.entries.length} record
+                    {group.entries.length > 1 ? "s" : ""}
+                  </Badge>
+                </div>
+
+                {/* Grade Info */}
+                <ModalSection title="Grade Info">
+                  <ModalField
+                    label="Grade Label"
+                    value={group.grade?.label ?? "—"}
+                  />
+
+                  <ModalField
+                    label="Price Multiplier"
+                    value={group.grade?.price_multiplier ?? "—"}
+                  />
+
+                  <ModalField
+                    label="Yield Multiplier"
+                    value={group.grade?.yield_multiplier ?? "—"}
+                  />
+
+                  <ModalField
+                    label="Last Updated"
+                    value={formatDatetime(latest?.last_updated)}
+                  />
+                </ModalSection>
+
+                {/* History */}
+                <div>
+                  <div className="text-xs font-semibold text-muted uppercase tracking-widest mb-2 pb-1 border-b border-border">
+                    History
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 pb-1 text-xs text-muted uppercase tracking-wide">
+                    <div>Expected %</div>
+                    <div>Sample Size</div>
+                    <div>Updated</div>
+                  </div>
+
+                  {group.entries.map((entry, entryIdx) => (
+                    <GradeHistoryRow
+                      key={entry.id ?? entryIdx}
+                      entry={entry}
+                    />
+                  ))}
+                </div>
+
+                {/* Species */}
+                <ModalSection title="Species">
+                  {group.species ? (
+                    <>
+                      <ModalField
+                        label="Scientific Name"
+                        value={group.species.scientific_name}
+                      />
+
+                      <ModalField
+                        label="Base Price / MT"
+                        value={
+                          group.species.base_procurement_price_per_mt
+                            ? `₹${Number(
+                              group.species
+                                .base_procurement_price_per_mt
+                            ).toLocaleString("en-IN")}`
+                            : "—"
+                        }
+                      />
+
+                      {group.species.export_certifications?.length > 0 && (
+                        <div className="col-span-2 flex flex-wrap gap-2 mt-1">
+                          {group.species.export_certifications.map(
+                            (cert) => (
+                              <Badge
+                                key={cert}
+                                variant="success"
+                              >
+                                {cert}
+                              </Badge>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="col-span-2 text-sm text-muted">
+                      No species linked to this grade.
+                    </div>
+                  )}
+                </ModalSection>
+              </div>
+            );
+          })}
         </div>
       )}
     </Modal>
@@ -236,8 +378,15 @@ const Supplier = () => {
     [supplierList, supplierNameMap]
   );
 
+  // Table shows one row per (supplier, grade) — latest record only.
+  // Full date-wise history is available via the eye button's modal.
+  const dedupedList = useMemo(
+    () => dedupeLatestBySupplierGrade(enrichedList),
+    [enrichedList]
+  );
+
   const filteredData = useFilter({
-    data: enrichedList,
+    data: dedupedList,
     fields: ["grade_code", "supplier_id", "supplier_name"],
     search,
   });
@@ -285,11 +434,12 @@ const Supplier = () => {
               <Td>
                 <Button
                   iconOnly
-                  title="View"
+                  title={`View ${item.grade_code} history`}
                   onClick={() => setSelectedSupplier(item)}
                 >
                   <FaEye />
                 </Button>
+
               </Td>
             </>
           )}
@@ -309,6 +459,7 @@ const Supplier = () => {
         <SupplierDetailModal
           supplierId={selectedSupplier.supplier_id}
           supplierName={selectedSupplier.supplier_name}
+          gradeCode={selectedSupplier.grade_code}
           isOpen={!!selectedSupplier}
           onClose={() => setSelectedSupplier(null)}
         />
