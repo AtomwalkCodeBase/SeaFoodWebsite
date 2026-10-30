@@ -18,7 +18,7 @@ export default function AllocateBatchModal({
 
   const allocatedSoFar = useMemo(() => {
     return Object.values(allocations).reduce(
-      (sum, v) => sum + Number(v || 0),
+      (sum, allocation) => sum + Number(allocation.mt || 0),
       0
     );
   }, [allocations]);
@@ -26,11 +26,17 @@ export default function AllocateBatchModal({
   const remaining = totalUnallocated - allocatedSoFar;
 
   const handleChange = (id, value) => {
-    const num = Number(value || 0);
+    const packets = Math.max(0, Math.floor(Number(value) || 0));
+
+    // Temporary calculation until product base quantity is connected
+    const mt = 0;
 
     setAllocations((prev) => ({
       ...prev,
-      [id]: num,
+      [id]: {
+        packets,
+        mt,
+      },
     }));
   };
 
@@ -53,7 +59,8 @@ export default function AllocateBatchModal({
       width="max-w-2xl"
       isOpen={isOpen}
       onClose={onClose}
-      onSave={() => onConfirm(allocations)}
+      onSave={() =>
+        onConfirm(allocations)}
       saveButtonText={` Confirm allocation (${allocatedSoFar.toFixed(3)} MT)`}
       saveDisabled={allocatedSoFar <= 0 || remaining < 0 || isSaving}
     >
@@ -99,7 +106,7 @@ export default function AllocateBatchModal({
           return (
             <div
               key={o.id}
-              className={`rounded-xl border p-4 bg-backgroundAlt mb-3 ${isSelected ? "border-primary border-2": "border-border bg-background-alt/40"}`}
+              className={`rounded-xl border p-4 bg-backgroundAlt mb-3 ${isSelected ? "border-primary border-2" : "border-border bg-background-alt/40"}`}
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -108,13 +115,12 @@ export default function AllocateBatchModal({
                     checked={isSelected}
                     disabled={selectedOrders.length > 0 && !isSelected}
                     onChange={(e) => handleSelectOrder(o.id, e.target.checked)}
-                    className={`w-5 h-5 rounded border-border accent-primary ${
-                      selectedOrders.length > 0
-                        ? isSelected
-                          ? 'cursor-pointer'
-                          : 'opacity-50 cursor-not-allowed'
-                        : ''
-                    }`}/>
+                    className={`w-5 h-5 rounded border-border accent-primary ${selectedOrders.length > 0
+                      ? isSelected
+                        ? 'cursor-pointer'
+                        : 'opacity-50 cursor-not-allowed'
+                      : ''
+                      }`} />
                   <div>
                     <div className="flex items-center gap-2">
                       <p className={`font-semibold ${isSelected ? "text-text" : "text-text/50"}`}>
@@ -137,18 +143,40 @@ export default function AllocateBatchModal({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    step="0.001"
-                    min="0"
-                    max={o.remaining_qty_mt}
-                    value={value}
-                    disabled={!isSelected}
-                    onChange={(e) =>
-                      handleChange(o.id, e.target.value)
-                    }
-                    className={`w-24 bg-background border border-border rounded-lg px-3 py-2 ${!isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  />
+
+                  {/* Packet Count */}
+                  <div>
+                    <label className="block text-xs text-text-light mb-1">
+                      Packets
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="0"
+                      value={allocations[o.id]?.packets || ""}
+                      disabled={!isSelected}
+                      onChange={(e) => handleChange(o.id, e.target.value)}
+                      className={`w-24 bg-background border border-border rounded-lg px-3 py-2 ${!isSelected ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                    />
+                  </div>
+
+                  {/* Calculated MT */}
+                  <div>
+                    <label className="block text-xs text-text-light mb-1">
+                      Quantity (MT)
+                    </label>
+
+                    <input
+                      type="number"
+                      value={(allocations[o.id]?.mt || 0).toFixed(3)}
+                      readOnly
+                      disabled={!isSelected}
+                      className="w-28 bg-backgroundAlt border border-border rounded-lg px-3 py-2 opacity-80"
+                    />
+                  </div>
 
                   <span className="text-sm text-text-light">
                     MT
@@ -160,15 +188,17 @@ export default function AllocateBatchModal({
         })}
       </div>
 
-      {remaining < 0 ? (
-        <div className="rounded-xl bg-error/10 text-error px-4 py-3 text-sm">
-          Cannot allocate more than the Total Unallocated ({totalUnallocated.toFixed(3)} MT). Please reduce the allocations.
-        </div>
-      ) : (
-        <div className="rounded-xl bg-info/8 text-info px-4 py-3 text-sm">
-          {remaining.toFixed(3)} MT unallocated — will remain in finished goods inventory
-        </div>
-      )}
-    </Modal>
+      {
+        remaining < 0 ? (
+          <div className="rounded-xl bg-error/10 text-error px-4 py-3 text-sm">
+            Cannot allocate more than the Total Unallocated ({totalUnallocated.toFixed(3)} MT). Please reduce the allocations.
+          </div>
+        ) : (
+          <div className="rounded-xl bg-info/8 text-info px-4 py-3 text-sm">
+            {remaining.toFixed(3)} MT unallocated — will remain in finished goods inventory
+          </div>
+        )
+      }
+    </Modal >
   );
 }

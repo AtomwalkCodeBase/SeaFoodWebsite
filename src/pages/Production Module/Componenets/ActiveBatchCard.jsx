@@ -244,6 +244,7 @@ const ActiveBatchCard = ({ batch, hideActionButtons }) => {
         <ActualOutputModal
           batch={batch}
           activity={selectedLog}
+          isOpen={isActualOutputModalOpen}
           activityName={resolvedSelectedActivityName}
           isSaving={actualOutputMutation.isPending}
           onClose={() => setIsActualOutputModalOpen(false)}
@@ -261,18 +262,21 @@ const ActiveBatchCard = ({ batch, hideActionButtons }) => {
           onClose={() => setIsAllocateModalOpen(false)}
           onConfirm={(allocations) => {
             const items = Object.entries(allocations)
-              .filter(([, quantity]) => Number(quantity) > 0)
-              .map(([order_plan_id, quantity_mt]) => ({
-                order_plan_id,
-                quantity_mt: Number(quantity_mt || 0),
+              .filter(([, allocation]) => Number(allocation?.packets) > 0)
+              .map(([order_plan_id, allocation]) => ({
+                order_plan_id: Number(order_plan_id),
+                quantity_mt: Number(allocation.mt),
+                allocated_qty: Number(allocation.packets),
               }));
 
             if (items.length === 0) {
-              toast.warn("Enter quantity for at least one order before confirming.");
+              toast.warn("Enter packet count for at least one order.");
               return;
             }
 
-            items.forEach((item) => manualAllocateMutation.mutate(item));
+            items.forEach((item) => {
+              manualAllocateMutation.mutate(item);
+            });
           }}
         />
       )}
