@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { useOrders, useProcessActivityList } from '../../../hooks/useProductQueries';
 import { Badge as Badge2 } from "../../../components/EmptyState";
 import ActualOutputModal from '../../../pages/Production Module/Modal/ActualOutputModal';
+import ConfirmPopup from '../../../components/ConfirmPopup';
+import Modal from '../../../components/Modal';
 
 const getDynamicSteps = (processActivities = []) => {
   if (processActivities?.length > 0) {
@@ -26,6 +28,12 @@ const ActiveBatchCard = ({ batch, hideActionButtons }) => {
   const currentActivityName = batch.current_activity_name;
   const [selectedActivityName, setSelectedActivityName] = useState(() => currentActivityName || "");
   const [isActualOutputModalOpen, setIsActualOutputModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+const [pendingPayload, setPendingPayload] = useState(null);
+const [confirmMessage, setConfirmMessage] = useState("");
+const [confirmTitle, setConfirmTitle] = useState("Confirm Activity");
+const [isQCConfirmation, setIsQCConfirmation] = useState(false);
+const [isQCDetailsOpen, setIsQCDetailsOpen] = useState(false);
 
   const { data: activitiesData, isLoading: processActivityLoading } = useProcessActivityList(!!batch.product, batch.product);
   const { data: orderList = [], isLoading: ordersLoading } = useOrders();
@@ -41,32 +49,79 @@ const ActiveBatchCard = ({ batch, hideActionButtons }) => {
   );
 
 
+ const currentIdx = dynamicSteps.indexOf(currentActivityName);
+
   const resolvedSelectedActivityName = selectedActivityName || (batch.status === "SCHEDULED" ? dynamicSteps[0] : currentActivityName || dynamicSteps[0]);
 
-  const currentIdx = dynamicSteps.indexOf(currentActivityName);
   const selectedLog = batch.activity_logs?.find((log) => log.activity_name === resolvedSelectedActivityName);
 
+  const qcTestDetails = selectedLog?.qc_test_required || {};
+
+const hasQCDetails = Object.keys(qcTestDetails).length > 0;
+
+  const activityQCData = selectedLog?.activity_qc_data || {};
+
+  const isQCActivity = Object.keys(activityQCData).length > 0;
+
   const displayInput = selectedLog?.input_weight_mt || batch.input_weight_mt || "0";
+
   const displayExpected = selectedLog?.expected_output_mt || "0";
+
   const displayActual = selectedLog?.actual_output_mt || "-";
+
   const displayWorkerAssigned = selectedLog?.workers_assigned || 0;
 
   const isLastStep = currentIdx === dynamicSteps.length - 1;
-  const canAdvance = batch.status === "SCHEDULED" || (currentIdx >= 0 && batch.status !== "ALLOCATING");
-  const canEnterActualOutput = !hideActionButtons && batch.status !== "COMPLETED" && resolvedSelectedActivityName === currentActivityName && selectedLog && selectedLog.status !== "COMPLETED";
 
-  const nextStepLabel = batch.status === "SCHEDULED" ? dynamicSteps[0] : isLastStep ? "Complete Batch" : dynamicSteps[currentIdx + 1];
+  const isCurrentActivitySelected = resolvedSelectedActivityName === currentActivityName;
 
-  const advanceMutation = useMutation({
-    mutationFn: () => AdvanceBatchActivity(batch.id),
-    onSuccess: () => {
-      toast.success(
-        batch.status === "SCHEDULED" ? `Started ${dynamicSteps[0]}` : `Advance to ${nextStepLabel}`
-      );
-      qc.invalidateQueries({ queryKey: ["batches"] });
+  const canStartBatch = !hideActionButtons && batch.status === "SCHEDULED";
+
+  const canCompleteActivity =
+      !hideActionButtons &&
+      batch.status !== "SCHEDULED" &&
+      batch.status !== "COMPLETED" &&
+      batch.status !== "ALLOCATING" &&
+      isCurrentActivitySelected &&
+      selectedLog &&
+      selectedLog.status !== "COMPLETED";
+
+  const nextStepLabel = isLastStep ? "Complete Batch" : dynamicSteps[currentIdx + 1];
+
+const advanceMutation = useMutation({
+    mutationFn: (payload) => {
+        if (payload) {
+            return AdvanceBatchActivity(batch.id, payload);
+        }
+
+        return AdvanceBatchActivity(batch.id);
     },
-    onError: (error) => toast.error(error?.message || "Failed to advance batch activity"),
-  });
+
+    onSuccess: () => {
+        toast.success("Activity completed successfully");
+
+        setIsConfirmOpen(false);
+        setIsActualOutputModalOpen(false);
+        setPendingPayload(null);
+        setIsQCConfirmation(false);
+
+        qc.invalidateQueries({
+            queryKey: ["batches"],
+        });
+
+        qc.invalidateQueries({
+            queryKey: ["orders"],
+        });
+    },
+
+    onError: (error) => {
+        console.log("Advance activity error:", error);
+
+        toast.error(
+            error?.message || "Failed to complete activity"
+        );
+    },
+});
 
   const autoAllocateMutation = useMutation({
     mutationFn: () => AutoAllocateBatch(batch.id),
@@ -109,6 +164,67 @@ const ActiveBatchCard = ({ batch, hideActionButtons }) => {
       );
     },
   });
+
+// Start the batch
+const handleStartBatch = () => {
+    advanceMutation.mutate();
+};
+
+
+// Complete normal activity using expected output
+const handleCompleteActivity = () => {
+    const payload = {
+        activity_name: resolvedSelectedActivityName,
+        actual_output_mt: Number(
+            selectedLog?.expected_output_mt || 0
+        ),
+        remarks: "",
+        qc_test_required: {},
+    };
+
+    setPendingPayload(payload);
+
+    setConfirmTitle("Complete Activity");
+
+    setConfirmMessage(
+        `Are you sure you want to complete ${resolvedSelectedActivityName}? The actual output will be recorded using the expected output quantity. If you want to change the output quantity, click on Enter Actual Output instead.`
+    );
+
+    setIsQCConfirmation(false);
+    setIsConfirmOpen(true);
+};
+
+
+// Submit actual output or QC form
+const handleActualOutputSubmit = (payload) => {
+
+    // QC activities require confirmation
+    if (isQCActivity) {
+        setPendingPayload(payload);
+
+        setConfirmTitle("Confirm QC Results");
+
+        setConfirmMessage(
+            `Are you sure you want to save the QC test results and actual output for ${resolvedSelectedActivityName}?`
+        );
+
+        setIsQCConfirmation(true);
+        setIsConfirmOpen(true);
+
+        return;
+    }
+
+    // Normal actual output can be saved directly
+    advanceMutation.mutate(payload);
+};
+
+
+// Confirm and execute the pending action
+const handleConfirmActivity = () => {
+    if (!pendingPayload) return;
+
+    advanceMutation.mutate(pendingPayload);
+};
 
   return (
     <>
@@ -190,69 +306,119 @@ const ActiveBatchCard = ({ batch, hideActionButtons }) => {
           </div>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          {!hideActionButtons && canAdvance && (
+ <div className="flex gap-2 flex-wrap">
+
+    {/* Start Batch */}
+    {canStartBatch && (
+        <Button
+            variant="primary"
+            size="sm"
+            onClick={handleStartBatch}
+            loading={advanceMutation.isPending}
+            disable={advanceMutation.isPending}
+        >
+            Start the Batch
+        </Button>
+    )}
+
+
+    {/* Complete Activity */}
+    {canCompleteActivity && (
+        <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+                if (isQCActivity) {
+                    setIsActualOutputModalOpen(true);
+                } else {
+                    handleCompleteActivity();
+                }
+            }}
+            disable={advanceMutation.isPending}
+        >
+            Complete {resolvedSelectedActivityName}
+        </Button>
+    )}
+
+
+    {/* Enter Actual Output - Only for non-QC activities */}
+    {canCompleteActivity && !isQCActivity && (
+        <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsActualOutputModalOpen(true)}
+        >
+            Enter Actual Output
+        </Button>
+    )}
+
+
+    {/* Assign Worker */}
+    {!hideActionButtons &&
+        displayWorkerAssigned === 0 &&
+        batch.status !== "SCHEDULED" &&
+        batch.status !== "ALLOCATING" &&
+        batch.status !== "COMPLETED" &&
+        selectedLog?.status !== "COMPLETED" && (
             <Button
-              variant="primary"
-              size="sm"
-              onClick={() => advanceMutation.mutate()}
-              loading={advanceMutation.isPending}
-              disable={advanceMutation.isPending}
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/work-force")}
             >
-              Start {currentActivityName}
+                Assign Worker
             </Button>
-          )}
-          {canEnterActualOutput && (<Button variant="secondary" size="sm" onClick={() => setIsActualOutputModalOpen(true)} >Enter Actual Output </Button>)}
+        )}
 
-          {!hideActionButtons && displayWorkerAssigned === 0 && batch.status !== "ALLOCATING" && selectedLog?.status !== "COMPLETED" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/work-force")}
-            >
-              Assign Worker
-            </Button>
-          )}
+        {hasQCDetails && (
+    <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsQCDetailsOpen(true)}
+    >
+        QC Details
+    </Button>
+)}
 
-          {batch.status === "ALLOCATING" && (
-            <>
-              {!hideActionButtons && (
+
+    {/* Allocation buttons */}
+    {batch.status === "ALLOCATING" && (
+        <>
+            {!hideActionButtons && (
                 <Button
-                  variant="success"
-                  size="sm"
-                  onClick={() => autoAllocateMutation.mutate()}
-                  loading={autoAllocateMutation.isPending}
+                    variant="success"
+                    size="sm"
+                    onClick={() => autoAllocateMutation.mutate()}
+                    loading={autoAllocateMutation.isPending}
                 >
-                  Auto-allocate to order
+                    Auto-allocate to order
                 </Button>
-              )}
+            )}
 
-              {!hideActionButtons && (
+            {!hideActionButtons && (
                 <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setIsAllocateModalOpen(true)}
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsAllocateModalOpen(true)}
                 >
-                  Manual allocate
+                    Manual allocate
                 </Button>
-              )}
-            </>
-          )}
-        </div>
+            )}
+        </>
+    )}
+
+</div>
       </div>
       {isActualOutputModalOpen && (
-        <ActualOutputModal
-          batch={batch}
-          activity={selectedLog}
-          isOpen={isActualOutputModalOpen}
-          activityName={resolvedSelectedActivityName}
-          isSaving={actualOutputMutation.isPending}
-          onClose={() => setIsActualOutputModalOpen(false)}
-          onConfirm={(payload) => {
-            actualOutputMutation.mutate(payload);
-          }}
-        />
-      )}
+    <ActualOutputModal
+        batch={batch}
+        activity={selectedLog}
+        isOpen={isActualOutputModalOpen}
+        activityName={resolvedSelectedActivityName}
+        isSaving={advanceMutation.isPending}
+        onClose={() => setIsActualOutputModalOpen(false)}
+        onConfirm={handleActualOutputSubmit}
+    />
+)}
       {isAllocateModalOpen && (
         <AllocateBatchModal
           batch={batch}
@@ -260,26 +426,107 @@ const ActiveBatchCard = ({ batch, hideActionButtons }) => {
           orders={matchingOrders}
           isSaving={manualAllocateMutation.isPending}
           onClose={() => setIsAllocateModalOpen(false)}
-          onConfirm={(allocations) => {
-            const items = Object.entries(allocations)
-              .filter(([, allocation]) => Number(allocation?.packets) > 0)
-              .map(([order_plan_id, allocation]) => ({
-                order_plan_id: Number(order_plan_id),
-                quantity_mt: Number(allocation.mt),
-                allocated_qty: Number(allocation.packets),
-              }));
+onConfirm={(allocations) => {
+    const selected = Object.entries(allocations)
+        .find(([, allocation]) => Number(allocation?.packets) > 0);
 
-            if (items.length === 0) {
-              toast.warn("Enter packet count for at least one order.");
-              return;
-            }
+    if (!selected) {
+        toast.warn("Enter packet count.");
+        return;
+    }
 
-            items.forEach((item) => {
-              manualAllocateMutation.mutate(item);
-            });
-          }}
+    const [order_plan_id, allocation] = selected;
+
+    const payload = {
+        order_plan_id: order_plan_id,
+        quantity_mt: Number(allocation.mt),
+        allocated_qty: Number(allocation.packets),
+    };
+
+    manualAllocateMutation.mutate(payload);
+}}
         />
       )}
+
+      <ConfirmPopup
+    isOpen={isConfirmOpen}
+    title={confirmTitle}
+    message={confirmMessage}
+    confirmLabel={
+        isQCConfirmation
+            ? "Save QC Results"
+            : "Complete Activity"
+    }
+    cancelLabel="Cancel"
+    isLoading={advanceMutation.isPending}
+    onClose={() => {
+        if (advanceMutation.isPending) return;
+
+        setIsConfirmOpen(false);
+        setPendingPayload(null);
+        setIsQCConfirmation(false);
+    }}
+    onConfirm={handleConfirmActivity}
+/>
+
+{isQCDetailsOpen && (
+    <Modal
+        title={`QC Details - ${selectedLog?.activity_name}`}
+        width="max-w-2xl"
+        isOpen={isQCDetailsOpen}
+        onClose={() => setIsQCDetailsOpen(false)}
+        showSaveButton={false}
+        cancelButtonText={null}
+    >
+        <div className="space-y-3">
+
+            <div className="mb-4">
+                <p className="text-sm text-text-light">
+                    Batch
+                </p>
+
+                <p className="font-semibold text-text">
+                    {batch.batch_number}
+                </p>
+            </div>
+
+            <h3 className="font-semibold text-text">
+                QC Test Results
+            </h3>
+
+            <div className="space-y-3">
+
+                {Object.entries(qcTestDetails).map(
+                    ([key, value]) => (
+                        <div
+                            key={key}
+                            className="rounded-lg border border-border bg-backgroundAlt p-3"
+                        >
+                            <p className="text-xs text-text-light mb-1">
+                                {key.replace(/_/g, " ")}
+                            </p>
+
+                            <p className="font-medium text-text">
+                                {value || "--"}
+                            </p>
+                        </div>
+                    )
+                )}
+
+            </div>
+
+            <div className="flex justify-end pt-3">
+                <Button
+                    variant="outline"
+                    onClick={() => setIsQCDetailsOpen(false)}
+                >
+                    Close
+                </Button>
+            </div>
+
+        </div>
+    </Modal>
+)}
     </>
   );
 };
